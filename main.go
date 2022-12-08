@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "github.com/MSSkowron/GoBankAPI/api"
 
 func main() {
-	fmt.Println("GoBankAPI!")
+	api.NewGoBookAPIServer(":8080").Run()
 }
