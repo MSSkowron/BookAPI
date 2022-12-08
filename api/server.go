@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -34,21 +35,28 @@ func (s *GoBookAPIServer) Run() {
 }
 
 func (s *GoBookAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request) {
-
+	writeJSONResponse(w, http.StatusNotImplemented, "TODO")
 }
 
 func (s *GoBookAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) {
-
+	writeJSONResponse(w, http.StatusNotImplemented, "TODO")
 }
 
 func (s *GoBookAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Request) {
-
+	writeJSONResponse(w, http.StatusNotImplemented, "TODO")
 }
 
 func (s *GoBookAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Request) {
-
+	writeJSONResponse(w, http.StatusNotImplemented, "TODO")
 }
 
 func (s *GoBookAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) {
+	writeJSONResponse(w, http.StatusNotImplemented, "TODO")
+}
 
+func writeJSONResponse(w http.ResponseWriter, statusCode int, v any) error {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+
+	return json.NewEncoder(w).Encode(v)
 }
