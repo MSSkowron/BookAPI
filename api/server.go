@@ -2,14 +2,18 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
-	model "github.com/MSSkowron/GoBankAPI/model"
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/MSSkowron/GoBankAPI/model"
+	jwt "github.com/golang-jwt/jwt"
 	mux "github.com/gorilla/mux"
 )
+
+var users []*model.User = []*model.User{}
 
 type GoBookAPIServer struct {
 	listenAddr string
@@ -24,7 +28,8 @@ func NewGoBookAPIServer(listenAddr string) *GoBookAPIServer {
 func (s *GoBookAPIServer) Run() {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/users", s.handlePostUser).Methods("POST")
+	r.HandleFunc("/users/register", s.handlePostUserRegister).Methods("POST")
+	r.HandleFunc("/users/login", s.handlePostUserLogin).Methods("POST")
 	r.HandleFunc("/books", validateJWT(s.handleGetBooks)).Methods("GET")
 	r.HandleFunc("/books", validateJWT(s.handlePostBook)).Methods("POST")
 	r.HandleFunc("/books/{id}", validateJWT(s.handleGetBookByID)).Methods("GET")
@@ -38,15 +43,49 @@ func (s *GoBookAPIServer) Run() {
 	}
 }
 
-func (s *GoBookAPIServer) handlePostUser(w http.ResponseWriter, r *http.Request) {
-	user := model.NewUser("test@gmail.com", "test", "test", 18)
+func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Request) {
+	loginRequest := &model.LoginRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
+		writeJSONResponse(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
 
-	token, err := createJWT(user)
+	valid := false
+	for _, u := range users {
+		if u.Email == loginRequest.Email {
+			if u.Password == loginRequest.Password {
+				valid = true
+				break
+			} else {
+				writeJSONResponse(w, http.StatusUnauthorized, "invalid credentials")
+				return
+			}
+		}
+	}
+
+	if !valid {
+		writeJSONResponse(w, http.StatusNotFound, "invalid credentials")
+		return
+	}
+
+	token, err := generateToken(loginRequest.Email)
 	if err != nil {
 		writeJSONResponse(w, http.StatusInternalServerError, nil)
 	}
 
-	writeJSONResponse(w, http.StatusNotImplemented, token)
+	writeJSONResponse(w, http.StatusOK, token)
+}
+
+func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.Request) {
+	createAccountRequest := &model.CreateAccountRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&createAccountRequest); err != nil {
+		writeJSONResponse(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	users = append(users, model.NewUser(createAccountRequest.Email, createAccountRequest.Password, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age)))
+
+	writeJSONResponse(w, http.StatusOK, "registered successfully")
 }
 
 func (s *GoBookAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request) {
@@ -71,11 +110,10 @@ func (s *GoBookAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.Re
 
 var SECRET = []byte("super-secret-auth-key")
 
-func createJWT(user *model.User) (string, error) {
+func generateToken(email string) (tokenString string, err error) {
 	claims := &jwt.MapClaims{
-		"expiresAt": time.Now().Add(time.Hour).Unix(),
-		"userID":    user.ID,
-		"userEmail": user.Email,
+		"email":     email,
+		"expiresAt": time.Now().Add(10 * time.Minute).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -83,25 +121,41 @@ func createJWT(user *model.User) (string, error) {
 	return token.SignedString(SECRET)
 }
 
+func validateToken(tokenString string) error {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		_, ok := t.Method.(*jwt.SigningMethodHMAC)
+		if !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", t.Header["alg"])
+		}
+
+		return SECRET, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	if !token.Valid {
+		return errors.New("token is not valid")
+	}
+
+	if int64(token.Claims.(jwt.MapClaims)["expiresAt"].(float64)) < time.Now().Local().Unix() {
+		return errors.New("token expired")
+	}
+
+	return nil
+}
+
 func validateJWT(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] != nil {
-			token, err := jwt.Parse(r.Header["Token"][0], func(t *jwt.Token) (interface{}, error) {
-				_, ok := t.Method.(*jwt.SigningMethodHMAC)
-				if !ok {
-					writeJSONResponse(w, http.StatusUnauthorized, "not authorized")
-				}
-
-				return SECRET, nil
-			})
-
+			err := validateToken(r.Header.Get("Token"))
 			if err != nil {
 				writeJSONResponse(w, http.StatusUnauthorized, "not authorized: "+err.Error())
+				return
 			}
 
-			if token.Valid {
-				handlerFunc(w, r)
-			}
+			handlerFunc(w, r)
+
 		} else {
 			writeJSONResponse(w, http.StatusUnauthorized, "not authorized")
 		}
