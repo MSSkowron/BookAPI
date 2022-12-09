@@ -1,7 +1,17 @@
 package main
 
-import "github.com/MSSkowron/GoBankAPI/api"
+import (
+	"log"
+
+	"github.com/MSSkowron/GoBankAPI/api"
+	"github.com/MSSkowron/GoBankAPI/storage"
+)
 
 func main() {
-	api.NewGoBookAPIServer(":8080").Run()
+	storage, err := storage.NewPostgresSQLStorage()
+	if err != nil {
+		log.Fatalln("error while creating storage: " + err.Error())
+	}
+
+	api.NewGoBookAPIServer(":8080", storage).Run()
 }

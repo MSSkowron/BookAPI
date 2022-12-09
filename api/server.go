@@ -9,19 +9,20 @@ import (
 	"time"
 
 	"github.com/MSSkowron/GoBankAPI/model"
-	jwt "github.com/golang-jwt/jwt"
-	mux "github.com/gorilla/mux"
+	"github.com/MSSkowron/GoBankAPI/storage"
+	"github.com/golang-jwt/jwt"
+	"github.com/gorilla/mux"
 )
-
-var users []*model.User = []*model.User{}
 
 type GoBookAPIServer struct {
 	listenAddr string
+	storage    storage.Storage
 }
 
-func NewGoBookAPIServer(listenAddr string) *GoBookAPIServer {
+func NewGoBookAPIServer(listenAddr string, storage storage.Storage) *GoBookAPIServer {
 	return &GoBookAPIServer{
 		listenAddr: listenAddr,
+		storage:    storage,
 	}
 }
 
@@ -43,39 +44,6 @@ func (s *GoBookAPIServer) Run() {
 	}
 }
 
-func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Request) {
-	loginRequest := &model.LoginRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
-		writeJSONResponse(w, http.StatusBadRequest, "invalid request body")
-		return
-	}
-
-	valid := false
-	for _, u := range users {
-		if u.Email == loginRequest.Email {
-			if u.Password == loginRequest.Password {
-				valid = true
-				break
-			} else {
-				writeJSONResponse(w, http.StatusUnauthorized, "invalid credentials")
-				return
-			}
-		}
-	}
-
-	if !valid {
-		writeJSONResponse(w, http.StatusNotFound, "invalid credentials")
-		return
-	}
-
-	token, err := generateToken(loginRequest.Email)
-	if err != nil {
-		writeJSONResponse(w, http.StatusInternalServerError, nil)
-	}
-
-	writeJSONResponse(w, http.StatusOK, token)
-}
-
 func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.Request) {
 	createAccountRequest := &model.CreateAccountRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&createAccountRequest); err != nil {
@@ -83,9 +51,38 @@ func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.
 		return
 	}
 
-	users = append(users, model.NewUser(createAccountRequest.Email, createAccountRequest.Password, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age)))
+	if err := s.storage.CreateUser(model.NewUser(createAccountRequest.Email, createAccountRequest.Password, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))); err != nil {
+		writeJSONResponse(w, http.StatusInternalServerError, "error while creating new user")
+	}
 
 	writeJSONResponse(w, http.StatusOK, "registered successfully")
+}
+
+func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Request) {
+	loginRequest := &model.LoginRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
+		writeJSONResponse(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	user, err := s.storage.GetUserByUsername(loginRequest.Email)
+	if err != nil {
+		writeJSONResponse(w, http.StatusUnauthorized, "invalid credentials")
+		return
+	}
+
+	if user.Password != loginRequest.Password {
+		writeJSONResponse(w, http.StatusUnauthorized, "invalid credentials")
+		return
+	}
+
+	token, err := generateToken(user.Email)
+	if err != nil {
+		writeJSONResponse(w, http.StatusInternalServerError, nil)
+		return
+	}
+
+	writeJSONResponse(w, http.StatusOK, token)
 }
 
 func (s *GoBookAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request) {

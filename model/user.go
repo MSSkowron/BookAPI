@@ -1,10 +1,5 @@
 package model
 
-import (
-	"math/rand"
-	"strconv"
-)
-
 type User struct {
 	ID        string `json:"id"`
 	Email     string `json:"email"`
@@ -16,7 +11,6 @@ type User struct {
 
 func NewUser(email, password, firstName, lastName string, age int) *User {
 	return &User{
-		ID:        strconv.Itoa(rand.Intn(10000)),
 		Email:     email,
 		Password:  password,
 		FirstName: firstName,
