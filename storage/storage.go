@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/MSSkowron/GoBankAPI/model"
+	_ "github.com/lib/pq"
 )
 
 type Storage interface {
