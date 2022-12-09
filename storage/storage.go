@@ -17,7 +17,7 @@ type PostgresSQLStorage struct {
 }
 
 func NewPostgresSQLStorage() (*PostgresSQLStorage, error) {
-	connStr := "TODO"
+	connStr := "user=gobookapiuser dbname=postgres password=gobookapipassword sslmode=disable"
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -32,34 +32,7 @@ func NewPostgresSQLStorage() (*PostgresSQLStorage, error) {
 		db: db,
 	}
 
-	if err := postgresSQLStore.init(); err != nil {
-		return nil, err
-	}
-
 	return postgresSQLStore, nil
-}
-
-func (s *PostgresSQLStorage) init() error {
-	if err := s.createUsersTable(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *PostgresSQLStorage) createUsersTable() error {
-	query := ` CREATE TABLE IF NOT EXISTS users (
-		id SERIAL PRIMARY KEY,
-		email varchar(50),
-		password varchar(256),
-		first_name varchar(50),
-		last_name varchar(50),
-		age smallint,
-	)
-	`
-
-	_, err := s.db.Exec(query)
-	return err
 }
 
 func (s *PostgresSQLStorage) CreateUser(*model.User) error {
