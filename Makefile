@@ -1,4 +1,4 @@
-BINARY_NAME='gobankapi'
+BINARY_NAME='gobookapi'
 
 build:
 	@go build -o bin/${BINARY_NAME}
