@@ -37,10 +37,10 @@ func (s *GoBookAPIServer) Run() {
 	r.HandleFunc("/books/{id}", validateJWT(s.handlePutBookByID)).Methods("PUT")
 	r.HandleFunc("/books/{id}", validateJWT(s.handleDeleteBookByID)).Methods("DELETE")
 
-	log.Println("[GoBookAPI] Server is running on: " + s.listenAddr)
+	log.Println("[GoBookAPIServer] Server is running on: " + s.listenAddr)
 
 	if err := http.ListenAndServe(s.listenAddr, r); err != nil {
-		log.Fatal("[GoBookAPI] Error while running server: " + err.Error())
+		log.Fatal("[GoBookAPIServer] Error while running server: " + err.Error())
 	}
 }
 
@@ -65,8 +65,8 @@ func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	user, err := s.storage.GetUserByUsername(loginRequest.Email)
-	if err != nil {
+	user, err := s.storage.GetUserByEmail(loginRequest.Email)
+	if err != nil || user == nil {
 		writeJSONResponse(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
@@ -86,7 +86,13 @@ func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Req
 }
 
 func (s *GoBookAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request) {
-	writeJSONResponse(w, http.StatusNotImplemented, "TODO")
+	books, err := s.storage.GetBooks()
+	if err != nil {
+		writeJSONResponse(w, http.StatusInternalServerError, nil)
+		return
+	}
+
+	writeJSONResponse(w, http.StatusNotImplemented, books)
 }
 
 func (s *GoBookAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) {
