@@ -92,7 +92,7 @@ func (s *GoBookAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	writeJSONResponse(w, http.StatusNotImplemented, books)
+	writeJSONResponse(w, http.StatusOK, books)
 }
 
 func (s *GoBookAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) {
