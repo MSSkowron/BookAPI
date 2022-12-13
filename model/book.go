@@ -1,13 +1,12 @@
 package model
 
 type Book struct {
-	ID     string  `json:"id"`
-	Isbn   string  `json:"isbn"`
-	Title  string  `json:"title"`
-	Author *Author `json:"author"`
+	ID     string `json:"id"`
+	Author string `json:"author"`
+	Title  string `json:"title"`
 }
 
-func NewBook(title string, author *Author) *Book {
+func NewBook(title string, author string) *Book {
 	return &Book{
 		Title:  title,
 		Author: author,

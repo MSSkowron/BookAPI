@@ -12,6 +12,7 @@ type Storage interface {
 	CreateUser(*model.User) error
 	GetUserByEmail(string) (*model.User, error)
 	GetBooks() ([]*model.Book, error)
+	CreateBook(book *model.Book) error
 }
 
 type PostgresSQLStorage struct {
@@ -46,10 +47,6 @@ func (s *PostgresSQLStorage) init() error {
 		return err
 	}
 
-	if err := s.createAuthorsTable(); err != nil {
-		return err
-	}
-
 	if err := s.createBooksTable(); err != nil {
 		return err
 	}
@@ -72,27 +69,11 @@ func (s *PostgresSQLStorage) createUsersTable() error {
 	return err
 }
 
-func (s *PostgresSQLStorage) createAuthorsTable() error {
-	query := `CREATE TABLE IF NOT EXISTS authors (
-		id INT GENERATED ALWAYS AS IDENTITY,
-		first_name varchar(50) NOT NULL,
-		last_name varchar(50) NOT NULL,
-		PRIMARY KEY(id)
-	);`
-
-	_, err := s.db.Exec(query)
-	return err
-}
-
 func (s *PostgresSQLStorage) createBooksTable() error {
 	query := `CREATE TABLE IF NOT EXISTS books (
 		id INT GENERATED ALWAYS AS IDENTITY,
-		author_id  INT,
-		isbn varchar(100) NOT NULL,
-		title varchar(100) NOT NULL,
-		CONSTRAINT fk_author 
-			FOREIGN KEY(author_id)
-				REFERENCES authors(id)
+		author  varchar(100) NOT NULL,
+		title varchar(100) NOT NULL
 	);`
 
 	_, err := s.db.Exec(query)
@@ -128,6 +109,20 @@ func (s *PostgresSQLStorage) GetUserByEmail(email string) (*model.User, error) {
 	return user, nil
 }
 
+func (s *PostgresSQLStorage) CreateBook(book *model.Book) error {
+	query := `insert into "books" (author, title) values ($1)`
+
+	_, err := s.db.Exec(query, book.Author, book.Title)
+	if err != nil {
+		log.Println("[PostgresSQLStorage] Error while inserting new book: " + err.Error())
+		return err
+	}
+
+	log.Println("[PostgresSQLStorage] Inserted new book")
+
+	return nil
+}
+
 func (s *PostgresSQLStorage) GetBooks() ([]*model.Book, error) {
 	query := `select * from books`
 
@@ -139,7 +134,7 @@ func (s *PostgresSQLStorage) GetBooks() ([]*model.Book, error) {
 	books := []*model.Book{}
 	for rows.Next() {
 		book := &model.Book{}
-		if err := rows.Scan(&book.ID, &book.Isbn, &book.Title, &book.Author); err != nil {
+		if err := rows.Scan(&book.ID, &book.Title, &book.Author); err != nil {
 			return nil, err
 		}
 

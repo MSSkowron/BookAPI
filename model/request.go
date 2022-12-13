@@ -12,3 +12,8 @@ type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
+type CreateBookRequest struct {
+	Author string `json:"author"`
+	Title  string `json:"title"`
+}

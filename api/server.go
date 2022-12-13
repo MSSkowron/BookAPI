@@ -96,7 +96,19 @@ func (s *GoBookAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *GoBookAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) {
-	writeJSONResponse(w, http.StatusNotImplemented, "TODO")
+	createBookRequest := model.CreateBookRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&createBookRequest); err != nil {
+		writeJSONResponse(w, http.StatusInternalServerError, "invalid request body")
+		return
+	}
+
+	newBook := model.NewBook(createBookRequest.Title, createBookRequest.Author)
+	if err := s.storage.CreateBook(newBook); err != nil {
+		writeJSONResponse(w, http.StatusInternalServerError, "error while creating new book")
+		return
+	}
+
+	writeJSONResponse(w, http.StatusOK, nil)
 }
 
 func (s *GoBookAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Request) {
