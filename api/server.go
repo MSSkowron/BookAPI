@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/MSSkowron/GoBankAPI/model"
@@ -53,6 +54,7 @@ func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.
 
 	if err := s.storage.CreateUser(model.NewUser(createAccountRequest.Email, createAccountRequest.Password, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))); err != nil {
 		writeJSONResponse(w, http.StatusInternalServerError, "error while creating new user")
+		return
 	}
 
 	writeJSONResponse(w, http.StatusOK, "registered successfully")
@@ -112,7 +114,22 @@ func (s *GoBookAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *GoBookAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Request) {
-	writeJSONResponse(w, http.StatusNotImplemented, "TODO")
+	idString := mux.Vars(r)["id"]
+	defer r.Body.Close()
+
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		writeJSONResponse(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	book, err := s.storage.GetBookByID(id)
+	if err != nil {
+		writeJSONResponse(w, http.StatusNotFound, "not found")
+		return
+	}
+
+	writeJSONResponse(w, http.StatusOK, book)
 }
 
 func (s *GoBookAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Request) {

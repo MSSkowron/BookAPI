@@ -13,6 +13,7 @@ type Storage interface {
 	GetUserByEmail(string) (*model.User, error)
 	GetBooks() ([]*model.Book, error)
 	CreateBook(book *model.Book) error
+	GetBookByID(id int) (*model.Book, error)
 }
 
 type PostgresSQLStorage struct {
@@ -73,7 +74,8 @@ func (s *PostgresSQLStorage) createBooksTable() error {
 	query := `CREATE TABLE IF NOT EXISTS books (
 		id INT GENERATED ALWAYS AS IDENTITY,
 		author  varchar(100) NOT NULL,
-		title varchar(100) NOT NULL
+		title varchar(100) NOT NULL, 
+		PRIMARY KEY(id)
 	);`
 
 	_, err := s.db.Exec(query)
@@ -110,7 +112,7 @@ func (s *PostgresSQLStorage) GetUserByEmail(email string) (*model.User, error) {
 }
 
 func (s *PostgresSQLStorage) CreateBook(book *model.Book) error {
-	query := `insert into "books" (author, title) values ($1)`
+	query := `insert into "books" (author, title) values ($1, $2)`
 
 	_, err := s.db.Exec(query, book.Author, book.Title)
 	if err != nil {
@@ -144,4 +146,19 @@ func (s *PostgresSQLStorage) GetBooks() ([]*model.Book, error) {
 	log.Println("[PostgresSQLStorage] Books correctly pulled from database")
 
 	return books, nil
+}
+
+func (s *PostgresSQLStorage) GetBookByID(id int) (*model.Book, error) {
+	query := `select * from books where id=$1`
+
+	row := s.db.QueryRow(query, id)
+
+	book := &model.Book{}
+	if err := row.Scan(&book.ID, &book.Title, &book.Author); err != nil {
+		return nil, err
+	}
+
+	log.Println("[PostgresSQLStorage] Book correctly pulled from database")
+
+	return book, nil
 }
