@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/MSSkowron/GoBankAPI/crypto"
 	"github.com/MSSkowron/GoBankAPI/model"
 	"github.com/MSSkowron/GoBankAPI/storage"
 	"github.com/golang-jwt/jwt"
@@ -52,7 +53,13 @@ func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if err := s.storage.CreateUser(model.NewUser(createAccountRequest.Email, createAccountRequest.Password, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))); err != nil {
+	hashedPass, err := crypto.HashPassword(createAccountRequest.Password)
+	if err != nil {
+		writeJSONResponse(w, http.StatusInternalServerError, "error while creating new user")
+		return
+	}
+
+	if err := s.storage.CreateUser(model.NewUser(createAccountRequest.Email, hashedPass, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))); err != nil {
 		writeJSONResponse(w, http.StatusInternalServerError, "error while creating new user")
 		return
 	}
@@ -73,7 +80,7 @@ func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if user.Password != loginRequest.Password {
+	if err := crypto.CheckPassword(loginRequest.Password, user.Password); err != nil {
 		writeJSONResponse(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
