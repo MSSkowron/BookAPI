@@ -59,12 +59,13 @@ func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.
 		return
 	}
 
-	if err := s.storage.CreateUser(model.NewUser(createAccountRequest.Email, hashedPass, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))); err != nil {
+	newUser := model.NewUser(createAccountRequest.Email, hashedPass, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
+	if err := s.storage.CreateUser(newUser); err != nil {
 		writeJSONResponse(w, http.StatusInternalServerError, "error while creating new user")
 		return
 	}
 
-	writeJSONResponse(w, http.StatusOK, "registered successfully")
+	writeJSONResponse(w, http.StatusOK, newUser)
 }
 
 func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Request) {
@@ -117,7 +118,7 @@ func (s *GoBookAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	writeJSONResponse(w, http.StatusOK, nil)
+	writeJSONResponse(w, http.StatusOK, newBook)
 }
 
 func (s *GoBookAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Request) {

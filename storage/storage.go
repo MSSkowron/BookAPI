@@ -85,13 +85,15 @@ func (s *PostgresSQLStorage) createBooksTable() error {
 }
 
 func (s *PostgresSQLStorage) CreateUser(user *model.User) error {
-	query := `insert into "users" (email, password, first_name, last_name, age) values ($1, $2, $3, $4, $5)`
+	query := `insert into "users" (email, password, first_name, last_name, age) values ($1, $2, $3, $4, $5) RETURNING id`
+	id := 0
 
-	_, err := s.db.Exec(query, user.Email, user.Password, user.FirstName, user.LastName, user.Age)
-	if err != nil {
-		log.Println("[PostgresSQLStorage] Error while inserting new user: " + err.Error())
+	if err := s.db.QueryRow(query, user.Email, user.Password, user.FirstName, user.LastName, user.Age).Scan(&id); err != nil {
+		log.Println("[PostgresSQLStorage] Error while inserting book: " + err.Error())
 		return err
 	}
+
+	user.ID = id
 
 	log.Println("[PostgresSQLStorage] Inserted new user")
 
@@ -105,6 +107,7 @@ func (s *PostgresSQLStorage) GetUserByEmail(email string) (*model.User, error) {
 
 	user := &model.User{}
 	if err := row.Scan(&user.ID, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age); err != nil {
+		log.Println("[PostgresSQLStorage] Error while pulling user: " + err.Error())
 		return nil, err
 	}
 
@@ -114,13 +117,15 @@ func (s *PostgresSQLStorage) GetUserByEmail(email string) (*model.User, error) {
 }
 
 func (s *PostgresSQLStorage) CreateBook(book *model.Book) error {
-	query := `insert into "books" (author, title) values ($1, $2)`
+	query := `insert into "books" (author, title) values ($1, $2) RETURNING id`
+	id := 0
 
-	_, err := s.db.Exec(query, book.Author, book.Title)
-	if err != nil {
-		log.Println("[PostgresSQLStorage] Error while inserting new book: " + err.Error())
+	if err := s.db.QueryRow(query, book.Author, book.Title).Scan(&id); err != nil {
+		log.Println("[PostgresSQLStorage] Error while inserting book: " + err.Error())
 		return err
 	}
+
+	book.ID = id
 
 	log.Println("[PostgresSQLStorage] Inserted new book")
 
@@ -139,6 +144,7 @@ func (s *PostgresSQLStorage) GetBooks() ([]*model.Book, error) {
 	for rows.Next() {
 		book := &model.Book{}
 		if err := rows.Scan(&book.ID, &book.Title, &book.Author); err != nil {
+			log.Println("[PostgresSQLStorage] Error while pulling books: " + err.Error())
 			return nil, err
 		}
 
@@ -157,6 +163,7 @@ func (s *PostgresSQLStorage) GetBookByID(id int) (*model.Book, error) {
 
 	book := &model.Book{}
 	if err := row.Scan(&book.ID, &book.Title, &book.Author); err != nil {
+		log.Println("[PostgresSQLStorage] Error while pulling book: " + err.Error())
 		return nil, err
 	}
 
@@ -168,12 +175,12 @@ func (s *PostgresSQLStorage) GetBookByID(id int) (*model.Book, error) {
 func (s *PostgresSQLStorage) DeleteBookByID(id int) error {
 	query := `delete from books where id=$1`
 
-	_, err := s.db.Exec(query, id)
-	if err != nil {
+	if _, err := s.db.Exec(query, id); err != nil {
+		log.Println("[PostgresSQLStorage] Error while deleting book: " + err.Error())
 		return err
 	}
 
-	log.Println("[PostgresSQLStorage] Book correctly pulled from database")
+	log.Println("[PostgresSQLStorage] Book correctly deleted from database")
 
 	return nil
 }
@@ -181,8 +188,8 @@ func (s *PostgresSQLStorage) DeleteBookByID(id int) error {
 func (s *PostgresSQLStorage) UpdateBook(book *model.Book) error {
 	query := `UPDATE books SET author = $1, title= $2 WHERE id = $3;`
 
-	_, err := s.db.Exec(query, book.Author, book.Title, book.ID)
-	if err != nil {
+	if _, err := s.db.Exec(query, book.Author, book.Title, book.ID); err != nil {
+		log.Println("[PostgresSQLStorage] Error while updating book: " + err.Error())
 		return err
 	}
 
