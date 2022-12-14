@@ -12,8 +12,10 @@ type Storage interface {
 	CreateUser(*model.User) error
 	GetUserByEmail(string) (*model.User, error)
 	GetBooks() ([]*model.Book, error)
-	CreateBook(book *model.Book) error
-	GetBookByID(id int) (*model.Book, error)
+	CreateBook(*model.Book) error
+	GetBookByID(int) (*model.Book, error)
+	DeleteBookByID(int) error
+	UpdateBook(*model.Book) error
 }
 
 type PostgresSQLStorage struct {
@@ -161,4 +163,30 @@ func (s *PostgresSQLStorage) GetBookByID(id int) (*model.Book, error) {
 	log.Println("[PostgresSQLStorage] Book correctly pulled from database")
 
 	return book, nil
+}
+
+func (s *PostgresSQLStorage) DeleteBookByID(id int) error {
+	query := `delete from books where id=$1`
+
+	_, err := s.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	log.Println("[PostgresSQLStorage] Book correctly pulled from database")
+
+	return nil
+}
+
+func (s *PostgresSQLStorage) UpdateBook(book *model.Book) error {
+	query := `UPDATE books SET author = $1, title= $2 WHERE id = $3;`
+
+	_, err := s.db.Exec(query, book.Author, book.Title, book.ID)
+	if err != nil {
+		return err
+	}
+
+	log.Println("[PostgresSQLStorage] Book correctly updated")
+
+	return nil
 }

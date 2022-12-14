@@ -47,7 +47,7 @@ func (s *GoBookAPIServer) Run() {
 
 func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.Request) {
 	createAccountRequest := &model.CreateAccountRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&createAccountRequest); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
 		writeJSONResponse(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
@@ -62,7 +62,7 @@ func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.
 
 func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Request) {
 	loginRequest := &model.LoginRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
 		writeJSONResponse(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
@@ -98,8 +98,8 @@ func (s *GoBookAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *GoBookAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) {
-	createBookRequest := model.CreateBookRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&createBookRequest); err != nil {
+	createBookRequest := &model.CreateBookRequest{}
+	if err := json.NewDecoder(r.Body).Decode(createBookRequest); err != nil {
 		writeJSONResponse(w, http.StatusInternalServerError, "invalid request body")
 		return
 	}
@@ -133,11 +133,57 @@ func (s *GoBookAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Reque
 }
 
 func (s *GoBookAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Request) {
-	writeJSONResponse(w, http.StatusNotImplemented, "TODO")
+	idString := mux.Vars(r)["id"]
+	defer r.Body.Close()
+
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		writeJSONResponse(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	_, err = s.storage.GetBookByID(id)
+	if err != nil {
+		writeJSONResponse(w, http.StatusNotFound, "not found")
+		return
+	}
+
+	book := &model.Book{}
+	if err := json.NewDecoder(r.Body).Decode(book); err != nil {
+		writeJSONResponse(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if err := s.storage.UpdateBook(book); err != nil {
+		writeJSONResponse(w, http.StatusInternalServerError, "error while deleting the book")
+		return
+	}
+
+	writeJSONResponse(w, http.StatusOK, nil)
 }
 
 func (s *GoBookAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) {
-	writeJSONResponse(w, http.StatusNotImplemented, "TODO")
+	idString := mux.Vars(r)["id"]
+	defer r.Body.Close()
+
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		writeJSONResponse(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	_, err = s.storage.GetBookByID(id)
+	if err != nil {
+		writeJSONResponse(w, http.StatusNotFound, "not found")
+		return
+	}
+
+	if err := s.storage.DeleteBookByID(id); err != nil {
+		writeJSONResponse(w, http.StatusInternalServerError, "error while deleting the book")
+		return
+	}
+
+	writeJSONResponse(w, http.StatusOK, nil)
 }
 
 var SECRET = []byte("super-secret-auth-key")
