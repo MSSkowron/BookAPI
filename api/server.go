@@ -16,6 +16,21 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type apiFunc func(w http.ResponseWriter, r *http.Request) error
+
+func makeHTTPHandler(f apiFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := f(w, r); err != nil {
+			if err := writeJSONResponse(w, http.StatusInternalServerError, err); err != nil {
+				log.Printf("[GoBookAPIServer] Error: %s", err.Error())
+				return
+			}
+
+			log.Printf("[GoBookAPIServer] Error: %s", err.Error())
+		}
+	}
+}
+
 type GoBookAPIServer struct {
 	listenAddr string
 	storage    storage.Storage
@@ -31,8 +46,8 @@ func NewGoBookAPIServer(listenAddr string, storage storage.Storage) *GoBookAPISe
 func (s *GoBookAPIServer) Run() {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/users/register", s.handlePostUserRegister).Methods("POST")
-	r.HandleFunc("/users/login", s.handlePostUserLogin).Methods("POST")
+	r.HandleFunc("/users/register", makeHTTPHandler(s.handlePostUserRegister)).Methods("POST")
+	r.HandleFunc("/users/login", makeHTTPHandler(s.handlePostUserLogin)).Methods("POST")
 	r.HandleFunc("/books", validateJWT(s.handleGetBooks)).Methods("GET")
 	r.HandleFunc("/books", validateJWT(s.handlePostBook)).Methods("POST")
 	r.HandleFunc("/books/{id}", validateJWT(s.handleGetBookByID)).Methods("GET")
@@ -46,152 +61,133 @@ func (s *GoBookAPIServer) Run() {
 	}
 }
 
-func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.Request) {
+func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.Request) error {
 	createAccountRequest := &model.CreateAccountRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
-		writeJSONResponse(w, http.StatusBadRequest, "invalid request body")
-		return
+		return errors.New("invalid request body")
 	}
 
 	hashedPass, err := crypto.HashPassword(createAccountRequest.Password)
 	if err != nil {
-		writeJSONResponse(w, http.StatusInternalServerError, "error while creating new user")
-		return
+		return errors.New("error while creating new user")
 	}
 
 	newUser := model.NewUser(createAccountRequest.Email, hashedPass, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
 	if err := s.storage.CreateUser(newUser); err != nil {
-		writeJSONResponse(w, http.StatusInternalServerError, "error while creating new user")
-		return
+		return errors.New("error while creating new user")
 	}
 
-	writeJSONResponse(w, http.StatusOK, newUser)
+	return writeJSONResponse(w, http.StatusOK, newUser)
 }
 
-func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Request) {
+func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Request) error {
 	loginRequest := &model.LoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
-		writeJSONResponse(w, http.StatusBadRequest, "invalid request body")
-		return
+		return errors.New("invalid request body")
 	}
 
 	user, err := s.storage.GetUserByEmail(loginRequest.Email)
 	if err != nil || user == nil {
-		writeJSONResponse(w, http.StatusUnauthorized, "invalid credentials")
-		return
+		return errors.New("invalid credentials")
 	}
 
 	if err := crypto.CheckPassword(loginRequest.Password, user.Password); err != nil {
-		writeJSONResponse(w, http.StatusUnauthorized, "invalid credentials")
-		return
+		return errors.New("invalid credentials")
 	}
 
 	token, err := generateToken(user.Email)
 	if err != nil {
-		writeJSONResponse(w, http.StatusInternalServerError, nil)
-		return
+		return err
 	}
 
-	writeJSONResponse(w, http.StatusOK, token)
+	return writeJSONResponse(w, http.StatusOK, token)
 }
 
-func (s *GoBookAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request) {
+func (s *GoBookAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
 	books, err := s.storage.GetBooks()
 	if err != nil {
-		writeJSONResponse(w, http.StatusInternalServerError, nil)
-		return
+		return err
 	}
 
-	writeJSONResponse(w, http.StatusOK, books)
+	return writeJSONResponse(w, http.StatusOK, books)
 }
 
-func (s *GoBookAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) {
+func (s *GoBookAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 	createBookRequest := &model.CreateBookRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createBookRequest); err != nil {
-		writeJSONResponse(w, http.StatusInternalServerError, "invalid request body")
-		return
+		return errors.New("invalid request body")
 	}
 
 	newBook := model.NewBook(createBookRequest.Title, createBookRequest.Author)
 	if err := s.storage.CreateBook(newBook); err != nil {
-		writeJSONResponse(w, http.StatusInternalServerError, "error while creating new book")
-		return
+		return errors.New("error while creating new book")
 	}
 
-	writeJSONResponse(w, http.StatusOK, newBook)
+	return writeJSONResponse(w, http.StatusOK, newBook)
 }
 
-func (s *GoBookAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Request) {
+func (s *GoBookAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Request) error {
 	idString := mux.Vars(r)["id"]
 	defer r.Body.Close()
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		writeJSONResponse(w, http.StatusBadRequest, "invalid id")
-		return
+		return errors.New("invalid id")
 	}
 
 	book, err := s.storage.GetBookByID(id)
 	if err != nil {
-		writeJSONResponse(w, http.StatusNotFound, "not found")
-		return
+		return errors.New("not found")
 	}
 
-	writeJSONResponse(w, http.StatusOK, book)
+	return writeJSONResponse(w, http.StatusOK, book)
 }
 
-func (s *GoBookAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Request) {
+func (s *GoBookAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Request) error {
 	idString := mux.Vars(r)["id"]
 	defer r.Body.Close()
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		writeJSONResponse(w, http.StatusBadRequest, "invalid id")
-		return
+		return errors.New("invalid id")
 	}
 
 	_, err = s.storage.GetBookByID(id)
 	if err != nil {
-		writeJSONResponse(w, http.StatusNotFound, "not found")
-		return
+		return errors.New("not found")
 	}
 
 	book := &model.Book{}
 	if err := json.NewDecoder(r.Body).Decode(book); err != nil {
-		writeJSONResponse(w, http.StatusBadRequest, "invalid request body")
-		return
+		return errors.New("invalid request body")
 	}
 
 	if err := s.storage.UpdateBook(book); err != nil {
-		writeJSONResponse(w, http.StatusInternalServerError, "error while deleting the book")
-		return
+		return errors.New("error while deleting the book")
 	}
 
-	writeJSONResponse(w, http.StatusOK, nil)
+	return writeJSONResponse(w, http.StatusOK, nil)
 }
 
-func (s *GoBookAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) {
+func (s *GoBookAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) error {
 	idString := mux.Vars(r)["id"]
 	defer r.Body.Close()
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		writeJSONResponse(w, http.StatusBadRequest, "invalid id")
-		return
+		return errors.New("invalid id")
 	}
 
 	_, err = s.storage.GetBookByID(id)
 	if err != nil {
-		writeJSONResponse(w, http.StatusNotFound, "not found")
-		return
+		return errors.New("not found")
 	}
 
 	if err := s.storage.DeleteBookByID(id); err != nil {
-		writeJSONResponse(w, http.StatusInternalServerError, "error while deleting the book")
-		return
+		return errors.New("error while deleting the book")
 	}
 
-	writeJSONResponse(w, http.StatusOK, nil)
+	return writeJSONResponse(w, http.StatusOK, nil)
 }
 
 var SECRET = []byte("super-secret-auth-key")
@@ -231,19 +227,32 @@ func validateToken(tokenString string) error {
 	return nil
 }
 
-func validateJWT(handlerFunc http.HandlerFunc) http.HandlerFunc {
+func validateJWT(f apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] != nil {
-			err := validateToken(r.Header.Get("Token"))
-			if err != nil {
-				writeJSONResponse(w, http.StatusUnauthorized, "not authorized: "+err.Error())
+			if err := validateToken(r.Header.Get("Token")); err != nil {
+				if err := writeJSONResponse(w, http.StatusUnauthorized, "not authorized: "+err.Error()); err != nil {
+					log.Printf("[GoBookAPIServer] Error: %s", err.Error())
+					return
+				}
+
+				log.Printf("[GoBookAPIServer] Error: %s", err.Error())
 				return
 			}
 
-			handlerFunc(w, r)
+			if err := f(w, r); err != nil {
+				if err := writeJSONResponse(w, http.StatusInternalServerError, err.Error()); err != nil {
+					log.Printf("[GoBookAPIServer] Error: %s", err.Error())
+					return
+				}
 
+				log.Printf("[GoBookAPIServer] Error: %s", err.Error())
+			}
 		} else {
-			writeJSONResponse(w, http.StatusUnauthorized, "not authorized")
+			if err := writeJSONResponse(w, http.StatusUnauthorized, "not authorized"); err != nil {
+				log.Printf("[GoBookAPIServer] Error: %s", err.Error())
+				return
+			}
 		}
 	}
 }
