@@ -23,7 +23,7 @@ type PostgresSQLStorage struct {
 }
 
 func NewPostgresSQLStorage() (*PostgresSQLStorage, error) {
-	connStr := "user=gobookapiuser dbname=postgres password=gobookapipassword sslmode=disable"
+	connStr := "host=postgresdb user=gobookapiuser dbname=postgres password=gobookapipassword sslmode=disable"
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
