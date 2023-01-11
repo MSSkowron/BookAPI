@@ -33,11 +33,11 @@ docker-compose up -d
 
   ```json
   {
-    email     string,
-    password  string,
-    firstName string,
-    lastName  string,
-    age       int64
+    "email":     string,
+    "password":  string,
+    "firstName": string,
+    "lastName":  string,
+    "age":       int64
   }
   ```
 
@@ -45,12 +45,12 @@ docker-compose up -d
 
   ```json
   {
-    id        int,
-    email     string,
-    password  string,
-    firstName string,
-    lastName  string,
-    age       int64
+    "id":        int,
+    "email":     string,
+    "password":  string,
+    "firstName": string,
+    "lastName":  string,
+    "age":       int64
   }
   ```
 
@@ -59,16 +59,13 @@ docker-compose up -d
 
   ```json
   {
-    email    string,
-    password string
+    "email":    string,
+    "password": string
   }
   ```
 
   Response: authentication token of type string
-
-  ```
-
-  ```
+  <br/>
 
 - In methods below we need to include an authentication token which we've receiver while logging. The token should be set with the key "Token" in a request header.
 
@@ -78,8 +75,8 @@ docker-compose up -d
 
   ```json
     {
-      author string,
-      title  string
+      "author": string,
+      "title":  string
     }
   ```
 
@@ -89,8 +86,8 @@ docker-compose up -d
 
   ```json
     {
-      author string,
-      title  string
+      "author": string,
+      "title":  string
     }
   ```
 
