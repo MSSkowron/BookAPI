@@ -67,7 +67,7 @@ docker-compose up -d
   Response: authentication token of type string
   <br/>
 
-- In methods below we need to include an authentication token which we've receiver while logging. The token should be set with the key "Token" in a request header.
+- In methods below we need to include the authentication token which we've received while logging in. The token should be set with the key "Token" in a request header.
 
   - **GET /books**
   - **POST /books**
