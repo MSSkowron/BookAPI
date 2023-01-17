@@ -1,6 +1,6 @@
 # GoBookAPI
 
-GoBookAPI is a simple application written in Go language to manage books. We can perform basic CRUD operations on the database via the API.
+GoBookAPI is a simple HTTP Server written in Go language to manage books. We can perform basic CRUD operations on the database via the API.
 
 ## Technologies
 
