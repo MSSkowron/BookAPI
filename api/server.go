@@ -46,22 +46,22 @@ func NewGoBookAPIServer(listenAddr string, storage storage.Storage) *GoBookAPISe
 func (s *GoBookAPIServer) Run() {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/users/register", makeHTTPHandler(s.handlePostUserRegister)).Methods("POST")
-	r.HandleFunc("/users/login", makeHTTPHandler(s.handlePostUserLogin)).Methods("POST")
+	r.HandleFunc("/register", makeHTTPHandler(s.handleRegister)).Methods("POST")
+	r.HandleFunc("/login", makeHTTPHandler(s.handleLogin)).Methods("POST")
 	r.HandleFunc("/books", validateJWT(s.handleGetBooks)).Methods("GET")
 	r.HandleFunc("/books", validateJWT(s.handlePostBook)).Methods("POST")
 	r.HandleFunc("/books/{id}", validateJWT(s.handleGetBookByID)).Methods("GET")
 	r.HandleFunc("/books/{id}", validateJWT(s.handlePutBookByID)).Methods("PUT")
 	r.HandleFunc("/books/{id}", validateJWT(s.handleDeleteBookByID)).Methods("DELETE")
 
-	log.Println("[GoBookAPIServer] Server is running on: " + s.listenAddr)
+	log.Println("[BookAPIServer] Server is running on: " + s.listenAddr)
 
 	if err := http.ListenAndServe(s.listenAddr, r); err != nil {
-		log.Fatal("[GoBookAPIServer] Error while running server: " + err.Error())
+		log.Fatal("[BookAPIServer] Error while running server: " + err.Error())
 	}
 }
 
-func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.Request) error {
+func (s *GoBookAPIServer) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	createAccountRequest := &model.CreateAccountRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
 		return errors.New("invalid request body")
@@ -80,7 +80,7 @@ func (s *GoBookAPIServer) handlePostUserRegister(w http.ResponseWriter, r *http.
 	return writeJSONResponse(w, http.StatusOK, newUser)
 }
 
-func (s *GoBookAPIServer) handlePostUserLogin(w http.ResponseWriter, r *http.Request) error {
+func (s *GoBookAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	loginRequest := &model.LoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
 		return errors.New("invalid request body")
