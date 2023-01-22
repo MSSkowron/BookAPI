@@ -33,11 +33,11 @@ docker-compose up -d
 
   ```json
   {
-    "email":     string,
-    "password":  string,
-    "firstName": string,
-    "lastName":  string,
-    "age":       int64
+    "email":     "string",
+    "password":  "string",
+    "firstName": "string",
+    "lastName":  "string",
+    "age":       "int64"
   }
   ```
 
@@ -45,12 +45,12 @@ docker-compose up -d
 
   ```json
   {
-    "id":        int,
-    "email":     string,
-    "password":  string,
-    "firstName": string,
-    "lastName":  string,
-    "age":       int64
+    "id":        "int64",
+    "email":     "string",
+    "password":  "string",
+    "firstName": "string",
+    "lastName":  "string",
+    "age":       "int64"
   }
   ```
 
@@ -59,8 +59,8 @@ docker-compose up -d
 
   ```json
   {
-    "email":    string,
-    "password": string
+    "email":    "string",
+    "password": "string"
   }
   ```
 
@@ -75,8 +75,8 @@ docker-compose up -d
 
   ```json
     {
-      "author": string,
-      "title":  string
+      "author": "string",
+      "title":  "string"
     }
   ```
 
@@ -86,8 +86,8 @@ docker-compose up -d
 
   ```json
     {
-      "author": string,
-      "title":  string
+      "author": "string",
+      "title":  "string"
     }
   ```
 
