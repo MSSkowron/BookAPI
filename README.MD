@@ -1,6 +1,6 @@
-# GoBookAPI
+# BookRESTAPI
 
-GoBookAPI is a simple REST API written in Go language to manage books. We can perform basic CRUD operations on the database via the API.
+BookRESTAPI is a simple REST API written in Go language to manage books. We can perform basic CRUD operations on the database via the API.
 
 ## Technologies
 
