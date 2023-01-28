@@ -1,6 +1,6 @@
 # GoBookAPI
 
-GoBookAPI is a simple HTTP Server written in Go language to manage books. We can perform basic CRUD operations on the database via the API.
+GoBookAPI is a simple REST API written in Go language to manage books. We can perform basic CRUD operations on the database via the API.
 
 ## Technologies
 
@@ -25,7 +25,7 @@ docker-compose up -d
 
 ## How to use the API
 
-    GoBookAPI provides the following endpoints and methods:
+GoBookAPI listens on the port 8080. It provides the following endpoints and methods:
 
 - **POST /users/register**
 
