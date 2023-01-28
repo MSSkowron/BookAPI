@@ -20,24 +20,24 @@ We need to have Docker installed in order to run the application.
 
 ```
 cd GoBookAPI
-docker-compose up -d
+docker-compose up
 ```
 
 ## How to use the API
 
 GoBookAPI listens on the port 8080. It provides the following endpoints and methods:
 
-- **POST /users/register**
+- **POST /register**
 
   JSON Request Body:
 
   ```json
   {
-    "email":     "string",
-    "password":  "string",
+    "email": "string",
+    "password": "string",
     "firstName": "string",
-    "lastName":  "string",
-    "age":       "int64"
+    "lastName": "string",
+    "age": "int64"
   }
   ```
 
@@ -45,21 +45,21 @@ GoBookAPI listens on the port 8080. It provides the following endpoints and meth
 
   ```json
   {
-    "id":        "int64",
-    "email":     "string",
-    "password":  "string",
+    "id": "int64",
+    "email": "string",
+    "password": "string",
     "firstName": "string",
-    "lastName":  "string",
-    "age":       "int64"
+    "lastName": "string",
+    "age": "int64"
   }
   ```
 
-- **POST /users/login**
+- **POST /login**
   JSON Request Body:
 
   ```json
   {
-    "email":    "string",
+    "email": "string",
     "password": "string"
   }
   ```
@@ -74,10 +74,10 @@ GoBookAPI listens on the port 8080. It provides the following endpoints and meth
     JSON Request Body:
 
   ```json
-    {
-      "author": "string",
-      "title":  "string"
-    }
+  {
+    "author": "string",
+    "title": "string"
+  }
   ```
 
   - **GET /books/{id}**
@@ -85,10 +85,10 @@ GoBookAPI listens on the port 8080. It provides the following endpoints and meth
     JSON Request Body:
 
   ```json
-    {
-      "author": "string",
-      "title":  "string"
-    }
+  {
+    "author": "string",
+    "title": "string"
+  }
   ```
 
   - **DELETE /books/{id}**
