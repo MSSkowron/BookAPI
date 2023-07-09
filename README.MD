@@ -4,8 +4,8 @@ BookRESTAPI is a simple REST API written in Go language that allows you to manag
 
 ## Technologies
 
-- Go
-- PostgreSQL
+- Go 1.19
+- PostgreSQL 15
 - Docker
 
 ## Requirements

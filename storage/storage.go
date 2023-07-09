@@ -4,6 +4,7 @@ import (
 	"github.com/MSSkowron/BookRESTAPI/model"
 )
 
+// Storage is an interface for storage
 type Storage interface {
 	InsertUser(user *model.User) (int, error)
 	SelectUserByEmail(email string) (*model.User, error)

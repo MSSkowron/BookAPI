@@ -16,6 +16,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var secret = []byte("super-secret-auth-key")
+
 type apiFunc func(w http.ResponseWriter, r *http.Request) error
 
 func makeHTTPHandler(f apiFunc) http.HandlerFunc {
@@ -31,11 +33,13 @@ func makeHTTPHandler(f apiFunc) http.HandlerFunc {
 	}
 }
 
+// BookRESTAPIServer is a server for handling REST API requests
 type BookRESTAPIServer struct {
 	listenAddr string
 	storage    storage.Storage
 }
 
+// NewBookRESTAPIServer creates a new BookRESTAPIServer
 func NewBookRESTAPIServer(listenAddr string, storage storage.Storage) *BookRESTAPIServer {
 	return &BookRESTAPIServer{
 		listenAddr: listenAddr,
@@ -43,6 +47,7 @@ func NewBookRESTAPIServer(listenAddr string, storage storage.Storage) *BookRESTA
 	}
 }
 
+// Run runs the server
 func (s *BookRESTAPIServer) Run() {
 	r := mux.NewRouter()
 
@@ -196,8 +201,6 @@ func (s *BookRESTAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.
 	return writeJSONResponse(w, http.StatusOK, nil)
 }
 
-var SECRET = []byte("super-secret-auth-key")
-
 func generateToken(email string) (tokenString string, err error) {
 	claims := &jwt.MapClaims{
 		"email":     email,
@@ -206,17 +209,17 @@ func generateToken(email string) (tokenString string, err error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString(SECRET)
+	return token.SignedString(secret)
 }
 
 func validateToken(tokenString string) error {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", t.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
 
-		return SECRET, nil
+		return secret, nil
 	})
 	if err != nil {
 		return err

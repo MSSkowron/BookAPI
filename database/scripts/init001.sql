@@ -1,4 +1,4 @@
-create table USERS
+create table users
 (
     id bigint primary key generated always as identity,
     email    varchar(50) NOT NULL,
@@ -8,7 +8,7 @@ create table USERS
 	age smallint NOT NULL
 );
 
-create table BOOKS (
+create table books (
     id bigint primary key generated always as identity,
     author varchar(100) NOT NULL, 
     title varchar(100) NOT NULL

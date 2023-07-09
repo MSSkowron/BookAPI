@@ -10,7 +10,7 @@ import (
 func main() {
 	storage, err := storage.NewPostgresSQLStorage()
 	if err != nil {
-		log.Fatalf("error while creating storage: %s", err.Error())
+		log.Fatalln(err)
 	}
 
 	api.NewBookRESTAPIServer(":8080", storage).Run()

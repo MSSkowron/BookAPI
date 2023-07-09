@@ -1,5 +1,6 @@
 package model
 
+// User represents a user
 type User struct {
 	ID        int    `json:"id"`
 	Email     string `json:"email"`
@@ -9,7 +10,8 @@ type User struct {
 	Age       int    `json:"age"`
 }
 
-func NewUser(email, password, firstName, lastName string, age int) *User {
+// NewUser creates a new user
+func NewUser(email string, password string, firstName string, lastName string, age int) *User {
 	return &User{
 		Email:     email,
 		Password:  password,

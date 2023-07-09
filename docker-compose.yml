@@ -3,7 +3,7 @@ version: '3.5'
 services:
   database:
     container_name: bookrestapidatabase
-    image: postgres
+    image: postgres:15
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -19,7 +19,7 @@ services:
     build: .
     depends_on:
       - database
-    restart: on-failure
+    restart: always
     networks:
       - bookrestapinet
     ports:
