@@ -107,7 +107,7 @@ The BookRESTAPI exposes the following endpoints and methods:
       }
     ```
 
-  - Endpoint: `\books\{id}` Method: `POST`
+  - Endpoint: `\books\{id}` Method: `GET`
 
     Retrieves details of a specific book by ID.
 

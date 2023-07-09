@@ -10,7 +10,7 @@ import (
 
 const (
 	driverName       = "postgres"
-	connectionString = "host=postgresdb user=postgres password=postgres dbname=bookrestapidb sslmode=disable"
+	connectionString = "host=database user=postgres password=postgres dbname=postgres sslmode=disable"
 )
 
 type PostgresSQLStorage struct {

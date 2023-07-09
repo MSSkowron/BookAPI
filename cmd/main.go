@@ -13,5 +13,5 @@ func main() {
 		log.Fatalf("error while creating storage: %s", err.Error())
 	}
 
-	api.NewGoBookAPIServer(":8080", storage).Run()
+	api.NewBookRESTAPIServer(":8080", storage).Run()
 }
