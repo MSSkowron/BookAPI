@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/MSSkowron/GoBankAPI/model"
+	"github.com/MSSkowron/BookRESTAPI/model"
 	_ "github.com/lib/pq"
 )
 

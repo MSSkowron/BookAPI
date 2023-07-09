@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/MSSkowron/GoBankAPI/crypto"
-	"github.com/MSSkowron/GoBankAPI/model"
-	"github.com/MSSkowron/GoBankAPI/storage"
+	"github.com/MSSkowron/BookRESTAPI/crypto"
+	"github.com/MSSkowron/BookRESTAPI/model"
+	"github.com/MSSkowron/BookRESTAPI/storage"
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 )
