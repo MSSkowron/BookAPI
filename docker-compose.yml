@@ -1,29 +1,31 @@
 services:
-  postgresdb:
+  database:
+    container_name: bookrestapidatabase
     image: postgres
     environment:
-      - POSTGRES_USER=gobookapiuser
-      - POSTGRES_PASSWORD=gobookapipassword
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     ports:
       - "5432:5432"
-    volumes: 
-      - postgresdbdata:/var/lib/postgresql/data
+    volumes:
+      - ./database/data:/var/lib/postgresql/data
+      - ./database/scripts/:/docker-entrypoint-initdb.d/
     networks:
-      - gobookapinet
-  gobookapi:
+      - bookrestapinet
+  server:
+    container_name: bookrestapiserver
     build: .
     depends_on:
-      - postgresdb
+      - database
     networks:
-      - gobookapinet
+      - bookrestapinet
     ports:
       - "8080:8080"
 
 volumes:
-  postgresdbdata:
+  bookrestapidata:
     driver: local
 
 networks:
-  gobookapinet:
+  bookrestapinet:
     driver: bridge
-
