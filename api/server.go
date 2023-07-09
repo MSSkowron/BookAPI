@@ -12,22 +12,20 @@ import (
 	"github.com/MSSkowron/BookRESTAPI/crypto"
 	"github.com/MSSkowron/BookRESTAPI/model"
 	"github.com/MSSkowron/BookRESTAPI/storage"
-	"github.com/golang-jwt/jwt"
+	"github.com/MSSkowron/BookRESTAPI/token"
 	"github.com/gorilla/mux"
 )
 
-var secret = []byte("super-secret-auth-key")
+var (
+	secret              = "super-secret-auth-key"
+	tokenExpirationTime = 10 * time.Minute
+)
 
 type apiFunc func(w http.ResponseWriter, r *http.Request) error
 
 func makeHTTPHandler(f apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := f(w, r); err != nil {
-			if err := writeJSONResponse(w, http.StatusInternalServerError, err); err != nil {
-				log.Printf("[BookRESTAPIServer] Error: %s", err.Error())
-				return
-			}
-
 			log.Printf("[BookRESTAPIServer] Error: %s", err.Error())
 		}
 	}
@@ -69,18 +67,18 @@ func (s *BookRESTAPIServer) Run() {
 func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	createAccountRequest := &model.CreateAccountRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
-		return errors.New("invalid request body")
+		return writeJSONResponse(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
 	}
 
 	hashedPass, err := crypto.HashPassword(createAccountRequest.Password)
 	if err != nil {
-		return errors.New("error while creating new user")
+		return writeJSONResponse(w, http.StatusInternalServerError, fmt.Errorf("error while hashing password: %w", err))
 	}
 
 	newUser := model.NewUser(createAccountRequest.Email, hashedPass, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
 	id, err := s.storage.InsertUser(newUser)
 	if err != nil {
-		return errors.New("error while creating new user")
+		return writeJSONResponse(w, http.StatusInternalServerError, fmt.Errorf("error while creating new user: %w", err))
 	}
 
 	newUser.ID = id
@@ -91,21 +89,21 @@ func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Reques
 func (s *BookRESTAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	loginRequest := &model.LoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
-		return errors.New("invalid request body")
+		return writeJSONResponse(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
 	}
 
 	user, err := s.storage.SelectUserByEmail(loginRequest.Email)
 	if err != nil || user == nil {
-		return errors.New("invalid credentials")
+		return writeJSONResponse(w, http.StatusUnauthorized, errors.New("invalid credentials"))
 	}
 
 	if err := crypto.CheckPassword(loginRequest.Password, user.Password); err != nil {
-		return errors.New("invalid credentials")
+		return writeJSONResponse(w, http.StatusUnauthorized, errors.New("invalid credentials"))
 	}
 
-	token, err := generateToken(user.Email)
+	token, err := token.Generate(user.ID, user.Email, secret, tokenExpirationTime)
 	if err != nil {
-		return err
+		return writeJSONResponse(w, http.StatusInternalServerError, fmt.Errorf("error while generating token: %w", err))
 	}
 
 	return writeJSONResponse(w, http.StatusOK, token)
@@ -114,7 +112,7 @@ func (s *BookRESTAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) 
 func (s *BookRESTAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
 	books, err := s.storage.SelectAllBooks()
 	if err != nil {
-		return err
+		return writeJSONResponse(w, http.StatusInternalServerError, fmt.Errorf("error while getting books: %w", err))
 	}
 
 	return writeJSONResponse(w, http.StatusOK, books)
@@ -123,13 +121,13 @@ func (s *BookRESTAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Reques
 func (s *BookRESTAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 	createBookRequest := &model.CreateBookRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createBookRequest); err != nil {
-		return errors.New("invalid request body")
+		return writeJSONResponse(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
 	}
 
 	newBook := model.NewBook(createBookRequest.Title, createBookRequest.Author)
 	id, err := s.storage.InsertBook(newBook)
 	if err != nil {
-		return errors.New("error while creating new book")
+		return writeJSONResponse(w, http.StatusInternalServerError, fmt.Errorf("error while creating new book: %w", err))
 	}
 
 	newBook.ID = id
@@ -143,12 +141,12 @@ func (s *BookRESTAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Req
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		return errors.New("invalid id")
+		return writeJSONResponse(w, http.StatusBadRequest, errors.New("invalid id"))
 	}
 
 	book, err := s.storage.SelectBookByID(id)
 	if err != nil {
-		return errors.New("not found")
+		return writeJSONResponse(w, http.StatusNotFound, errors.New("not found"))
 	}
 
 	return writeJSONResponse(w, http.StatusOK, book)
@@ -160,21 +158,21 @@ func (s *BookRESTAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Req
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		return errors.New("invalid id")
+		return writeJSONResponse(w, http.StatusBadRequest, errors.New("invalid id"))
 	}
 
 	_, err = s.storage.SelectBookByID(id)
 	if err != nil {
-		return errors.New("not found")
+		return writeJSONResponse(w, http.StatusNotFound, errors.New("not found"))
 	}
 
 	book := &model.Book{}
 	if err := json.NewDecoder(r.Body).Decode(book); err != nil {
-		return errors.New("invalid request body")
+		return writeJSONResponse(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
 	}
 
 	if err := s.storage.UpdateBook(book); err != nil {
-		return errors.New("error while deleting the book")
+		return writeJSONResponse(w, http.StatusInternalServerError, errors.New("error while updating the book"))
 	}
 
 	return writeJSONResponse(w, http.StatusOK, nil)
@@ -186,60 +184,25 @@ func (s *BookRESTAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		return errors.New("invalid id")
+		return writeJSONResponse(w, http.StatusBadRequest, errors.New("invalid id"))
 	}
 
 	_, err = s.storage.SelectBookByID(id)
 	if err != nil {
-		return errors.New("not found")
+		return writeJSONResponse(w, http.StatusNotFound, errors.New("not found"))
 	}
 
 	if err := s.storage.DeleteBook(id); err != nil {
-		return errors.New("error while deleting the book")
+		return writeJSONResponse(w, http.StatusInternalServerError, errors.New("error while deleting the book"))
 	}
 
 	return writeJSONResponse(w, http.StatusOK, nil)
 }
 
-func generateToken(email string) (tokenString string, err error) {
-	claims := &jwt.MapClaims{
-		"email":     email,
-		"expiresAt": time.Now().Add(10 * time.Minute).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	return token.SignedString(secret)
-}
-
-func validateToken(tokenString string) error {
-	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-		_, ok := t.Method.(*jwt.SigningMethodHMAC)
-		if !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-		}
-
-		return secret, nil
-	})
-	if err != nil {
-		return err
-	}
-
-	if !token.Valid {
-		return errors.New("token is not valid")
-	}
-
-	if int64(token.Claims.(jwt.MapClaims)["expiresAt"].(float64)) < time.Now().Local().Unix() {
-		return errors.New("token expired")
-	}
-
-	return nil
-}
-
 func validateJWT(f apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] != nil {
-			if err := validateToken(r.Header.Get("Token")); err != nil {
+			if err := token.Validate(r.Header.Get("Token"), secret); err != nil {
 				if err := writeJSONResponse(w, http.StatusUnauthorized, "unauthorized: "+err.Error()); err != nil {
 					log.Printf("[BookRESTAPIServer] Error: %s", err.Error())
 					return
