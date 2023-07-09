@@ -73,9 +73,12 @@ func (s *GoBookAPIServer) handleRegister(w http.ResponseWriter, r *http.Request)
 	}
 
 	newUser := model.NewUser(createAccountRequest.Email, hashedPass, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
-	if err := s.storage.CreateUser(newUser); err != nil {
+	id, err := s.storage.InsertUser(newUser)
+	if err != nil {
 		return errors.New("error while creating new user")
 	}
+
+	newUser.ID = id
 
 	return writeJSONResponse(w, http.StatusOK, newUser)
 }
@@ -86,7 +89,7 @@ func (s *GoBookAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) er
 		return errors.New("invalid request body")
 	}
 
-	user, err := s.storage.GetUserByEmail(loginRequest.Email)
+	user, err := s.storage.SelectUserByEmail(loginRequest.Email)
 	if err != nil || user == nil {
 		return errors.New("invalid credentials")
 	}
@@ -104,7 +107,7 @@ func (s *GoBookAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) er
 }
 
 func (s *GoBookAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
-	books, err := s.storage.GetBooks()
+	books, err := s.storage.SelectAllBooks()
 	if err != nil {
 		return err
 	}
@@ -119,9 +122,12 @@ func (s *GoBookAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request)
 	}
 
 	newBook := model.NewBook(createBookRequest.Title, createBookRequest.Author)
-	if err := s.storage.CreateBook(newBook); err != nil {
+	id, err := s.storage.InsertBook(newBook)
+	if err != nil {
 		return errors.New("error while creating new book")
 	}
+
+	newBook.ID = id
 
 	return writeJSONResponse(w, http.StatusOK, newBook)
 }
@@ -135,7 +141,7 @@ func (s *GoBookAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Reque
 		return errors.New("invalid id")
 	}
 
-	book, err := s.storage.GetBookByID(id)
+	book, err := s.storage.SelectBookByID(id)
 	if err != nil {
 		return errors.New("not found")
 	}
@@ -152,7 +158,7 @@ func (s *GoBookAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Reque
 		return errors.New("invalid id")
 	}
 
-	_, err = s.storage.GetBookByID(id)
+	_, err = s.storage.SelectBookByID(id)
 	if err != nil {
 		return errors.New("not found")
 	}
@@ -178,12 +184,12 @@ func (s *GoBookAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.Re
 		return errors.New("invalid id")
 	}
 
-	_, err = s.storage.GetBookByID(id)
+	_, err = s.storage.SelectBookByID(id)
 	if err != nil {
 		return errors.New("not found")
 	}
 
-	if err := s.storage.DeleteBookByID(id); err != nil {
+	if err := s.storage.DeleteBook(id); err != nil {
 		return errors.New("error while deleting the book")
 	}
 

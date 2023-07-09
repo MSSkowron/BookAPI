@@ -10,7 +10,7 @@ import (
 func main() {
 	storage, err := storage.NewPostgresSQLStorage()
 	if err != nil {
-		log.Fatalln("error while creating storage: " + err.Error())
+		log.Fatalf("error while creating storage: %s", err.Error())
 	}
 
 	api.NewGoBookAPIServer(":8080", storage).Run()

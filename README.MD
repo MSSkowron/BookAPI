@@ -1,6 +1,6 @@
 # BookRESTAPI
 
-BookRESTAPI is a simple REST API written in Go language to manage books. We can perform basic CRUD operations on the database via the API.
+BookRESTAPI is a simple REST API written in Go language that allows you to manage books. It provides basic CRUD operations on a PostgreSQL database via the HTTP API.
 
 ## Technologies
 
@@ -10,27 +10,42 @@ BookRESTAPI is a simple REST API written in Go language to manage books. We can 
 
 ## Requirements
 
-We need to have Docker installed in order to run the application.
+To run the application, make sure you have Docker installed on your system.
 
 ## Installation
 
-`git clone https://github.com/MSSkowron/GoBookAPI`
+Clone the repository:
+
+```
+git clone https://github.com/MSSkowron/BookRESTAPI
+```
 
 ## How to run
 
+Navigate to the project directory:
+
 ```
-cd GoBookAPI
+cd BookRESTAPI
+```
+
+Start the application using Docker Compose:
+
+```
 docker-compose up
 ```
 
+The application will be accessible at http://localhost:8080.
+
 ## How to use the API
 
-GoBookAPI listens on the port 8080. It provides the following endpoints and methods:
+The BookRESTAPI exposes the following endpoints and methods:
 
-- **POST /register**
+### User Registration
+  Endpoint: `\register` Method: `POST`
 
-  JSON Request Body:
+  Registers a new user.
 
+  Request Body:
   ```json
   {
     "email": "string",
@@ -41,8 +56,7 @@ GoBookAPI listens on the port 8080. It provides the following endpoints and meth
   }
   ```
 
-  JSON Response Body:
-
+  Response Body:
   ```json
   {
     "id": "int64",
@@ -54,9 +68,12 @@ GoBookAPI listens on the port 8080. It provides the following endpoints and meth
   }
   ```
 
-- **POST /login**
-  JSON Request Body:
+### User Login
+  Endpoint: `\login` Method: `POST`
 
+  Authenticates a user and returns an authentication token.
+
+  Request Body:
   ```json
   {
     "email": "string",
@@ -64,31 +81,50 @@ GoBookAPI listens on the port 8080. It provides the following endpoints and meth
   }
   ```
 
-  Response: authentication token of type string
-  <br/>
-
-- In methods below we need to include the authentication token which we've received while logging in. The token should be set with the key "Token" in a request header.
-
-  - **GET /books**
-  - **POST /books**
-    JSON Request Body:
-
+  Response Body:
   ```json
   {
-    "author": "string",
-    "title": "string"
+    "token": "string"
   }
   ```
+  **Note**: The authentication token received in the response must be included in the request headers for the following endpoints.
 
-  - **GET /books/{id}**
-  - **PUT /books/{id}**
-    JSON Request Body:
 
-  ```json
-  {
-    "author": "string",
-    "title": "string"
-  }
-  ```
+### Book Management
+  - Endpoint: `\books` Method: `GET`
 
-  - **DELETE /books/{id}**
+    Retrieves a list of all books.
+
+  - Endpoint: `\books` Method: `POST`
+
+    Creates a new book.
+
+    Request Body:
+    ```json
+      {
+        "author": "string",
+        "title": "string"
+      }
+    ```
+
+  - Endpoint: `\books\{id}` Method: `POST`
+
+    Retrieves details of a specific book by ID.
+
+  - Endpoint: `\books\{id}` Method: `PUT`
+
+    Updates the details of a specific book by ID.
+    
+    Request Body:
+    ```json
+    {
+      "author": "string",
+      "title": "string"
+    }
+    ```
+
+  - Endpoint: `\books\{id}` Method: `DELETE`
+  
+    Deletes a specific book by ID.
+
+Remember to include the authentication token received during login by setting the token with the key "Token" in the request header for the above endpoints.
