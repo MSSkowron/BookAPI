@@ -8,18 +8,13 @@ import (
 	_ "github.com/lib/pq" // postgres driver
 )
 
-const (
-	driverName       = "postgres"
-	connectionString = "host=database user=postgres password=postgres dbname=postgres sslmode=disable"
-)
-
 // PostgresSQLStorage is a storage for PostgreSQL
 type PostgresSQLStorage struct {
 	db *sql.DB
 }
 
 // NewPostgresSQLStorage creates a new PostgresSQLStorage
-func NewPostgresSQLStorage() (*PostgresSQLStorage, error) {
+func NewPostgresSQLStorage(driverName, connectionString string) (*PostgresSQLStorage, error) {
 	db, err := sql.Open(driverName, connectionString)
 	if err != nil {
 		return nil, err

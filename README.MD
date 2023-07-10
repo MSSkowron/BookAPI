@@ -8,6 +8,16 @@ BookRESTAPI is a simple REST API written in Go language that allows you to manag
 - PostgreSQL 15
 - Docker
 
+## Important dependencies
+
+- `bcrypt` (golang.org/x/crypto): Used for bcrypt hashing.
+
+- `jwt` (github.com/golang-jwt/jwt): Used for simplifying JWT token handling.
+- `mux` (github.com/gorilla/mux): Used for creating the API server.
+- `viper` (github.com/spf13/viper): Used for managing configurations.
+- `testify` (github.com/stretchr/testify): Used for enhanced testing.
+- `pq` (github.com/lib/pq): Used for working with PostgreSQL databases.
+
 ## Requirements
 
 To run the application, make sure you have Docker installed on your system.

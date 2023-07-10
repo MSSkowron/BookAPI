@@ -16,11 +16,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var (
-	secret              = "super-secret-auth-key"
-	tokenExpirationTime = 10 * time.Minute
-)
-
 type apiFunc func(w http.ResponseWriter, r *http.Request) error
 
 func makeHTTPHandler(f apiFunc) http.HandlerFunc {
@@ -33,15 +28,19 @@ func makeHTTPHandler(f apiFunc) http.HandlerFunc {
 
 // BookRESTAPIServer is a server for handling REST API requests
 type BookRESTAPIServer struct {
-	listenAddr string
-	storage    storage.Storage
+	listenAddr    string
+	storage       storage.Storage
+	tokenSecret   string
+	tokenDuration time.Duration
 }
 
 // NewBookRESTAPIServer creates a new BookRESTAPIServer
-func NewBookRESTAPIServer(listenAddr string, storage storage.Storage) *BookRESTAPIServer {
+func NewBookRESTAPIServer(listenAddr, tokenSecret string, tokenDuration time.Duration, storage storage.Storage) *BookRESTAPIServer {
 	return &BookRESTAPIServer{
-		listenAddr: listenAddr,
-		storage:    storage,
+		listenAddr:    listenAddr,
+		storage:       storage,
+		tokenSecret:   tokenSecret,
+		tokenDuration: tokenDuration,
 	}
 }
 
@@ -51,11 +50,11 @@ func (s *BookRESTAPIServer) Run() {
 
 	r.HandleFunc("/register", makeHTTPHandler(s.handleRegister)).Methods("POST")
 	r.HandleFunc("/login", makeHTTPHandler(s.handleLogin)).Methods("POST")
-	r.HandleFunc("/books", validateJWT(s.handleGetBooks)).Methods("GET")
-	r.HandleFunc("/books", validateJWT(s.handlePostBook)).Methods("POST")
-	r.HandleFunc("/books/{id}", validateJWT(s.handleGetBookByID)).Methods("GET")
-	r.HandleFunc("/books/{id}", validateJWT(s.handlePutBookByID)).Methods("PUT")
-	r.HandleFunc("/books/{id}", validateJWT(s.handleDeleteBookByID)).Methods("DELETE")
+	r.HandleFunc("/books", s.validateJWT(s.handleGetBooks)).Methods("GET")
+	r.HandleFunc("/books", s.validateJWT(s.handlePostBook)).Methods("POST")
+	r.HandleFunc("/books/{id}", s.validateJWT(s.handleGetBookByID)).Methods("GET")
+	r.HandleFunc("/books/{id}", s.validateJWT(s.handlePutBookByID)).Methods("PUT")
+	r.HandleFunc("/books/{id}", s.validateJWT(s.handleDeleteBookByID)).Methods("DELETE")
 
 	log.Println("[BookRESTAPIServer] Server is running on: " + s.listenAddr)
 
@@ -106,7 +105,7 @@ func (s *BookRESTAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) 
 		return writeJSONResponse(w, http.StatusUnauthorized, errors.New("invalid credentials"))
 	}
 
-	token, err := token.Generate(user.ID, user.Email, secret, tokenExpirationTime)
+	token, err := token.Generate(user.ID, user.Email, s.tokenSecret, s.tokenDuration)
 	if err != nil {
 		return writeJSONResponse(w, http.StatusInternalServerError, fmt.Errorf("error while generating token: %w", err))
 	}
@@ -204,10 +203,10 @@ func (s *BookRESTAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.
 	return writeJSONResponse(w, http.StatusOK, nil)
 }
 
-func validateJWT(f apiFunc) http.HandlerFunc {
+func (s *BookRESTAPIServer) validateJWT(f apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] != nil {
-			if err := token.Validate(r.Header.Get("Token"), secret); err != nil {
+			if err := token.Validate(r.Header.Get("Token"), s.tokenSecret); err != nil {
 				if err := writeJSONResponse(w, http.StatusUnauthorized, "unauthorized: "+err.Error()); err != nil {
 					log.Printf("[BookRESTAPIServer] Error: %s", err.Error())
 					return
