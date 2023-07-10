@@ -36,8 +36,9 @@ func NewLoginRequest(email string, password string) *LoginRequest {
 
 // CreateBookRequest represents a create book request
 type CreateBookRequest struct {
-	Author string `json:"author"`
-	Title  string `json:"title"`
+	CreatedBy int64  `json:"created_by"`
+	Author    string `json:"author"`
+	Title     string `json:"title"`
 }
 
 // NewCreateBookRequest creates a new create book request

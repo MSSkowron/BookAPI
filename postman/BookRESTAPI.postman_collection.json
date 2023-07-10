@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"email\": \"email@email.com\",\r\n    \"password\": \"password\",\r\n    \"firstName\": \"firstName\",\r\n    \"lastName\": \"lastName\",\r\n    \"age\": 18\r\n}",
+					"raw": "{\r\n    \"email\": \"email@test.com\",\r\n    \"password\": \"password\",\r\n    \"first_name\": \"firstName\",\r\n    \"last_name\": \"lastName\",\r\n    \"age\": 18\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -41,7 +41,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"email\": \"email@email.com\",\r\n    \"password\": \"password\"\r\n}",
+					"raw": "{\r\n    \"email\": \"email@test.com\",\r\n    \"password\": \"password\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -69,7 +69,7 @@
 				"header": [
 					{
 						"key": "Token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGVtYWlsLmNvbSIsImV4cGlyZXNBdCI6MTY4ODkzODIzOX0.KpqlrImhagqCGlcZXbQxc9Z8oO-LsOct4F3NIVRZagc",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
 						"type": "text"
 					}
 				],
@@ -94,7 +94,7 @@
 				"header": [
 					{
 						"key": "Token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGVtYWlsLmNvbSIsImV4cGlyZXNBdCI6MTY4ODkzODIzOX0.KpqlrImhagqCGlcZXbQxc9Z8oO-LsOct4F3NIVRZagc",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
 						"type": "text"
 					}
 				],
@@ -190,7 +190,7 @@
 				"header": [
 					{
 						"key": "Token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGVtYWlsLmNvbSIsImV4cGlyZXNBdCI6MTY4ODkzODIzOX0.KpqlrImhagqCGlcZXbQxc9Z8oO-LsOct4F3NIVRZagc",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
 						"type": "text"
 					}
 				],

@@ -61,7 +61,7 @@ func (s *PostgresSQLStorage) SelectUserByEmail(email string) (*model.User, error
 
 	row := s.db.QueryRow(query, email)
 	user := &model.User{}
-	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age)
+	err := row.Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age)
 	if err != nil {
 		log.Printf("[PostgresSQLStorage] Error while selecting user with email %s: %s", email, err.Error())
 		return nil, err
@@ -103,7 +103,7 @@ func (s *PostgresSQLStorage) SelectAllBooks() ([]*model.Book, error) {
 	books := []*model.Book{}
 	for rows.Next() {
 		book := &model.Book{}
-		if err := rows.Scan(&book.ID, &book.Title, &book.Author); err != nil {
+		if err := rows.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author); err != nil {
 			log.Printf("[PostgresSQLStorage] Error while selecting all books: %s", err.Error())
 			return nil, err
 		}
@@ -122,7 +122,7 @@ func (s *PostgresSQLStorage) SelectBookByID(id int) (*model.Book, error) {
 
 	row := s.db.QueryRow(query, id)
 	book := &model.Book{}
-	if err := row.Scan(&book.ID, &book.Title, &book.Author); err != nil {
+	if err := row.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author); err != nil {
 		log.Printf("[PostgresSQLStorage] Error while selecting book with ID %d: %s", id, err.Error())
 		return nil, err
 	}

@@ -70,6 +70,11 @@ func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Reques
 		return writeJSONResponse(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
 	}
 
+	user, _ := s.storage.SelectUserByEmail(createAccountRequest.Email)
+	if user != nil {
+		return writeJSONResponse(w, http.StatusBadRequest, "user with this email already exists")
+	}
+
 	hashedPass, err := crypto.HashPassword(createAccountRequest.Password)
 	if err != nil {
 		return writeJSONResponse(w, http.StatusInternalServerError, fmt.Errorf("error while hashing password: %w", err))
