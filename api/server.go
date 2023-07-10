@@ -90,7 +90,7 @@ func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Reques
 
 	newUser.ID = id
 
-	respondWithJSON(w, http.StatusCreated, newUser)
+	respondWithJSON(w, http.StatusOK, newUser)
 
 	return nil
 }
