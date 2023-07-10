@@ -14,7 +14,7 @@ func main() {
 		log.Fatalf("Error while loading config: %s", err.Error())
 	}
 
-	storage, err := storage.NewPostgresSQLStorage(config.DBDriver, config.DBSource)
+	storage, err := storage.NewPostgresSQLStorage(config.DBSource)
 	if err != nil {
 		log.Fatalf("Error while creating storage: %s", err.Error())
 	}
