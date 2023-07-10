@@ -1,4 +1,4 @@
-package model
+package types
 
 // CreateAccountRequest represents a create account request
 type CreateAccountRequest struct {

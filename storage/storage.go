@@ -1,16 +1,16 @@
 package storage
 
 import (
-	"github.com/MSSkowron/BookRESTAPI/model"
+	"github.com/MSSkowron/BookRESTAPI/types"
 )
 
 // Storage is an interface for storage
 type Storage interface {
-	InsertUser(user *model.User) (int, error)
-	SelectUserByEmail(email string) (*model.User, error)
-	InsertBook(book *model.Book) (int, error)
-	SelectBookByID(id int) (*model.Book, error)
-	SelectAllBooks() ([]*model.Book, error)
+	InsertUser(user *types.User) (int, error)
+	SelectUserByEmail(email string) (*types.User, error)
+	InsertBook(book *types.Book) (int, error)
+	SelectBookByID(id int) (*types.Book, error)
+	SelectAllBooks() ([]*types.Book, error)
 	DeleteBook(id int) error
-	UpdateBook(book *model.Book) error
+	UpdateBook(book *types.Book) error
 }
