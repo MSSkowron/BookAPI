@@ -65,7 +65,12 @@ func (s *BookRESTAPIServer) Run() {
 func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	createAccountRequest := &model.CreateAccountRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("invalid request body: %v", err))
+		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		return nil
+	}
+
+	if createAccountRequest.Email == "" || createAccountRequest.Password == "" || createAccountRequest.FirstName == "" || createAccountRequest.LastName == "" || createAccountRequest.Age == 0 {
+		respondWithError(w, http.StatusBadRequest, "invalid request body")
 		return nil
 	}
 
