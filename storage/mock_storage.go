@@ -114,3 +114,50 @@ func (s *MockStorage) DeleteBook(id int) error {
 func (s *MockStorage) UpdateBook(book *model.Book) error {
 	return nil
 }
+
+// Reset resets the storage to its initial state
+func (s *MockStorage) Reset() {
+	users = []*model.User{
+		{
+			ID:        1,
+			Email:     "johndoe@net.eu",
+			Password:  "johnpassword",
+			FirstName: "John",
+			LastName:  "Doe",
+			Age:       30,
+		},
+		{
+			ID:        2,
+			Email:     "janedoe@net.eu",
+			Password:  "janepassword",
+			FirstName: "Jane",
+			LastName:  "Doe",
+			Age:       25,
+		},
+		{
+			ID:        3,
+			Email:     "jankowalski@net.pl",
+			Password:  "janpassword",
+			FirstName: "Jan",
+			LastName:  "Kowalski",
+			Age:       30,
+		},
+	}
+	books = []*model.Book{
+		{
+			ID:     1,
+			Author: "J.R.R. Tolkien",
+			Title:  "The Lord of the Rings",
+		},
+		{
+			ID:     2,
+			Author: "J.K. Rowling",
+			Title:  "Harry Potter",
+		},
+		{
+			ID:     3,
+			Author: "Stephen King",
+			Title:  "The Shining",
+		},
+	}
+}

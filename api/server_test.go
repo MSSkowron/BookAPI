@@ -15,6 +15,8 @@ import (
 
 func TestHandleRegister(t *testing.T) {
 	mockStorage := storage.NewMockStorage()
+	defer mockStorage.Reset()
+
 	server := NewBookRESTAPIServer("0.0.0.0:8080", "secret1234567890", 1*time.Minute, mockStorage)
 	testServer := httptest.NewServer(makeHTTPHandler(server.handleRegister))
 	defer testServer.Close()
@@ -65,8 +67,9 @@ func TestHandleRegister(t *testing.T) {
 
 func TestHandleLogin(t *testing.T) {
 	mockStorage := storage.NewMockStorage()
-	server := NewBookRESTAPIServer("0.0.0.0:8080", "secret1234567890", 1*time.Minute, mockStorage)
+	defer mockStorage.Reset()
 
+	server := NewBookRESTAPIServer("0.0.0.0:8080", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister))
