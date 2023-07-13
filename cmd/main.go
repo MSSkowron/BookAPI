@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 
 	"github.com/MSSkowron/BookRESTAPI/api"
@@ -9,7 +10,10 @@ import (
 )
 
 func main() {
-	config, err := config.LoadConfig("./config.env")
+	configFileFlag := flag.String("configFile", "./config.env", "path to a configuration file")
+	flag.Parse()
+
+	config, err := config.LoadConfig(*configFileFlag)
 	if err != nil {
 		log.Fatalf("Error while loading config: %s", err.Error())
 	}
