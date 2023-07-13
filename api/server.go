@@ -65,31 +65,31 @@ func (s *BookRESTAPIServer) Run() {
 func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	createAccountRequest := &model.CreateAccountRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid request body"})
 		return nil
 	}
 
 	if createAccountRequest.Email == "" || createAccountRequest.Password == "" || createAccountRequest.FirstName == "" || createAccountRequest.LastName == "" || createAccountRequest.Age == 0 {
-		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid request body"})
 		return nil
 	}
 
 	user, _ := s.storage.SelectUserByEmail(createAccountRequest.Email)
 	if user != nil {
-		respondWithError(w, http.StatusBadRequest, "user with this email already exists")
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "user already exists"})
 		return nil
 	}
 
 	hashedPass, err := crypto.HashPassword(createAccountRequest.Password)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error while hashing password: %v", err))
+		respondWithError(w, http.StatusInternalServerError, model.ErrorResponse{Error: "error while hashing password"})
 		return fmt.Errorf("error while hashing password: %w", err)
 	}
 
 	newUser := model.NewUser(createAccountRequest.Email, hashedPass, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
 	id, err := s.storage.InsertUser(newUser)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error while inserting user: %v", err))
+		respondWithError(w, http.StatusInternalServerError, model.ErrorResponse{Error: "error while inserting user"})
 		return fmt.Errorf("error while inserting user: %w", err)
 	}
 
@@ -103,33 +103,33 @@ func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Reques
 func (s *BookRESTAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	loginRequest := &model.LoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid request body"})
 		return nil
 	}
 
 	if loginRequest.Email == "" || loginRequest.Password == "" {
-		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid request body"})
 		return nil
 	}
 
 	user, err := s.storage.SelectUserByEmail(loginRequest.Email)
 	if err != nil || user == nil {
-		respondWithError(w, http.StatusUnauthorized, "invalid credentials")
+		respondWithError(w, http.StatusUnauthorized, model.ErrorResponse{Error: "invalid credentials"})
 		return nil
 	}
 
 	if err := crypto.CheckPassword(loginRequest.Password, user.Password); err != nil {
-		respondWithError(w, http.StatusUnauthorized, "invalid credentials")
+		respondWithError(w, http.StatusUnauthorized, model.ErrorResponse{Error: "invalid credentials"})
 		return nil
 	}
 
 	token, err := token.Generate(user.ID, user.Email, s.tokenSecret, s.tokenDuration)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error while generating token: %v", err))
+		respondWithError(w, http.StatusInternalServerError, model.ErrorResponse{Error: "error while generating token"})
 		return fmt.Errorf("error while generating token: %w", err)
 	}
 
-	respondWithJSON(w, http.StatusOK, map[string]string{"token": token})
+	respondWithJSON(w, http.StatusOK, model.LoginResponse{Token: token})
 
 	return nil
 }
@@ -137,7 +137,7 @@ func (s *BookRESTAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) 
 func (s *BookRESTAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
 	books, err := s.storage.SelectAllBooks()
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error while getting books: %v", err))
+		respondWithError(w, http.StatusInternalServerError, model.ErrorResponse{Error: "error while getting books"})
 		return fmt.Errorf("error while getting books: %w", err)
 	}
 
@@ -149,19 +149,19 @@ func (s *BookRESTAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Reques
 func (s *BookRESTAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 	createBookRequest := &model.CreateBookRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createBookRequest); err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid request body"})
 		return nil
 	}
 
 	if createBookRequest.Title == "" || createBookRequest.Author == "" {
-		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid request body"})
 		return nil
 	}
 
 	newBook := model.NewBook(createBookRequest.Title, createBookRequest.Author)
 	id, err := s.storage.InsertBook(newBook)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error while creating new book: %v", err))
+		respondWithError(w, http.StatusInternalServerError, model.ErrorResponse{Error: "error while creating new book"})
 		return fmt.Errorf("error while creating new book: %w", err)
 	}
 
@@ -178,13 +178,13 @@ func (s *BookRESTAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Req
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid id")
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid id"})
 		return nil
 	}
 
 	book, err := s.storage.SelectBookByID(id)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "not found")
+		respondWithError(w, http.StatusNotFound, model.ErrorResponse{Error: "not found"})
 		return nil
 	}
 
@@ -199,24 +199,24 @@ func (s *BookRESTAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Req
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "invalid id")
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid id"})
 		return nil
 	}
 
 	_, err = s.storage.SelectBookByID(id)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "not found")
+		respondWithError(w, http.StatusNotFound, model.ErrorResponse{Error: "not found"})
 		return nil
 	}
 
 	book := &model.Book{}
 	if err := json.NewDecoder(r.Body).Decode(book); err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("invalid request body: %s", err))
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid request body"})
 		return nil
 	}
 
 	if err := s.storage.UpdateBook(book); err != nil {
-		respondWithError(w, http.StatusInternalServerError, "error while updating the book")
+		respondWithError(w, http.StatusInternalServerError, model.ErrorResponse{Error: "error while updating the book"})
 		return fmt.Errorf("error while updating the book: %s", err)
 	}
 
@@ -231,18 +231,18 @@ func (s *BookRESTAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("invalid id: %s", idString))
+		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid id"})
 		return nil
 	}
 
 	_, err = s.storage.SelectBookByID(id)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, fmt.Sprintf("book with id %d not found", id))
+		respondWithError(w, http.StatusNotFound, model.ErrorResponse{Error: "not found"})
 		return nil
 	}
 
 	if err := s.storage.DeleteBook(id); err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error while deleting the book with id %d", id))
+		respondWithError(w, http.StatusInternalServerError, model.ErrorResponse{Error: "error while deleting the book"})
 		return fmt.Errorf("error while deleting the book: %s", err.Error())
 	}
 
@@ -255,7 +255,7 @@ func validateJWT(f apiFunc, tokenSecret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] != nil {
 			if err := token.Validate(r.Header.Get("Token"), tokenSecret); err != nil {
-				respondWithError(w, http.StatusUnauthorized, "unauthorized")
+				respondWithError(w, http.StatusUnauthorized, model.ErrorResponse{Error: "unauthorized"})
 				return
 			}
 
@@ -263,13 +263,13 @@ func validateJWT(f apiFunc, tokenSecret string) http.HandlerFunc {
 				log.Printf("[BookRESTAPIServer] Error: %s", err.Error())
 			}
 		} else {
-			respondWithError(w, http.StatusUnauthorized, "unauthorized")
+			respondWithError(w, http.StatusUnauthorized, model.ErrorResponse{Error: "unauthorized"})
 		}
 	}
 }
 
-func respondWithError(w http.ResponseWriter, code int, message string) {
-	respondWithJSON(w, code, map[string]string{"error": message})
+func respondWithError(w http.ResponseWriter, code int, errorResponse model.ErrorResponse) {
+	respondWithJSON(w, code, errorResponse)
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload any) {

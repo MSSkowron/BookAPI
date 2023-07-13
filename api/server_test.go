@@ -89,15 +89,12 @@ func TestHandleRegister(t *testing.T) {
 				assert.Equal(t, "test", responseBodyUser.LastName, "Last name should be equal")
 				assert.Equal(t, 30, responseBodyUser.Age, "Age should be equal")
 			case http.StatusBadRequest:
-				var responseBodyError struct {
-					Error string `json:"error"`
-				}
-
-				err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+				responseError := model.ErrorResponse{}
+				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				assert.NoError(t, err)
 
-				assert.NotEmpty(t, responseBodyError.Error)
-				assert.Equal(t, "invalid request body", responseBodyError.Error)
+				assert.NotEmpty(t, responseError.Error)
+				assert.Equal(t, "invalid request body", responseError.Error)
 			default:
 				t.Fatalf("unexpected status code: %d", d.expectedStatusCode)
 			}
@@ -122,14 +119,11 @@ func TestHandleRegister(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	var responseBodyError struct {
-		Error string `json:"error"`
-	}
-
-	err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+	responseError := model.ErrorResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "user with this email already exists", responseBodyError.Error)
+	assert.Equal(t, "user already exists", responseError.Error)
 }
 
 func TestHandleLogin(t *testing.T) {
@@ -236,34 +230,24 @@ func TestHandleLogin(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				var responseBodyLoginResponse struct {
-					Token string `json:"token"`
-				}
-
-				err = json.NewDecoder(resp.Body).Decode(&responseBodyLoginResponse)
+				loginResponse := model.LoginResponse{}
+				err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 				assert.NoError(t, err)
-
-				assert.NotEmpty(t, responseBodyLoginResponse.Token)
+				assert.NotEmpty(t, loginResponse.Token)
 			case http.StatusUnauthorized:
-				var responseBodyError struct {
-					Error string `json:"error"`
-				}
-
-				err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+				responseError := model.ErrorResponse{}
+				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				assert.NoError(t, err)
 
-				assert.NotEmpty(t, responseBodyError.Error)
-				assert.Equal(t, "invalid credentials", responseBodyError.Error)
+				assert.NotEmpty(t, responseError.Error)
+				assert.Equal(t, "invalid credentials", responseError.Error)
 			case http.StatusBadRequest:
-				var responseBodyError struct {
-					Error string `json:"error"`
-				}
-
-				err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+				responseError := model.ErrorResponse{}
+				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				assert.NoError(t, err)
 
-				assert.NotEmpty(t, responseBodyError.Error)
-				assert.Equal(t, "invalid request body", responseBodyError.Error)
+				assert.NotEmpty(t, responseError.Error)
+				assert.Equal(t, "invalid request body", responseError.Error)
 			default:
 				t.Fatalf("unexpected status code: %d", d.expectedStatusCode)
 			}
@@ -317,13 +301,10 @@ func TestHandlePostBook(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var responseBody struct {
-		Token string `json:"token"`
-	}
-
-	err = json.NewDecoder(resp.Body).Decode(&responseBody)
+	loginResponse := model.LoginResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, responseBody.Token)
+	assert.NotEmpty(t, loginResponse.Token)
 
 	data := []struct {
 		name               string
@@ -366,7 +347,7 @@ func TestHandlePostBook(t *testing.T) {
 			req, err := http.NewRequest(http.MethodPost, testServer.URL+"/books", bytes.NewReader(bookJSON))
 			assert.NoError(t, err)
 
-			req.Header.Set("Token", responseBody.Token)
+			req.Header.Set("Token", loginResponse.Token)
 
 			resp, err := http.DefaultClient.Do(req)
 			assert.NoError(t, err)
@@ -376,8 +357,7 @@ func TestHandlePostBook(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				var responseBodyBook model.Book
-
+				responseBodyBook := model.Book{}
 				err = json.NewDecoder(resp.Body).Decode(&responseBodyBook)
 				assert.NoError(t, err)
 
@@ -385,15 +365,12 @@ func TestHandlePostBook(t *testing.T) {
 				assert.Equal(t, "test", responseBodyBook.Author)
 				assert.Equal(t, "test", responseBodyBook.Title)
 			case http.StatusBadRequest:
-				var responseBodyError struct {
-					Error string `json:"error"`
-				}
-
-				err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+				responseError := model.ErrorResponse{}
+				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				assert.NoError(t, err)
 
-				assert.NotEmpty(t, responseBodyError.Error)
-				assert.Equal(t, "invalid request body", responseBodyError.Error)
+				assert.NotEmpty(t, responseError.Error)
+				assert.Equal(t, "invalid request body", responseError.Error)
 			default:
 				t.Fatalf("unexpected status code: %d", d.expectedStatusCode)
 			}
@@ -412,15 +389,12 @@ func TestHandlePostBook(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	var responseBodyError struct {
-		Error string `json:"error"`
-	}
-
-	err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+	responseError := model.ErrorResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	assert.NoError(t, err)
 
-	assert.NotEmpty(t, responseBodyError.Error)
-	assert.Equal(t, "unauthorized", responseBodyError.Error)
+	assert.NotEmpty(t, responseError.Error)
+	assert.Equal(t, "unauthorized", responseError.Error)
 
 	// test no token
 	req, err = http.NewRequest(http.MethodPost, testServer.URL+"/books", nil)
@@ -432,11 +406,11 @@ func TestHandlePostBook(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	assert.NoError(t, err)
 
-	assert.NotEmpty(t, responseBodyError.Error)
-	assert.Equal(t, "unauthorized", responseBodyError.Error)
+	assert.NotEmpty(t, responseError.Error)
+	assert.Equal(t, "unauthorized", responseError.Error)
 }
 
 func TestHandleGetBookByID(t *testing.T) {
