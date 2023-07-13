@@ -54,7 +54,7 @@ func (s *PostgresSQLStorage) InsertUser(user *model.User) (int, error) {
 	return id, nil
 }
 
-// SelectUserByEmail selects a user by email
+// SelectUserByEmail selects a user with given email
 func (s *PostgresSQLStorage) SelectUserByEmail(email string) (*model.User, error) {
 	query := "SELECT * FROM users WHERE email=$1"
 
@@ -115,7 +115,7 @@ func (s *PostgresSQLStorage) SelectAllBooks() ([]*model.Book, error) {
 	return books, nil
 }
 
-// SelectBookByID selects a book by ID
+// SelectBookByID selects a book with given ID
 func (s *PostgresSQLStorage) SelectBookByID(id int) (*model.Book, error) {
 	query := "SELECT * FROM books WHERE id=$1"
 
@@ -131,7 +131,7 @@ func (s *PostgresSQLStorage) SelectBookByID(id int) (*model.Book, error) {
 	return book, nil
 }
 
-// DeleteBook deletes a book by ID
+// DeleteBook deletes a book with given ID
 func (s *PostgresSQLStorage) DeleteBook(id int) error {
 	query := "DELETE FROM books WHERE id=$1"
 
@@ -145,7 +145,7 @@ func (s *PostgresSQLStorage) DeleteBook(id int) error {
 	return nil
 }
 
-// UpdateBook updates a book
+// UpdateBook updates a book with given ID
 func (s *PostgresSQLStorage) UpdateBook(book *model.Book) error {
 	query := "UPDATE books SET author = $1, title = $2 WHERE id = $3"
 

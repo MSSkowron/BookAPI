@@ -16,9 +16,9 @@ var (
 )
 
 // Generate generates a new JWT token
-func Generate(userId int, userEmail, secret string, expirationTime time.Duration) (tokenString string, err error) {
+func Generate(userID int, userEmail, secret string, expirationTime time.Duration) (tokenString string, err error) {
 	claims := &jwt.MapClaims{
-		"id":        userId,
+		"id":        userID,
 		"email":     userEmail,
 		"expiresAt": time.Now().Add(expirationTime).Unix(),
 	}

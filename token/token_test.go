@@ -11,7 +11,7 @@ func TestGenerateAndValidateToken(t *testing.T) {
 	// Test cases
 	tests := []struct {
 		name                  string
-		userId                int
+		userID                int
 		userEmail             string
 		secret                string
 		expirationTime        time.Duration
@@ -20,7 +20,7 @@ func TestGenerateAndValidateToken(t *testing.T) {
 	}{
 		{
 			name:                  "Valid token",
-			userId:                1,
+			userID:                1,
 			userEmail:             "test@example.com",
 			secret:                "secret",
 			expirationTime:        time.Hour,
@@ -29,7 +29,7 @@ func TestGenerateAndValidateToken(t *testing.T) {
 		},
 		{
 			name:                  "Expired token",
-			userId:                1,
+			userID:                1,
 			userEmail:             "test@example.com",
 			secret:                "secret",
 			expirationTime:        -time.Hour, // Negative expiration time
@@ -40,7 +40,7 @@ func TestGenerateAndValidateToken(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			tokenString, err := Generate(test.userId, test.userEmail, test.secret, test.expirationTime)
+			tokenString, err := Generate(test.userID, test.userEmail, test.secret, test.expirationTime)
 			assert.Equal(t, test.expectedGenerateError, err)
 
 			err = Validate(tokenString, test.secret)

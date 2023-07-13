@@ -52,12 +52,15 @@ var (
 	}
 )
 
+// MockStorage is a mock implementation of Storage interface
 type MockStorage struct{}
 
+// NewMockStorage creates a new MockStorage
 func NewMockStorage() *MockStorage {
 	return &MockStorage{}
 }
 
+// InsertUser inserts a new user
 func (s *MockStorage) InsertUser(user *model.User) (int, error) {
 	for _, u := range users {
 		if u.Email == user.Email {
@@ -70,6 +73,7 @@ func (s *MockStorage) InsertUser(user *model.User) (int, error) {
 	return len(users), nil
 }
 
+// SelectUserByEmail selects a user with given email
 func (s *MockStorage) SelectUserByEmail(email string) (*model.User, error) {
 	for _, user := range users {
 		if user.Email == email {
@@ -80,10 +84,12 @@ func (s *MockStorage) SelectUserByEmail(email string) (*model.User, error) {
 	return nil, nil
 }
 
+// InsertBook inserts a new book
 func (s *MockStorage) InsertBook(book *model.Book) (int, error) {
 	return 4, nil
 }
 
+// SelectBookByID selects a book with given ID
 func (s *MockStorage) SelectBookByID(id int) (*model.Book, error) {
 	for _, book := range books {
 		if book.ID == id {
@@ -94,18 +100,17 @@ func (s *MockStorage) SelectBookByID(id int) (*model.Book, error) {
 	return nil, nil
 }
 
+// SelectAllBooks selects all books
 func (s *MockStorage) SelectAllBooks() ([]*model.Book, error) {
 	return books, nil
 }
 
+// DeleteBook deletes a book with given ID
 func (s *MockStorage) DeleteBook(id int) error {
 	return nil
 }
 
+// UpdateBook updates a book with given ID
 func (s *MockStorage) UpdateBook(book *model.Book) error {
 	return nil
-}
-
-func (s *MockStorage) Reset() {
-	fmt.Printf("%+v\n", users)
 }

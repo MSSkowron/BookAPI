@@ -16,4 +16,4 @@ lint:
 clean:
 	@rm -rf bin/$(BINARY_NAME)
 
-.PHONY: build run test clean
+.PHONY: build run test lint clean
