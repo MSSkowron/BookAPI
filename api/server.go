@@ -98,7 +98,12 @@ func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Reques
 func (s *BookRESTAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	loginRequest := &model.LoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("invalid request body: %v", err))
+		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		return nil
+	}
+
+	if loginRequest.Email == "" || loginRequest.Password == "" {
+		respondWithError(w, http.StatusBadRequest, "invalid request body")
 		return nil
 	}
 
