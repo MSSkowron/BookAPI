@@ -70,6 +70,7 @@ The BookRESTAPI exposes the following endpoints and methods:
   ```json
   {
     "id": "int64",
+    "created_at": "time.Time",
     "email": "string",
     "password": "string",
     "firstName": "string",
@@ -136,5 +137,14 @@ The BookRESTAPI exposes the following endpoints and methods:
   - Endpoint: `\books\{id}` Method: `DELETE`
   
     Deletes a specific book by ID.
+
+### Errors
+In case of errors, the server returns an appropriate status code and JSON in the following format:
+
+```json
+{
+  "error": "string"
+}
+```
 
 Remember to include the authentication token received during login by setting the token with the key "Token" in the request header for the above endpoints.
