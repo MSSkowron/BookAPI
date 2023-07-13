@@ -1,6 +1,10 @@
 package storage
 
-import "github.com/MSSkowron/BookRESTAPI/model"
+import (
+	"fmt"
+
+	"github.com/MSSkowron/BookRESTAPI/model"
+)
 
 var (
 	users []*model.User = []*model.User{
@@ -55,7 +59,15 @@ func NewMockStorage() *MockStorage {
 }
 
 func (s *MockStorage) InsertUser(user *model.User) (int, error) {
-	return 4, nil
+	for _, u := range users {
+		if u.Email == user.Email {
+			return -1, fmt.Errorf("user with email %s already exists", user.Email)
+		}
+	}
+
+	users = append(users, user)
+
+	return len(users), nil
 }
 
 func (s *MockStorage) SelectUserByEmail(email string) (*model.User, error) {
@@ -92,4 +104,8 @@ func (s *MockStorage) DeleteBook(id int) error {
 
 func (s *MockStorage) UpdateBook(book *model.Book) error {
 	return nil
+}
+
+func (s *MockStorage) Reset() {
+	fmt.Printf("%+v\n", users)
 }

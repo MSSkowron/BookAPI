@@ -14,7 +14,8 @@ import (
 )
 
 func TestHandleRegister(t *testing.T) {
-	server := NewBookRESTAPIServer("0.0.0.0:8080", "secret1234567890", 1*time.Minute, storage.NewMockStorage())
+	mockStorage := storage.NewMockStorage()
+	server := NewBookRESTAPIServer("0.0.0.0:8080", "secret1234567890", 1*time.Minute, mockStorage)
 	testServer := httptest.NewServer(makeHTTPHandler(server.handleRegister))
 	defer testServer.Close()
 
@@ -35,20 +36,34 @@ func TestHandleRegister(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	responseBody := &model.User{}
-	err = json.NewDecoder(resp.Body).Decode(responseBody)
+	responseBodyUser := model.User{}
+	err = json.NewDecoder(resp.Body).Decode(&responseBodyUser)
 	assert.NoError(t, err)
 
-	assert.NotEmpty(t, responseBody.ID, "ID should not be empty")
-	assert.Equal(t, responseBody.ID, 4, "ID should be equal to 4")
-	assert.Equal(t, createAccountRequest.Email, responseBody.Email, "Email should be equal")
-	assert.Equal(t, createAccountRequest.FirstName, responseBody.FirstName, "First name should be equal")
-	assert.Equal(t, createAccountRequest.LastName, responseBody.LastName, "Last name should be equal")
-	assert.Equal(t, createAccountRequest.Age, int64(responseBody.Age), "Age should be equal")
+	assert.NotEmpty(t, responseBodyUser.ID, "ID should not be empty")
+	assert.Equal(t, 4, responseBodyUser.ID, "ID should be equal to 4")
+	assert.Equal(t, createAccountRequest.Email, responseBodyUser.Email, "Email should be equal")
+	assert.Equal(t, createAccountRequest.FirstName, responseBodyUser.FirstName, "First name should be equal")
+	assert.Equal(t, createAccountRequest.LastName, responseBodyUser.LastName, "Last name should be equal")
+	assert.Equal(t, createAccountRequest.Age, int64(responseBodyUser.Age), "Age should be equal")
+
+	resp, err = http.Post(testServer.URL+"/register", "application/json", bytes.NewReader(createAccountRequestJSON))
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	var responseBodyError struct {
+		Error string `json:"error"`
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "user with this email already exists", responseBodyError.Error)
 }
 
 func TestHandleLogin(t *testing.T) {
-	//TODO
 }
 
 func TestHandleGetBooks(t *testing.T) {
