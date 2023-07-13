@@ -272,7 +272,171 @@ func TestHandleLogin(t *testing.T) {
 }
 
 func TestHandlePostBook(t *testing.T) {
-	//TODO
+	mockStorage := storage.NewMockStorage()
+	defer mockStorage.Reset()
+
+	server := NewBookRESTAPIServer("0.0.0.0:8080", "secret1234567890", 1*time.Minute, mockStorage)
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister))
+	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin))
+	mux.HandleFunc("/books", validateJWT(server.handlePostBook, server.tokenSecret))
+
+	testServer := httptest.NewServer(mux)
+	defer testServer.Close()
+
+	createAccountRequest := model.CreateAccountRequest{
+		Email:     "test@test.com",
+		Password:  "test",
+		FirstName: "test",
+		LastName:  "test",
+		Age:       30,
+	}
+
+	createAccountRequestJSON, err := json.Marshal(createAccountRequest)
+	assert.NoError(t, err)
+
+	resp, err := http.Post(testServer.URL+"/register", "application/json", bytes.NewReader(createAccountRequestJSON))
+	assert.NoError(t, err)
+
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	loginRequest := model.LoginRequest{
+		Email:    "test@test.com",
+		Password: "test",
+	}
+
+	loginRequestJSON, err := json.Marshal(loginRequest)
+	assert.NoError(t, err)
+
+	resp, err = http.Post(testServer.URL+"/login", "application/json", bytes.NewReader(loginRequestJSON))
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var responseBody struct {
+		Token string `json:"token"`
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&responseBody)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, responseBody.Token)
+
+	data := []struct {
+		name               string
+		input              any
+		expectedStatusCode int
+	}{
+		{
+			name: "valid",
+			input: model.Book{
+				Author: "test",
+				Title:  "test",
+			},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name: "no title",
+			input: model.Book{
+				Author: "test",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "bad request",
+			input: struct {
+				Author string `json:"author"`
+				Title  int    `json:"title"`
+			}{
+				Author: "test",
+				Title:  123,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			bookJSON, err := json.Marshal(d.input)
+			assert.NoError(t, err)
+
+			req, err := http.NewRequest(http.MethodPost, testServer.URL+"/books", bytes.NewReader(bookJSON))
+			assert.NoError(t, err)
+
+			req.Header.Set("Token", responseBody.Token)
+
+			resp, err := http.DefaultClient.Do(req)
+			assert.NoError(t, err)
+			defer resp.Body.Close()
+
+			assert.Equal(t, d.expectedStatusCode, resp.StatusCode)
+
+			switch d.expectedStatusCode {
+			case http.StatusOK:
+				var responseBodyBook model.Book
+
+				err = json.NewDecoder(resp.Body).Decode(&responseBodyBook)
+				assert.NoError(t, err)
+
+				assert.NotEmpty(t, responseBodyBook.ID)
+				assert.Equal(t, "test", responseBodyBook.Author)
+				assert.Equal(t, "test", responseBodyBook.Title)
+			case http.StatusBadRequest:
+				var responseBodyError struct {
+					Error string `json:"error"`
+				}
+
+				err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+				assert.NoError(t, err)
+
+				assert.NotEmpty(t, responseBodyError.Error)
+				assert.Equal(t, "invalid request body", responseBodyError.Error)
+			default:
+				t.Fatalf("unexpected status code: %d", d.expectedStatusCode)
+			}
+		})
+	}
+
+	// test invalid token
+	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/books", nil)
+	assert.NoError(t, err)
+
+	req.Header.Set("Token", "invalid token")
+
+	resp, err = http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+
+	var responseBodyError struct {
+		Error string `json:"error"`
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+	assert.NoError(t, err)
+
+	assert.NotEmpty(t, responseBodyError.Error)
+	assert.Equal(t, "unauthorized", responseBodyError.Error)
+
+	// test no token
+	req, err = http.NewRequest(http.MethodPost, testServer.URL+"/books", nil)
+	assert.NoError(t, err)
+
+	resp, err = http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+
+	err = json.NewDecoder(resp.Body).Decode(&responseBodyError)
+	assert.NoError(t, err)
+
+	assert.NotEmpty(t, responseBodyError.Error)
+	assert.Equal(t, "unauthorized", responseBodyError.Error)
 }
 
 func TestHandleGetBookByID(t *testing.T) {

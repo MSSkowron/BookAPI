@@ -149,7 +149,12 @@ func (s *BookRESTAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Reques
 func (s *BookRESTAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 	createBookRequest := &model.CreateBookRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createBookRequest); err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("invalid request body: %v", err))
+		respondWithError(w, http.StatusBadRequest, "invalid request body")
+		return nil
+	}
+
+	if createBookRequest.Title == "" || createBookRequest.Author == "" {
+		respondWithError(w, http.StatusBadRequest, "invalid request body")
 		return nil
 	}
 
