@@ -107,6 +107,13 @@ func (s *MockStorage) SelectAllBooks() ([]*model.Book, error) {
 
 // DeleteBook deletes a book with given ID
 func (s *MockStorage) DeleteBook(id int) error {
+	for i, book := range books {
+		if book.ID == id {
+			books = append(books[:i], books[i+1:]...)
+			return nil
+		}
+	}
+
 	return nil
 }
 

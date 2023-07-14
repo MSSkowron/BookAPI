@@ -183,7 +183,7 @@ func (s *BookRESTAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Req
 	}
 
 	book, err := s.storage.SelectBookByID(id)
-	if err != nil {
+	if err != nil || book == nil {
 		respondWithError(w, http.StatusNotFound, model.ErrorResponse{Error: "not found"})
 		return nil
 	}
@@ -203,13 +203,13 @@ func (s *BookRESTAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Req
 		return nil
 	}
 
-	_, err = s.storage.SelectBookByID(id)
-	if err != nil {
+	book, err := s.storage.SelectBookByID(id)
+	if err != nil || book == nil {
 		respondWithError(w, http.StatusNotFound, model.ErrorResponse{Error: "not found"})
 		return nil
 	}
 
-	book := &model.Book{}
+	book = &model.Book{}
 	if err := json.NewDecoder(r.Body).Decode(book); err != nil {
 		respondWithError(w, http.StatusBadRequest, model.ErrorResponse{Error: "invalid request body"})
 		return nil
@@ -235,8 +235,8 @@ func (s *BookRESTAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.
 		return nil
 	}
 
-	_, err = s.storage.SelectBookByID(id)
-	if err != nil {
+	book, err := s.storage.SelectBookByID(id)
+	if err != nil || book == nil {
 		respondWithError(w, http.StatusNotFound, model.ErrorResponse{Error: "not found"})
 		return nil
 	}
@@ -247,7 +247,6 @@ func (s *BookRESTAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.
 	}
 
 	respondWithJSON(w, http.StatusOK, nil)
-
 	return nil
 }
 
