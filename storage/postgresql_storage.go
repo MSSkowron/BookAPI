@@ -1,36 +1,32 @@
 package storage
 
 import (
-	"database/sql"
+	"context"
 	"log"
 
 	"github.com/MSSkowron/BookRESTAPI/model"
-	_ "github.com/lib/pq" // postgres driver
-)
-
-const (
-	driverName = "postgres"
+	pgx "github.com/jackc/pgx/v5"
 )
 
 // PostgresSQLStorage is a storage for PostgreSQL
 type PostgresSQLStorage struct {
-	db *sql.DB
+	conn *pgx.Conn
 }
 
 // NewPostgresSQLStorage creates a new PostgresSQLStorage
 func NewPostgresSQLStorage(connectionString string) (*PostgresSQLStorage, error) {
-	db, err := sql.Open(driverName, connectionString)
+	conn, err := pgx.Connect(context.Background(), connectionString)
 	if err != nil {
 		return nil, err
 	}
 
-	err = db.Ping()
+	err = conn.Ping(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
 	postgresSQLStorage := &PostgresSQLStorage{
-		db: db,
+		conn: conn,
 	}
 
 	return postgresSQLStorage, nil
@@ -43,7 +39,7 @@ func (s *PostgresSQLStorage) InsertUser(user *model.User) (int, error) {
 		id    int    = -1
 	)
 
-	err := s.db.QueryRow(query, user.Email, user.Password, user.FirstName, user.LastName, user.Age).Scan(&id)
+	err := s.conn.QueryRow(context.Background(), query, user.Email, user.Password, user.FirstName, user.LastName, user.Age).Scan(&id)
 	if err != nil {
 		log.Printf("[PostgresSQLStorage] Error while inserting new user: %s", err.Error())
 		return id, err
@@ -58,7 +54,7 @@ func (s *PostgresSQLStorage) InsertUser(user *model.User) (int, error) {
 func (s *PostgresSQLStorage) SelectUserByEmail(email string) (*model.User, error) {
 	query := "SELECT * FROM users WHERE email=$1"
 
-	row := s.db.QueryRow(query, email)
+	row := s.conn.QueryRow(context.Background(), query, email)
 	user := &model.User{}
 	err := row.Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age)
 	if err != nil {
@@ -78,7 +74,7 @@ func (s *PostgresSQLStorage) InsertBook(book *model.Book) (int, error) {
 		id    int    = -1
 	)
 
-	err := s.db.QueryRow(query, book.Author, book.Title).Scan(&id)
+	err := s.conn.QueryRow(context.Background(), query, book.Author, book.Title).Scan(&id)
 	if err != nil {
 		log.Printf("[PostgresSQLStorage] Error while inserting new book: %s", err.Error())
 		return id, err
@@ -93,7 +89,7 @@ func (s *PostgresSQLStorage) InsertBook(book *model.Book) (int, error) {
 func (s *PostgresSQLStorage) SelectAllBooks() ([]*model.Book, error) {
 	query := "SELECT * FROM books"
 
-	rows, err := s.db.Query(query)
+	rows, err := s.conn.Query(context.Background(), query)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +115,7 @@ func (s *PostgresSQLStorage) SelectAllBooks() ([]*model.Book, error) {
 func (s *PostgresSQLStorage) SelectBookByID(id int) (*model.Book, error) {
 	query := "SELECT * FROM books WHERE id=$1"
 
-	row := s.db.QueryRow(query, id)
+	row := s.conn.QueryRow(context.Background(), query, id)
 	book := &model.Book{}
 	if err := row.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author); err != nil {
 		log.Printf("[PostgresSQLStorage] Error while selecting book with ID %d: %s", id, err.Error())
@@ -135,7 +131,7 @@ func (s *PostgresSQLStorage) SelectBookByID(id int) (*model.Book, error) {
 func (s *PostgresSQLStorage) DeleteBook(id int) error {
 	query := "DELETE FROM books WHERE id=$1"
 
-	if _, err := s.db.Exec(query, id); err != nil {
+	if _, err := s.conn.Exec(context.Background(), query, id); err != nil {
 		log.Printf("[PostgresSQLStorage] Error while deleting book with ID %d: %s", id, err.Error())
 		return err
 	}
@@ -149,7 +145,7 @@ func (s *PostgresSQLStorage) DeleteBook(id int) error {
 func (s *PostgresSQLStorage) UpdateBook(book *model.Book) error {
 	query := "UPDATE books SET author = $1, title = $2 WHERE id = $3"
 
-	_, err := s.db.Exec(query, book.Author, book.Title, book.ID)
+	_, err := s.conn.Exec(context.Background(), query, book.Author, book.Title, book.ID)
 	if err != nil {
 		log.Printf("[PostgresSQLStorage] Error while updating book with ID %d: %s", book.ID, err.Error())
 		return err

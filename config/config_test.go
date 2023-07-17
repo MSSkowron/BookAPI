@@ -15,7 +15,7 @@ func TestLoadConfigValid(t *testing.T) {
 	cfg, err := LoadConfig(configFile)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "test_db", cfg.DBSource)
+	assert.Equal(t, "test_db", cfg.DatabaseURL)
 	assert.Equal(t, "127.0.0.1:8080", cfg.HTTPServerListenAddress)
 	assert.Equal(t, "test_secret", cfg.TokenSecret)
 	assert.Equal(t, time.Hour, cfg.TokenDuration)
@@ -34,7 +34,7 @@ func createTempConfigFile() string {
 	file, _ := os.Create(configFile)
 	defer file.Close()
 
-	file.WriteString("DB_SOURCE=test_db\n")
+	file.WriteString("DATABASE_URL=test_db\n")
 	file.WriteString("HTTP_SERVER_LISTEN_ADDRESS=127.0.0.1:8080\n")
 	file.WriteString("TOKEN_SECRET=test_secret\n")
 	file.WriteString("TOKEN_DURATION=1h\n")
