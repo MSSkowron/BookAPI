@@ -34,20 +34,20 @@ const (
 
 type apiFunc func(w http.ResponseWriter, r *http.Request) error
 
-func makeHTTPHandler(f apiFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := f(w, r); err != nil {
-			log.Printf("[BookRESTAPIServer] Error: %s", err.Error())
-		}
-	}
-}
-
 // BookRESTAPIServer is a server for handling REST API requests
 type BookRESTAPIServer struct {
 	listenAddr    string
 	storage       storage.Storage
 	tokenSecret   string
 	tokenDuration time.Duration
+}
+
+func makeHTTPHandler(f apiFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := f(w, r); err != nil {
+			log.Printf("[BookRESTAPIServer] Error while handling request: %v", err)
+		}
+	}
 }
 
 // NewBookRESTAPIServer creates a new BookRESTAPIServer
@@ -65,11 +65,11 @@ func (s *BookRESTAPIServer) Run() {
 	r := mux.NewRouter()
 	r.HandleFunc("/register", makeHTTPHandler(s.handleRegister)).Methods("POST")
 	r.HandleFunc("/login", makeHTTPHandler(s.handleLogin)).Methods("POST")
-	r.HandleFunc("/books", validateJWT(s.handleGetBooks, s.tokenSecret)).Methods("GET")
-	r.HandleFunc("/books", validateJWT(s.handlePostBook, s.tokenSecret)).Methods("POST")
-	r.HandleFunc("/books/{id}", validateJWT(s.handleGetBookByID, s.tokenSecret)).Methods("GET")
-	r.HandleFunc("/books/{id}", validateJWT(s.handlePutBookByID, s.tokenSecret)).Methods("PUT")
-	r.HandleFunc("/books/{id}", validateJWT(s.handleDeleteBookByID, s.tokenSecret)).Methods("DELETE")
+	r.HandleFunc("/books", validateJWT(makeHTTPHandler(s.handleGetBooks), s.tokenSecret)).Methods("GET")
+	r.HandleFunc("/books", validateJWT(makeHTTPHandler(s.handlePostBook), s.tokenSecret)).Methods("POST")
+	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(s.handleGetBookByID), s.tokenSecret)).Methods("GET")
+	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(s.handlePutBookByID), s.tokenSecret)).Methods("PUT")
+	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(s.handleDeleteBookByID), s.tokenSecret)).Methods("DELETE")
 
 	log.Println("[BookRESTAPIServer] Server is running on: " + s.listenAddr)
 
@@ -96,13 +96,13 @@ func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Reques
 		return nil
 	}
 
-	hashedPass, err := crypto.HashPassword(createAccountRequest.Password)
+	hashedPassword, err := crypto.HashPassword(createAccountRequest.Password)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 		return fmt.Errorf("error while hashing password: %w", err)
 	}
 
-	newUser := model.NewUser(createAccountRequest.Email, hashedPass, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
+	newUser := model.NewUser(createAccountRequest.Email, hashedPassword, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
 	id, err := s.storage.InsertUser(newUser)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
@@ -110,7 +110,6 @@ func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Reques
 	}
 
 	newUser.ID = id
-
 	respondWithJSON(w, http.StatusOK, newUser)
 
 	return nil
@@ -182,7 +181,6 @@ func (s *BookRESTAPIServer) handlePostBook(w http.ResponseWriter, r *http.Reques
 	}
 
 	newBook.ID = id
-
 	respondWithJSON(w, http.StatusOK, newBook)
 
 	return nil
@@ -266,7 +264,7 @@ func (s *BookRESTAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.
 	return nil
 }
 
-func validateJWT(f apiFunc, tokenSecret string) http.HandlerFunc {
+func validateJWT(f http.HandlerFunc, tokenSecret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] != nil {
 			if err := token.Validate(r.Header.Get("Token"), tokenSecret); err != nil {
@@ -274,9 +272,7 @@ func validateJWT(f apiFunc, tokenSecret string) http.HandlerFunc {
 				return
 			}
 
-			if err := f(w, r); err != nil {
-				log.Printf("[BookRESTAPIServer] Error: %s", err.Error())
-			}
+			f(w, r)
 		} else {
 			respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
 		}

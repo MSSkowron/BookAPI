@@ -297,7 +297,7 @@ func TestHandlePostBook(t *testing.T) {
 
 	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books", validateJWT(server.handlePostBook, server.tokenSecret)).Methods("POST")
+	mux.HandleFunc("/books", validateJWT(makeHTTPHandler(server.handlePostBook), server.tokenSecret)).Methods("POST")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -466,7 +466,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", validateJWT(server.handleGetBookByID, server.tokenSecret)).Methods("GET")
+	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(server.handleGetBookByID), server.tokenSecret)).Methods("GET")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -630,7 +630,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books", validateJWT(server.handleGetBooks, server.tokenSecret)).Methods("GET")
+	mux.HandleFunc("/books", validateJWT(makeHTTPHandler(server.handleGetBooks), server.tokenSecret)).Methods("GET")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -734,7 +734,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", validateJWT(server.handleDeleteBookByID, server.tokenSecret)).Methods("DELETE")
+	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(server.handleDeleteBookByID), server.tokenSecret)).Methods("DELETE")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -893,7 +893,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", validateJWT(server.handlePutBookByID, server.tokenSecret)).Methods("PUT")
+	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(server.handlePutBookByID), server.tokenSecret)).Methods("PUT")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
