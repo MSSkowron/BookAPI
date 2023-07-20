@@ -583,7 +583,7 @@ func TestHandleGetBookByID(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotEmpty(t, responseError.Error)
-	require.Equal(t, "invalid id", responseError.Error)
+	require.Equal(t, "invalid book id", responseError.Error)
 
 	// test invalid token
 	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/books/"+strconv.Itoa(data[0].inputID), nil)
@@ -846,7 +846,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotEmpty(t, responseError.Error)
-	require.Equal(t, "invalid id", responseError.Error)
+	require.Equal(t, "invalid book id", responseError.Error)
 
 	// test invalid token
 	req, err = http.NewRequest(http.MethodDelete, testServer.URL+"/books/2", nil)
@@ -1053,7 +1053,7 @@ func TestHandlePutBookByID(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotEmpty(t, responseError.Error)
-	require.Equal(t, "invalid id", responseError.Error)
+	require.Equal(t, "invalid book id", responseError.Error)
 
 	// test invalid token
 	req, err = http.NewRequest(http.MethodPut, testServer.URL+"/books/3", bytes.NewReader(requestBody))
