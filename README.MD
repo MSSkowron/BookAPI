@@ -98,10 +98,10 @@ The BookRESTAPI exposes the following endpoints and methods:
     "token": "string"
   }
   ```
-  **Note**: The authentication token received in the response must be included in the request headers for the following endpoints.
-
 
 ### Book Management
+  Authentication token received during login must be included to perform book management requests by setting the token with the key "Token" in the request header for the above endpoints.
+
   - Endpoint: `\books` Method: `GET`
 
     Retrieves a list of all books.
@@ -146,5 +146,3 @@ In case of errors, the server returns an appropriate status code and JSON in the
   "error": "string"
 }
 ```
-
-Remember to include the authentication token received during login by setting the token with the key "Token" in the request header for the above endpoints.
