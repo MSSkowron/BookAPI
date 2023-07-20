@@ -233,7 +233,10 @@ func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error
 		return nil
 	}
 
-	book = &model.Book{}
+	book = &model.Book{
+		ID:        id,
+		CreatedAt: book.CreatedAt,
+	}
 	if err := json.NewDecoder(r.Body).Decode(book); err != nil {
 		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
