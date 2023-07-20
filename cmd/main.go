@@ -4,8 +4,8 @@ import (
 	"flag"
 	"log"
 
-	"github.com/MSSkowron/BookRESTAPI/api"
 	"github.com/MSSkowron/BookRESTAPI/config"
+	"github.com/MSSkowron/BookRESTAPI/server"
 	"github.com/MSSkowron/BookRESTAPI/storage"
 )
 
@@ -18,10 +18,12 @@ func main() {
 		log.Fatalf("Error while loading config: %s", err.Error())
 	}
 
-	storage, err := storage.NewPostgresSQLStorage(config.DatabaseURL)
+	storage, err := storage.NewPostgresStorage(config.DatabaseURL)
 	if err != nil {
 		log.Fatalf("Error while creating storage: %s", err.Error())
 	}
 
-	api.NewBookRESTAPIServer(config.HTTPServerListenAddress, config.TokenSecret, config.TokenDuration, storage).Run()
+	if err := server.NewServer(config.HTTPServerListenAddress, config.TokenSecret, config.TokenDuration, storage).Run(); err != nil {
+		log.Fatalf("Error while running server: %s", err.Error())
+	}
 }

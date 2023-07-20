@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"encoding/json"
@@ -32,27 +32,27 @@ const (
 	ErrMsgInternalError = "internal error"
 )
 
-type apiFunc func(w http.ResponseWriter, r *http.Request) error
+type serverHandlerFunc func(w http.ResponseWriter, r *http.Request) error
 
-// BookRESTAPIServer is a server for handling REST API requests
-type BookRESTAPIServer struct {
+func makeHTTPHandlerFunc(f serverHandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := f(w, r); err != nil {
+			log.Printf("[Server] Error while handling request: %v", err)
+		}
+	}
+}
+
+// Server is a server for handling REST API requests
+type Server struct {
 	listenAddr    string
 	storage       storage.Storage
 	tokenSecret   string
 	tokenDuration time.Duration
 }
 
-func makeHTTPHandler(f apiFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := f(w, r); err != nil {
-			log.Printf("[BookRESTAPIServer] Error while handling request: %v", err)
-		}
-	}
-}
-
-// NewBookRESTAPIServer creates a new BookRESTAPIServer
-func NewBookRESTAPIServer(listenAddr, tokenSecret string, tokenDuration time.Duration, storage storage.Storage) *BookRESTAPIServer {
-	return &BookRESTAPIServer{
+// NewServer creates a new Server
+func NewServer(listenAddr, tokenSecret string, tokenDuration time.Duration, storage storage.Storage) *Server {
+	return &Server{
 		listenAddr:    listenAddr,
 		storage:       storage,
 		tokenSecret:   tokenSecret,
@@ -61,24 +61,24 @@ func NewBookRESTAPIServer(listenAddr, tokenSecret string, tokenDuration time.Dur
 }
 
 // Run runs the server
-func (s *BookRESTAPIServer) Run() {
+func (s *Server) Run() error {
 	r := mux.NewRouter()
-	r.HandleFunc("/register", makeHTTPHandler(s.handleRegister)).Methods("POST")
-	r.HandleFunc("/login", makeHTTPHandler(s.handleLogin)).Methods("POST")
-	r.HandleFunc("/books", validateJWT(makeHTTPHandler(s.handleGetBooks), s.tokenSecret)).Methods("GET")
-	r.HandleFunc("/books", validateJWT(makeHTTPHandler(s.handlePostBook), s.tokenSecret)).Methods("POST")
-	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(s.handleGetBookByID), s.tokenSecret)).Methods("GET")
-	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(s.handlePutBookByID), s.tokenSecret)).Methods("PUT")
-	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(s.handleDeleteBookByID), s.tokenSecret)).Methods("DELETE")
+	r.HandleFunc("/register", makeHTTPHandlerFunc(s.handleRegister)).Methods("POST")
+	r.HandleFunc("/login", makeHTTPHandlerFunc(s.handleLogin)).Methods("POST")
+	r.HandleFunc("/books", validateJWT(makeHTTPHandlerFunc(s.handleGetBooks), s.tokenSecret)).Methods("GET")
+	r.HandleFunc("/books", validateJWT(makeHTTPHandlerFunc(s.handlePostBook), s.tokenSecret)).Methods("POST")
+	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(s.handleGetBookByID), s.tokenSecret)).Methods("GET")
+	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(s.handlePutBookByID), s.tokenSecret)).Methods("PUT")
+	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(s.handleDeleteBookByID), s.tokenSecret)).Methods("DELETE")
 
-	log.Println("[BookRESTAPIServer] Server is running on: " + s.listenAddr)
+	log.Println("[Server] Server is running on: " + s.listenAddr)
 
-	if err := http.ListenAndServe(s.listenAddr, r); err != nil {
-		log.Fatal("[BookRESTAPIServer] Error while running server: " + err.Error())
-	}
+	return http.ListenAndServe(s.listenAddr, r)
 }
 
-func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
+	log.Println("[Server] Called POST /register")
+
 	createAccountRequest := &model.CreateAccountRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
 		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
@@ -115,7 +115,9 @@ func (s *BookRESTAPIServer) handleRegister(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-func (s *BookRESTAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
+	log.Println("[Server] Called POST /login")
+
 	loginRequest := &model.LoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
 		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
@@ -149,7 +151,9 @@ func (s *BookRESTAPIServer) handleLogin(w http.ResponseWriter, r *http.Request) 
 	return nil
 }
 
-func (s *BookRESTAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
+	log.Println("[Server] Called GET /books")
+
 	books, err := s.storage.SelectAllBooks()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
@@ -161,7 +165,9 @@ func (s *BookRESTAPIServer) handleGetBooks(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-func (s *BookRESTAPIServer) handlePostBook(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
+	log.Println("[Server] Called POST /books")
+
 	createBookRequest := &model.CreateBookRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createBookRequest); err != nil {
 		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
@@ -186,7 +192,9 @@ func (s *BookRESTAPIServer) handlePostBook(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-func (s *BookRESTAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) error {
+	log.Println("[Server] Called GET /books/{id}")
+
 	idString := mux.Vars(r)["id"]
 	defer r.Body.Close()
 
@@ -207,7 +215,9 @@ func (s *BookRESTAPIServer) handleGetBookByID(w http.ResponseWriter, r *http.Req
 	return nil
 }
 
-func (s *BookRESTAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error {
+	log.Println("[Server] Called PUT /books/{id}")
+
 	idString := mux.Vars(r)["id"]
 	defer r.Body.Close()
 
@@ -239,7 +249,9 @@ func (s *BookRESTAPIServer) handlePutBookByID(w http.ResponseWriter, r *http.Req
 	return nil
 }
 
-func (s *BookRESTAPIServer) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) error {
+func (s *Server) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) error {
+	log.Println("[Server] Called DELETE /books/{id}")
+
 	idString := mux.Vars(r)["id"]
 	defer r.Body.Close()
 
@@ -288,7 +300,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload any) {
 
 	response, err := json.Marshal(payload)
 	if err != nil {
-		log.Printf("[BookRESTAPIServer] Error while marshaling JSON response: %s", err.Error())
+		log.Printf("[Server] Error while marshaling JSON response: %s", err.Error())
 
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(ErrMsgInternalError))

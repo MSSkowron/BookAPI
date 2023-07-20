@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"bytes"
@@ -21,10 +21,10 @@ func TestHandleRegister(t *testing.T) {
 	mockStorage := storage.NewMockStorage()
 	defer mockStorage.Reset()
 
-	server := NewBookRESTAPIServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
 
-	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
+	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -152,11 +152,11 @@ func TestHandleLogin(t *testing.T) {
 	mockStorage := storage.NewMockStorage()
 	defer mockStorage.Reset()
 
-	server := NewBookRESTAPIServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
 
-	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
+	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -292,12 +292,12 @@ func TestHandlePostBook(t *testing.T) {
 	mockStorage := storage.NewMockStorage()
 	defer mockStorage.Reset()
 
-	server := NewBookRESTAPIServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
 
-	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books", validateJWT(makeHTTPHandler(server.handlePostBook), server.tokenSecret)).Methods("POST")
+	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
+	mux.HandleFunc("/books", validateJWT(makeHTTPHandlerFunc(server.handlePostBook), server.tokenSecret)).Methods("POST")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -461,12 +461,12 @@ func TestHandleGetBookByID(t *testing.T) {
 	mockStorage := storage.NewMockStorage()
 	defer mockStorage.Reset()
 
-	server := NewBookRESTAPIServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
 
-	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(server.handleGetBookByID), server.tokenSecret)).Methods("GET")
+	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
+	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(server.handleGetBookByID), server.tokenSecret)).Methods("GET")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -625,12 +625,12 @@ func TestHandleGetBooks(t *testing.T) {
 	mockStorage := storage.NewMockStorage()
 	defer mockStorage.Reset()
 
-	server := NewBookRESTAPIServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
 
-	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books", validateJWT(makeHTTPHandler(server.handleGetBooks), server.tokenSecret)).Methods("GET")
+	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
+	mux.HandleFunc("/books", validateJWT(makeHTTPHandlerFunc(server.handleGetBooks), server.tokenSecret)).Methods("GET")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -729,12 +729,12 @@ func TestHandleDeleteBookByID(t *testing.T) {
 	mockStorage := storage.NewMockStorage()
 	defer mockStorage.Reset()
 
-	server := NewBookRESTAPIServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
 
-	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(server.handleDeleteBookByID), server.tokenSecret)).Methods("DELETE")
+	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
+	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(server.handleDeleteBookByID), server.tokenSecret)).Methods("DELETE")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -888,12 +888,12 @@ func TestHandlePutBookByID(t *testing.T) {
 	mockStorage := storage.NewMockStorage()
 	defer mockStorage.Reset()
 
-	server := NewBookRESTAPIServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
 
-	mux.HandleFunc("/register", makeHTTPHandler(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandler(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandler(server.handlePutBookByID), server.tokenSecret)).Methods("PUT")
+	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
+	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(server.handlePutBookByID), server.tokenSecret)).Methods("PUT")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
