@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "0108c4a1-dfb4-4f19-a794-867d5068f9db",
+		"_postman_id": "d2186912-f3be-4158-bb49-1529dba7c799",
 		"name": "BookRESTAPI",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "22564350"
@@ -65,14 +65,18 @@
 		{
 			"name": "Get All Books",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
-						"type": "text"
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:8080/books",
 					"protocol": "http",
@@ -90,14 +94,18 @@
 		{
 			"name": "Get Book By ID",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
-						"type": "text"
-					}
-				],
+				"header": [],
 				"url": {
 					"raw": "http://localhost:8080/books/1",
 					"protocol": "http",
@@ -116,14 +124,18 @@
 		{
 			"name": "Update Book",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
+							"type": "string"
+						}
+					]
+				},
 				"method": "PUT",
-				"header": [
-					{
-						"key": "Token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGVtYWlsLmNvbSIsImV4cGlyZXNBdCI6MTY4ODkzODIzOX0.KpqlrImhagqCGlcZXbQxc9Z8oO-LsOct4F3NIVRZagc",
-						"type": "text"
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": "{\r\n    \"author\": \"Author Author\",\r\n    \"title\": \"The Title\"\r\n}",
@@ -151,14 +163,18 @@
 		{
 			"name": "Delete Book",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
+							"type": "string"
+						}
+					]
+				},
 				"method": "DELETE",
-				"header": [
-					{
-						"key": "Token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGVtYWlsLmNvbSIsImV4cGlyZXNBdCI6MTY4ODkzODIzOX0.KpqlrImhagqCGlcZXbQxc9Z8oO-LsOct4F3NIVRZagc",
-						"type": "text"
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": "{\r\n    \"id\": 1,\r\n    \"author\": \"Author Author\",\r\n    \"title\": \"The Title\"\r\n}",
@@ -186,14 +202,18 @@
 		{
 			"name": "Add Book",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
+							"type": "string"
+						}
+					]
+				},
 				"method": "POST",
-				"header": [
-					{
-						"key": "Token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHRzc3NzZXN0LmNvbSIsImV4cGlyZXNBdCI6MTY4OTAwMjUxMCwiaWQiOjF9.ZPMMH9IQK8ojppGksAwNCQpvDRLywYV2tjuHLASc6h4",
-						"type": "text"
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": "{\r\n    \"author\": \"Author Author\",\r\n    \"title\": \"The Title\"\r\n}",
