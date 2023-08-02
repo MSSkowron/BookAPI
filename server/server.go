@@ -2,10 +2,12 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/MSSkowron/BookRESTAPI/crypto"
@@ -24,6 +26,8 @@ const (
 	ErrMsgBadRequestInvalidBookID = "invalid book id"
 	// ErrMsgUnauthorized is a message for unauthorized
 	ErrMsgUnauthorized = "unauthorized"
+	// ErrMsgUnauthorizedExpiredToken is a message for unauthorized with expired token
+	ErrMsgUnauthorizedExpiredToken = "expired token"
 	// ErrMsgUnauthorizedInvalidCredentials is a message for unauthorized with invalid credentials
 	ErrMsgUnauthorizedInvalidCredentials = "invalid credentials"
 	// ErrMsgNotFound is a message for not found
@@ -281,16 +285,30 @@ func (s *Server) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) er
 
 func validateJWT(f http.HandlerFunc, tokenSecret string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Header["Token"] != nil {
-			if err := token.Validate(r.Header.Get("Token"), tokenSecret); err != nil {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
+			return
+		}
+
+		authHeaderParts := strings.Split(authHeader, " ")
+		if len(authHeaderParts) != 2 || authHeaderParts[0] != "Bearer" {
+			respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
+			return
+		}
+
+		tokenString := authHeaderParts[1]
+		if err := token.Validate(tokenString, tokenSecret); err != nil {
+			if errors.Is(err, token.ErrExpiredToken) {
+				respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedExpiredToken)
+			} else {
 				respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
-				return
 			}
 
-			f(w, r)
-		} else {
-			respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
+			return
 		}
+
+		f(w, r)
 	}
 }
 

@@ -46,7 +46,12 @@ func Validate(tokenString, secret string) error {
 		return ErrInvalidToken
 	}
 
-	if int64(token.Claims.(jwt.MapClaims)["expiresAt"].(float64)) < time.Now().Local().Unix() {
+	expiresAt, ok := token.Claims.(jwt.MapClaims)["expiresAt"].(float64)
+	if !ok {
+		return ErrInvalidToken
+	}
+
+	if int64(expiresAt) < time.Now().Local().Unix() {
 		return ErrExpiredToken
 	}
 
