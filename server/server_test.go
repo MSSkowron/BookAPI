@@ -391,7 +391,7 @@ func TestHandlePostBook(t *testing.T) {
 			req, err := http.NewRequest(http.MethodPost, testServer.URL+"/books", bytes.NewReader(bookJSON))
 			require.NoError(t, err)
 
-			req.Header.Set("Token", loginResponse.Token)
+			req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
@@ -425,7 +425,7 @@ func TestHandlePostBook(t *testing.T) {
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/books", nil)
 	require.NoError(t, err)
 
-	req.Header.Set("Token", "invalid token")
+	req.Header.Set("Authorization", "Bearer invalid_token")
 
 	resp, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -538,7 +538,7 @@ func TestHandleGetBookByID(t *testing.T) {
 			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/books/%d", testServer.URL, d.inputID), nil)
 			require.NoError(t, err)
 
-			req.Header.Set("Token", loginResponse.Token)
+			req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
@@ -570,7 +570,7 @@ func TestHandleGetBookByID(t *testing.T) {
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/books/abc", nil)
 	require.NoError(t, err)
 
-	req.Header.Set("Token", loginResponse.Token)
+	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 
 	resp, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -589,7 +589,7 @@ func TestHandleGetBookByID(t *testing.T) {
 	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/books/"+strconv.Itoa(data[0].inputID), nil)
 	require.NoError(t, err)
 
-	req.Header.Set("Token", "invalid token")
+	req.Header.Set("Authorization", "Bearer invalid_token")
 
 	resp, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -675,7 +675,7 @@ func TestHandleGetBooks(t *testing.T) {
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/books", nil)
 	require.NoError(t, err)
 
-	req.Header.Set("Token", loginResponse.Token)
+	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 
 	resp, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -693,7 +693,7 @@ func TestHandleGetBooks(t *testing.T) {
 	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/books", nil)
 	require.NoError(t, err)
 
-	req.Header.Set("Token", "invalid token")
+	req.Header.Set("Authorization", "Bearer invalid_token")
 
 	resp, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -802,7 +802,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 			req, err := http.NewRequest(http.MethodDelete, testServer.URL+"/books/"+strconv.Itoa(d.inputID), nil)
 			require.NoError(t, err)
 
-			req.Header.Set("Token", loginResponse.Token)
+			req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
@@ -833,7 +833,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 	req, err := http.NewRequest(http.MethodDelete, testServer.URL+"/books/abc", nil)
 	require.NoError(t, err)
 
-	req.Header.Set("Token", loginResponse.Token)
+	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 
 	resp, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -852,7 +852,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 	req, err = http.NewRequest(http.MethodDelete, testServer.URL+"/books/2", nil)
 	require.NoError(t, err)
 
-	req.Header.Set("Token", "invalid token")
+	req.Header.Set("Authorization", "Bearer invalid_token")
 
 	resp, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -1001,7 +1001,7 @@ func TestHandlePutBookByID(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			req.Header.Set("Token", loginResponse.Token)
+			req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
@@ -1040,7 +1040,7 @@ func TestHandlePutBookByID(t *testing.T) {
 	req, err := http.NewRequest(http.MethodPut, testServer.URL+"/books/abc", bytes.NewReader(requestBody))
 	require.NoError(t, err)
 
-	req.Header.Set("Token", loginResponse.Token)
+	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
 
 	resp, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -1059,7 +1059,7 @@ func TestHandlePutBookByID(t *testing.T) {
 	req, err = http.NewRequest(http.MethodPut, testServer.URL+"/books/3", bytes.NewReader(requestBody))
 	require.NoError(t, err)
 
-	req.Header.Set("Token", "invalid token")
+	req.Header.Set("Authorization", "Bearer invalid_token")
 
 	resp, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
