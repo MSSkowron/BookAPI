@@ -50,7 +50,7 @@ The application will be accessible at http://localhost:8080.
 The BookRESTAPI exposes the following endpoints and methods:
 
 ### User Registration
-  Endpoint: `\register` Method: `POST`
+  `\register` Method: `POST`
 
   Registers a new user.
 
@@ -79,7 +79,7 @@ The BookRESTAPI exposes the following endpoints and methods:
   ```
 
 ### User Login
-  Endpoint: `\login` Method: `POST`
+  `\login` Method: `POST`
 
   Authenticates a user and returns an authentication token.
 
@@ -99,13 +99,17 @@ The BookRESTAPI exposes the following endpoints and methods:
   ```
 
 ### Book Management
-  Authentication token received during login must be included to perform book management requests by setting the token with the key "Token" in the request header for the above endpoints.
+  Authentication bearer token received during login must be included to perform book management requests. Set the bearer token with the key "Authorization" in the request header for the above endpoints. The bearer authentication header should be set as follows:
+  ```
+  "Authorization": "Bearer <token>"
+  ```
 
-  - Endpoint: `\books` Method: `GET`
+  Available endpoints:
+  - `\books` Method: `GET`
 
     Retrieves a list of all books.
 
-  - Endpoint: `\books` Method: `POST`
+  - `\books` Method: `POST`
 
     Creates a new book.
 
@@ -117,11 +121,11 @@ The BookRESTAPI exposes the following endpoints and methods:
       }
     ```
 
-  - Endpoint: `\books\{id}` Method: `GET`
+  - `\books\{id}` Method: `GET`
 
     Retrieves details of a specific book by ID.
 
-  - Endpoint: `\books\{id}` Method: `PUT`
+  - `\books\{id}` Method: `PUT`
 
     Updates the details of a specific book by ID.
     
@@ -133,7 +137,7 @@ The BookRESTAPI exposes the following endpoints and methods:
     }
     ```
 
-  - Endpoint: `\books\{id}` Method: `DELETE`
+  - `\books\{id}` Method: `DELETE`
   
     Deletes a specific book by ID.
 
@@ -145,3 +149,7 @@ In case of errors, the server returns an appropriate status code and JSON in the
   "error": "string"
 }
 ```
+
+## License
+
+The project is available as open source under the terms of the MIT License.
