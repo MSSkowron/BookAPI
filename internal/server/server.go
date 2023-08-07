@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MSSkowron/BookRESTAPI/internal/database"
 	"github.com/MSSkowron/BookRESTAPI/internal/model"
-	"github.com/MSSkowron/BookRESTAPI/internal/storage"
 	"github.com/MSSkowron/BookRESTAPI/pkg/crypto"
 	"github.com/MSSkowron/BookRESTAPI/pkg/token"
 	"github.com/gorilla/mux"
@@ -49,16 +49,16 @@ func makeHTTPHandlerFunc(f serverHandlerFunc) http.HandlerFunc {
 // Server is a server for handling REST API requests
 type Server struct {
 	listenAddr    string
-	storage       storage.Storage
+	database      database.Database
 	tokenSecret   string
 	tokenDuration time.Duration
 }
 
 // NewServer creates a new Server
-func NewServer(listenAddr, tokenSecret string, tokenDuration time.Duration, storage storage.Storage) *Server {
+func NewServer(listenAddr, tokenSecret string, tokenDuration time.Duration, database database.Database) *Server {
 	return &Server{
 		listenAddr:    listenAddr,
-		storage:       storage,
+		database:      database,
 		tokenSecret:   tokenSecret,
 		tokenDuration: tokenDuration,
 	}
@@ -94,7 +94,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	user, _ := s.storage.SelectUserByEmail(createAccountRequest.Email)
+	user, _ := s.database.SelectUserByEmail(createAccountRequest.Email)
 	if user != nil {
 		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestUserAlreadyExists)
 		return nil
@@ -107,7 +107,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	newUser := model.NewUser(createAccountRequest.Email, hashedPassword, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
-	id, err := s.storage.InsertUser(newUser)
+	id, err := s.database.InsertUser(newUser)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 		return fmt.Errorf("error while inserting user: %w", err)
@@ -133,7 +133,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	user, err := s.storage.SelectUserByEmail(loginRequest.Email)
+	user, err := s.database.SelectUserByEmail(loginRequest.Email)
 	if err != nil || user == nil {
 		respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedInvalidCredentials)
 		return nil
@@ -158,7 +158,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
 	log.Println("[Server] Called GET /books")
 
-	books, err := s.storage.SelectAllBooks()
+	books, err := s.database.SelectAllBooks()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 		return fmt.Errorf("error while getting books: %w", err)
@@ -184,7 +184,7 @@ func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	newBook := model.NewBook(createBookRequest.Title, createBookRequest.Author)
-	id, err := s.storage.InsertBook(newBook)
+	id, err := s.database.InsertBook(newBook)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 		return fmt.Errorf("error while creating new book: %w", err)
@@ -208,7 +208,7 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) error
 		return nil
 	}
 
-	book, err := s.storage.SelectBookByID(id)
+	book, err := s.database.SelectBookByID(id)
 	if err != nil || book == nil {
 		respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
 		return nil
@@ -231,7 +231,7 @@ func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error
 		return nil
 	}
 
-	book, err := s.storage.SelectBookByID(id)
+	book, err := s.database.SelectBookByID(id)
 	if err != nil || book == nil {
 		respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
 		return nil
@@ -246,7 +246,7 @@ func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error
 		return nil
 	}
 
-	if err := s.storage.UpdateBook(book); err != nil {
+	if err := s.database.UpdateBook(book); err != nil {
 		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 		return fmt.Errorf("error while updating the book: %s", err)
 	}
@@ -268,13 +268,13 @@ func (s *Server) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) er
 		return nil
 	}
 
-	book, err := s.storage.SelectBookByID(id)
+	book, err := s.database.SelectBookByID(id)
 	if err != nil || book == nil {
 		respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
 		return nil
 	}
 
-	if err := s.storage.DeleteBook(id); err != nil {
+	if err := s.database.DeleteBook(id); err != nil {
 		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 		return fmt.Errorf("error while deleting the book: %s", err.Error())
 	}

@@ -1,11 +1,11 @@
-package storage
+package database
 
 import (
 	"github.com/MSSkowron/BookRESTAPI/internal/model"
 )
 
-// Storage is an interface for storage
-type Storage interface {
+// Database is an interface for database operations
+type Database interface {
 	InsertUser(user *model.User) (int, error)
 	SelectUserByEmail(email string) (*model.User, error)
 	InsertBook(book *model.Book) (int, error)

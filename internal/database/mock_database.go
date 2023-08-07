@@ -1,4 +1,4 @@
-package storage
+package database
 
 import (
 	"fmt"
@@ -52,16 +52,16 @@ var (
 	}
 )
 
-// MockStorage is a mock implementation of Storage interface
-type MockStorage struct{}
+// MockDatabase is a mock implementation of Database interface
+type MockDatabase struct{}
 
-// NewMockStorage creates a new MockStorage
-func NewMockStorage() *MockStorage {
-	return &MockStorage{}
+// NewMockDatabase creates a new MockDatabase
+func NewMockDatabase() *MockDatabase {
+	return &MockDatabase{}
 }
 
 // InsertUser inserts a new user
-func (s *MockStorage) InsertUser(user *model.User) (int, error) {
+func (s *MockDatabase) InsertUser(user *model.User) (int, error) {
 	for _, u := range users {
 		if u.Email == user.Email {
 			return -1, fmt.Errorf("user with email %s already exists", user.Email)
@@ -74,7 +74,7 @@ func (s *MockStorage) InsertUser(user *model.User) (int, error) {
 }
 
 // SelectUserByEmail selects a user with given email
-func (s *MockStorage) SelectUserByEmail(email string) (*model.User, error) {
+func (s *MockDatabase) SelectUserByEmail(email string) (*model.User, error) {
 	for _, user := range users {
 		if user.Email == email {
 			return user, nil
@@ -85,12 +85,12 @@ func (s *MockStorage) SelectUserByEmail(email string) (*model.User, error) {
 }
 
 // InsertBook inserts a new book
-func (s *MockStorage) InsertBook(book *model.Book) (int, error) {
+func (s *MockDatabase) InsertBook(book *model.Book) (int, error) {
 	return 4, nil
 }
 
 // SelectBookByID selects a book with given ID
-func (s *MockStorage) SelectBookByID(id int) (*model.Book, error) {
+func (s *MockDatabase) SelectBookByID(id int) (*model.Book, error) {
 	for _, book := range books {
 		if book.ID == id {
 			return book, nil
@@ -101,12 +101,12 @@ func (s *MockStorage) SelectBookByID(id int) (*model.Book, error) {
 }
 
 // SelectAllBooks selects all books
-func (s *MockStorage) SelectAllBooks() ([]*model.Book, error) {
+func (s *MockDatabase) SelectAllBooks() ([]*model.Book, error) {
 	return books, nil
 }
 
 // DeleteBook deletes a book with given ID
-func (s *MockStorage) DeleteBook(id int) error {
+func (s *MockDatabase) DeleteBook(id int) error {
 	for i, book := range books {
 		if book.ID == id {
 			books = append(books[:i], books[i+1:]...)
@@ -118,12 +118,12 @@ func (s *MockStorage) DeleteBook(id int) error {
 }
 
 // UpdateBook updates a book with given ID
-func (s *MockStorage) UpdateBook(book *model.Book) error {
+func (s *MockDatabase) UpdateBook(book *model.Book) error {
 	return nil
 }
 
 // Reset resets the storage to its initial state
-func (s *MockStorage) Reset() {
+func (s *MockDatabase) Reset() {
 	users = []*model.User{
 		{
 			ID:        1,

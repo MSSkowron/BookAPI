@@ -11,14 +11,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MSSkowron/BookRESTAPI/internal/database"
 	"github.com/MSSkowron/BookRESTAPI/internal/model"
-	"github.com/MSSkowron/BookRESTAPI/internal/storage"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
 
 func TestHandleRegister(t *testing.T) {
-	mockStorage := storage.NewMockStorage()
+	mockStorage := database.NewMockDatabase()
 	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
@@ -149,7 +149,7 @@ func TestHandleRegister(t *testing.T) {
 }
 
 func TestHandleLogin(t *testing.T) {
-	mockStorage := storage.NewMockStorage()
+	mockStorage := database.NewMockDatabase()
 	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
@@ -289,7 +289,7 @@ func TestHandleLogin(t *testing.T) {
 }
 
 func TestHandlePostBook(t *testing.T) {
-	mockStorage := storage.NewMockStorage()
+	mockStorage := database.NewMockDatabase()
 	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
@@ -458,7 +458,7 @@ func TestHandlePostBook(t *testing.T) {
 }
 
 func TestHandleGetBookByID(t *testing.T) {
-	mockStorage := storage.NewMockStorage()
+	mockStorage := database.NewMockDatabase()
 	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
@@ -622,7 +622,7 @@ func TestHandleGetBookByID(t *testing.T) {
 }
 
 func TestHandleGetBooks(t *testing.T) {
-	mockStorage := storage.NewMockStorage()
+	mockStorage := database.NewMockDatabase()
 	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
@@ -726,7 +726,7 @@ func TestHandleGetBooks(t *testing.T) {
 }
 
 func TestHandleDeleteBookByID(t *testing.T) {
-	mockStorage := storage.NewMockStorage()
+	mockStorage := database.NewMockDatabase()
 	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
@@ -885,7 +885,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 }
 
 func TestHandlePutBookByID(t *testing.T) {
-	mockStorage := storage.NewMockStorage()
+	mockStorage := database.NewMockDatabase()
 	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
