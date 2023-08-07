@@ -19,7 +19,6 @@ import (
 
 func TestHandleRegister(t *testing.T) {
 	mockStorage := database.NewMockDatabase()
-	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
@@ -150,7 +149,6 @@ func TestHandleRegister(t *testing.T) {
 
 func TestHandleLogin(t *testing.T) {
 	mockStorage := database.NewMockDatabase()
-	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
@@ -290,7 +288,6 @@ func TestHandleLogin(t *testing.T) {
 
 func TestHandlePostBook(t *testing.T) {
 	mockStorage := database.NewMockDatabase()
-	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
@@ -459,7 +456,6 @@ func TestHandlePostBook(t *testing.T) {
 
 func TestHandleGetBookByID(t *testing.T) {
 	mockStorage := database.NewMockDatabase()
-	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
@@ -623,7 +619,6 @@ func TestHandleGetBookByID(t *testing.T) {
 
 func TestHandleGetBooks(t *testing.T) {
 	mockStorage := database.NewMockDatabase()
-	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
@@ -727,7 +722,6 @@ func TestHandleGetBooks(t *testing.T) {
 
 func TestHandleDeleteBookByID(t *testing.T) {
 	mockStorage := database.NewMockDatabase()
-	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()
@@ -886,7 +880,6 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 func TestHandlePutBookByID(t *testing.T) {
 	mockStorage := database.NewMockDatabase()
-	defer mockStorage.Reset()
 
 	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
 	mux := mux.NewRouter()

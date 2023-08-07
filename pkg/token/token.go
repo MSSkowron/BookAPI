@@ -2,7 +2,6 @@ package token
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -13,6 +12,8 @@ var (
 	ErrInvalidToken = errors.New("invalid token")
 	// ErrExpiredToken is returned when the token is expired
 	ErrExpiredToken = errors.New("token is expired")
+	// ErrInvalidSignature is returned when the token signature is invalid
+	ErrInvalidSignature = errors.New("invalid signature")
 )
 
 // Generate generates a new JWT token
@@ -33,7 +34,7 @@ func Validate(tokenString, secret string) error {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+			return nil, ErrInvalidSignature
 		}
 
 		return []byte(secret), nil

@@ -14,7 +14,7 @@ type PostgresqlDatabase struct {
 }
 
 // NewPostgresqlDatabase creates a new PostgresqlDatabase
-func NewPostgresqlDatabase(connectionString string) (*PostgresqlDatabase, error) {
+func NewPostgresqlDatabase(connectionString string) (Database, error) {
 	conn, err := pgx.Connect(context.Background(), connectionString)
 	if err != nil {
 		return nil, err

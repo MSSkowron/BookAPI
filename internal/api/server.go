@@ -8,12 +8,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/MSSkowron/BookRESTAPI/internal/database"
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
-	"github.com/MSSkowron/BookRESTAPI/pkg/crypto"
-	"github.com/MSSkowron/BookRESTAPI/pkg/token"
+	"github.com/MSSkowron/BookRESTAPI/internal/services"
 	"github.com/gorilla/mux"
 )
 
@@ -28,6 +25,8 @@ const (
 	ErrMsgUnauthorized = "unauthorized"
 	// ErrMsgUnauthorizedExpiredToken is a message for unauthorized with expired token
 	ErrMsgUnauthorizedExpiredToken = "expired token"
+	// ErrMsgUnauthorizedInvalidToken is a message for unauthorized with invalid token
+	ErrMsgUnauthorizedInvalidToken = "invalid token"
 	// ErrMsgUnauthorizedInvalidCredentials is a message for unauthorized with invalid credentials
 	ErrMsgUnauthorizedInvalidCredentials = "invalid credentials"
 	// ErrMsgNotFound is a message for not found
@@ -48,19 +47,17 @@ func makeHTTPHandlerFunc(f ServerHandlerFunc) http.HandlerFunc {
 
 // Server is a HTTP server for handling REST API requests
 type Server struct {
-	listenAddr    string
-	database      database.Database
-	tokenSecret   string
-	tokenDuration time.Duration
+	listenAddr  string
+	userService services.UserService
+	bookService services.BookService
 }
 
 // NewServer creates a new Server
-func NewServer(listenAddr, tokenSecret string, tokenDuration time.Duration, database database.Database) *Server {
+func NewServer(listenAddr string, userService services.UserService, bookService services.BookService) *Server {
 	return &Server{
-		listenAddr:    listenAddr,
-		database:      database,
-		tokenSecret:   tokenSecret,
-		tokenDuration: tokenDuration,
+		listenAddr:  listenAddr,
+		userService: userService,
+		bookService: bookService,
 	}
 }
 
@@ -69,11 +66,11 @@ func (s *Server) Run() error {
 	r := mux.NewRouter()
 	r.HandleFunc("/register", makeHTTPHandlerFunc(s.handleRegister)).Methods("POST")
 	r.HandleFunc("/login", makeHTTPHandlerFunc(s.handleLogin)).Methods("POST")
-	r.HandleFunc("/books", validateJWT(makeHTTPHandlerFunc(s.handleGetBooks), s.tokenSecret)).Methods("GET")
-	r.HandleFunc("/books", validateJWT(makeHTTPHandlerFunc(s.handlePostBook), s.tokenSecret)).Methods("POST")
-	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(s.handleGetBookByID), s.tokenSecret)).Methods("GET")
-	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(s.handlePutBookByID), s.tokenSecret)).Methods("PUT")
-	r.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(s.handleDeleteBookByID), s.tokenSecret)).Methods("DELETE")
+	r.HandleFunc("/books", s.validateJWT(makeHTTPHandlerFunc(s.handleGetBooks))).Methods("GET")
+	r.HandleFunc("/books", s.validateJWT(makeHTTPHandlerFunc(s.handlePostBook))).Methods("POST")
+	r.HandleFunc("/books/{id}", s.validateJWT(makeHTTPHandlerFunc(s.handleGetBookByID))).Methods("GET")
+	r.HandleFunc("/books/{id}", s.validateJWT(makeHTTPHandlerFunc(s.handlePutBookByID))).Methods("PUT")
+	r.HandleFunc("/books/{id}", s.validateJWT(makeHTTPHandlerFunc(s.handleDeleteBookByID))).Methods("DELETE")
 
 	log.Println("[Server] Server is running on: " + s.listenAddr)
 
@@ -85,36 +82,42 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 
 	createAccountRequest := &models.CreateAccountRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
 	}
 
-	if createAccountRequest.Email == "" || createAccountRequest.Password == "" || createAccountRequest.FirstName == "" || createAccountRequest.LastName == "" || createAccountRequest.Age == 0 {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
-		return nil
-	}
-
-	user, _ := s.database.SelectUserByEmail(createAccountRequest.Email)
-	if user != nil {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestUserAlreadyExists)
-		return nil
-	}
-
-	hashedPassword, err := crypto.HashPassword(createAccountRequest.Password)
+	user, err := s.userService.RegisterUser(createAccountRequest.Email, createAccountRequest.Password, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while hashing password: %w", err)
+		if errors.Is(err, services.ErrUserAlreadyExists) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestUserAlreadyExists)
+			return nil
+		}
+		if errors.Is(err, services.ErrInvalidEmail) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			return nil
+		}
+		if errors.Is(err, services.ErrInvalidPassword) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			return nil
+		}
+		if errors.Is(err, services.ErrInvalidFirstName) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			return nil
+		}
+		if errors.Is(err, services.ErrInvalidLastName) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			return nil
+		}
+		if errors.Is(err, services.ErrInvalidAge) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			return nil
+		}
+
+		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
+		return fmt.Errorf("error while registering user: %w", err)
 	}
 
-	newUser := models.NewUser(createAccountRequest.Email, hashedPassword, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
-	id, err := s.database.InsertUser(newUser)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while inserting user: %w", err)
-	}
-
-	newUser.ID = id
-	respondWithJSON(w, http.StatusOK, newUser)
+	s.respondWithJSON(w, http.StatusOK, user)
 
 	return nil
 }
@@ -124,33 +127,22 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 
 	loginRequest := &models.LoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
 	}
 
-	if loginRequest.Email == "" || loginRequest.Password == "" {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
-		return nil
-	}
-
-	user, err := s.database.SelectUserByEmail(loginRequest.Email)
-	if err != nil || user == nil {
-		respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedInvalidCredentials)
-		return nil
-	}
-
-	if err := crypto.CheckPassword(loginRequest.Password, user.Password); err != nil {
-		respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedInvalidCredentials)
-		return nil
-	}
-
-	token, err := token.Generate(user.ID, user.Email, s.tokenSecret, s.tokenDuration)
+	token, err := s.userService.LoginUser(loginRequest.Email, loginRequest.Password)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while generating token: %w", err)
+		if errors.Is(err, services.ErrInvalidCredentials) {
+			s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedInvalidCredentials)
+			return nil
+		}
+
+		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
+		return fmt.Errorf("error while registering user: %w", err)
 	}
 
-	respondWithJSON(w, http.StatusOK, models.LoginResponse{Token: token})
+	s.respondWithJSON(w, http.StatusOK, models.LoginResponse{Token: token})
 
 	return nil
 }
@@ -158,13 +150,13 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
 	log.Println("[Server] Called GET /books")
 
-	books, err := s.database.SelectAllBooks()
+	books, err := s.bookService.GetBooks()
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
+		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 		return fmt.Errorf("error while getting books: %w", err)
 	}
 
-	respondWithJSON(w, http.StatusOK, books)
+	s.respondWithJSON(w, http.StatusOK, books)
 
 	return nil
 }
@@ -174,24 +166,26 @@ func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 
 	createBookRequest := &models.CreateBookRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createBookRequest); err != nil {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
 	}
 
-	if createBookRequest.Title == "" || createBookRequest.Author == "" {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
-		return nil
-	}
-
-	newBook := models.NewBook(createBookRequest.Title, createBookRequest.Author)
-	id, err := s.database.InsertBook(newBook)
+	book, err := s.bookService.AddBook(createBookRequest.Author, createBookRequest.Title)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
+		if errors.Is(err, services.ErrInvalidAuthor) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			return nil
+		}
+		if errors.Is(err, services.ErrInvalidTitle) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			return nil
+		}
+
+		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 		return fmt.Errorf("error while creating new book: %w", err)
 	}
 
-	newBook.ID = id
-	respondWithJSON(w, http.StatusOK, newBook)
+	s.respondWithJSON(w, http.StatusOK, book)
 
 	return nil
 }
@@ -204,17 +198,22 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) error
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidBookID)
+		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidBookID)
 		return nil
 	}
 
-	book, err := s.database.SelectBookByID(id)
-	if err != nil || book == nil {
-		respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
-		return nil
+	book, err := s.bookService.GetBook(id)
+	if err != nil {
+		if errors.Is(err, services.ErrBookNotFound) {
+			s.respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
+			return nil
+		}
+
+		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
+		return fmt.Errorf("error while getting book: %w", err)
 	}
 
-	respondWithJSON(w, http.StatusOK, book)
+	s.respondWithJSON(w, http.StatusOK, book)
 
 	return nil
 }
@@ -227,31 +226,32 @@ func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidBookID)
+		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidBookID)
 		return nil
 	}
 
-	book, err := s.database.SelectBookByID(id)
-	if err != nil || book == nil {
-		respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
-		return nil
-	}
-
-	book = &models.Book{
-		ID:        id,
-		CreatedAt: book.CreatedAt,
-	}
+	book := &models.Book{}
 	if err := json.NewDecoder(r.Body).Decode(book); err != nil {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
 	}
 
-	if err := s.database.UpdateBook(book); err != nil {
-		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while updating the book: %s", err)
+	updatedBook, err := s.bookService.UpdateBook(id, book.Author, book.Title)
+	if err != nil {
+		if errors.Is(err, services.ErrBookNotFound) {
+			s.respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
+			return nil
+		}
+		if errors.Is(err, services.ErrInvalidAuthorOrTitle) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			return nil
+		}
+
+		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
+		return fmt.Errorf("error while getting book: %w", err)
 	}
 
-	respondWithJSON(w, http.StatusOK, book)
+	s.respondWithJSON(w, http.StatusOK, updatedBook)
 
 	return nil
 }
@@ -264,47 +264,50 @@ func (s *Server) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) er
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidBookID)
+		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidBookID)
 		return nil
 	}
 
-	book, err := s.database.SelectBookByID(id)
-	if err != nil || book == nil {
-		respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
-		return nil
+	if err := s.bookService.DeleteBook(id); err != nil {
+		if errors.Is(err, services.ErrBookNotFound) {
+			s.respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
+			return nil
+		}
+
+		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
+		return fmt.Errorf("error while getting book: %w", err)
 	}
 
-	if err := s.database.DeleteBook(id); err != nil {
-		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while deleting the book: %s", err.Error())
-	}
-
-	respondWithJSON(w, http.StatusOK, nil)
+	s.respondWithJSON(w, http.StatusOK, nil)
 	return nil
 }
 
-func validateJWT(f http.HandlerFunc, tokenSecret string) http.HandlerFunc {
+func (s *Server) validateJWT(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
+			s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
 			return
 		}
 
 		authHeaderParts := strings.Split(authHeader, " ")
 		if len(authHeaderParts) != 2 || authHeaderParts[0] != "Bearer" {
-			respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
+			s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
 			return
 		}
 
 		tokenString := authHeaderParts[1]
-		if err := token.Validate(tokenString, tokenSecret); err != nil {
-			if errors.Is(err, token.ErrExpiredToken) {
-				respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedExpiredToken)
-			} else {
-				respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
+		if err := s.userService.ValidateToken(tokenString); err != nil {
+			if errors.Is(err, services.ErrExpiredToken) {
+				s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedExpiredToken)
+				return
+			}
+			if errors.Is(err, services.ErrInvalidToken) {
+				s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedInvalidToken)
+				return
 			}
 
+			s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 			return
 		}
 
@@ -312,11 +315,11 @@ func validateJWT(f http.HandlerFunc, tokenSecret string) http.HandlerFunc {
 	}
 }
 
-func respondWithError(w http.ResponseWriter, errCode int, errMessage string) {
-	respondWithJSON(w, errCode, models.ErrorResponse{Error: errMessage})
+func (s *Server) respondWithError(w http.ResponseWriter, errCode int, errMessage string) {
+	s.respondWithJSON(w, errCode, models.ErrorResponse{Error: errMessage})
 }
 
-func respondWithJSON(w http.ResponseWriter, code int, payload any) {
+func (s *Server) respondWithJSON(w http.ResponseWriter, code int, payload any) {
 	w.Header().Set("Content-Type", "application/json")
 
 	response, err := json.Marshal(payload)
