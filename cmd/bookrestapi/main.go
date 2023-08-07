@@ -4,13 +4,13 @@ import (
 	"flag"
 	"log"
 
-	"github.com/MSSkowron/BookRESTAPI/config"
-	"github.com/MSSkowron/BookRESTAPI/server"
-	"github.com/MSSkowron/BookRESTAPI/storage"
+	"github.com/MSSkowron/BookRESTAPI/internal/config"
+	"github.com/MSSkowron/BookRESTAPI/internal/server"
+	"github.com/MSSkowron/BookRESTAPI/internal/storage"
 )
 
 func main() {
-	configFileFlag := flag.String("configFile", "./config.env", "path to a configuration file")
+	configFileFlag := flag.String("configFile", "./configs/default_config.env", "path to a configuration file")
 	flag.Parse()
 
 	config, err := config.LoadConfig(*configFileFlag)

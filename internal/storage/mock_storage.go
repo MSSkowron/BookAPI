@@ -3,7 +3,7 @@ package storage
 import (
 	"fmt"
 
-	"github.com/MSSkowron/BookRESTAPI/model"
+	"github.com/MSSkowron/BookRESTAPI/internal/model"
 )
 
 var (

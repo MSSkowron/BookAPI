@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/MSSkowron/BookRESTAPI/model"
+	"github.com/MSSkowron/BookRESTAPI/internal/model"
 )
 
 // Storage is an interface for storage

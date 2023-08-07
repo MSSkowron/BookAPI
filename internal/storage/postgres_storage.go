@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/MSSkowron/BookRESTAPI/model"
+	"github.com/MSSkowron/BookRESTAPI/internal/model"
 	pgx "github.com/jackc/pgx/v5"
 )
 

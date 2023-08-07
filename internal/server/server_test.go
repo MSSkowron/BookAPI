@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MSSkowron/BookRESTAPI/model"
-	"github.com/MSSkowron/BookRESTAPI/storage"
+	"github.com/MSSkowron/BookRESTAPI/internal/model"
+	"github.com/MSSkowron/BookRESTAPI/internal/storage"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
