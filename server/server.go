@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MSSkowron/BookRESTAPI/crypto"
 	"github.com/MSSkowron/BookRESTAPI/model"
+	"github.com/MSSkowron/BookRESTAPI/pkg/crypto"
+	"github.com/MSSkowron/BookRESTAPI/pkg/token"
 	"github.com/MSSkowron/BookRESTAPI/storage"
-	"github.com/MSSkowron/BookRESTAPI/token"
 	"github.com/gorilla/mux"
 )
 
