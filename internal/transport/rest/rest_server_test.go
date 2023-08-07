@@ -1,4 +1,4 @@
-package server
+package rest
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
-	"github.com/MSSkowron/BookRESTAPI/internal/model"
+	"github.com/MSSkowron/BookRESTAPI/internal/models"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
@@ -37,7 +37,7 @@ func TestHandleRegister(t *testing.T) {
 	}{
 		{
 			name: "valid request",
-			input: model.CreateAccountRequest{
+			input: models.CreateAccountRequest{
 				Email:     "test@test.com",
 				Password:  "test",
 				FirstName: "test",
@@ -45,7 +45,7 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: model.User{
+			expectedResponse: models.User{
 				ID:        4,
 				Email:     "test@test.com",
 				FirstName: "test",
@@ -69,19 +69,19 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: models.ErrorResponse{
 				Error: "invalid request body",
 			},
 		},
 		{
 			name: "missing required fields",
-			input: model.CreateAccountRequest{
+			input: models.CreateAccountRequest{
 				FirstName: "test",
 				LastName:  "test",
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: models.ErrorResponse{
 				Error: "invalid request body",
 			},
 		},
@@ -100,23 +100,23 @@ func TestHandleRegister(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				responseBody := model.User{}
+				responseBody := models.User{}
 				err = json.NewDecoder(resp.Body).Decode(&responseBody)
 				require.NoError(t, err)
 
 				require.NotEmpty(t, responseBody.Password, "Password should not be empty")
-				require.Equal(t, d.expectedResponse.(model.User).ID, responseBody.ID, "ID should be equal")
-				require.Equal(t, d.expectedResponse.(model.User).Email, responseBody.Email, "Email should be equal")
-				require.Equal(t, d.expectedResponse.(model.User).FirstName, responseBody.FirstName, "First name should be equal")
-				require.Equal(t, d.expectedResponse.(model.User).LastName, responseBody.LastName, "Last name should be equal")
-				require.Equal(t, d.expectedResponse.(model.User).Age, responseBody.Age, "Age should be equal")
+				require.Equal(t, d.expectedResponse.(models.User).ID, responseBody.ID, "ID should be equal")
+				require.Equal(t, d.expectedResponse.(models.User).Email, responseBody.Email, "Email should be equal")
+				require.Equal(t, d.expectedResponse.(models.User).FirstName, responseBody.FirstName, "First name should be equal")
+				require.Equal(t, d.expectedResponse.(models.User).LastName, responseBody.LastName, "Last name should be equal")
+				require.Equal(t, d.expectedResponse.(models.User).Age, responseBody.Age, "Age should be equal")
 			case http.StatusBadRequest:
-				responseError := model.ErrorResponse{}
+				responseError := models.ErrorResponse{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
 				require.NotEmpty(t, responseError.Error)
-				require.Equal(t, d.expectedResponse.(model.ErrorResponse).Error, responseError.Error)
+				require.Equal(t, d.expectedResponse.(models.ErrorResponse).Error, responseError.Error)
 			default:
 				t.Fatalf("unexpected status code: %d", d.expectedStatusCode)
 			}
@@ -124,7 +124,7 @@ func TestHandleRegister(t *testing.T) {
 	}
 
 	// Test if user with this email already exists
-	createAccountRequest := model.CreateAccountRequest{
+	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
 		Password:  "test",
 		FirstName: "test",
@@ -141,7 +141,7 @@ func TestHandleRegister(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	responseError := model.ErrorResponse{}
+	responseError := models.ErrorResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -161,7 +161,7 @@ func TestHandleLogin(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := model.CreateAccountRequest{
+	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
 		Password:  "test",
 		FirstName: "test",
@@ -186,34 +186,34 @@ func TestHandleLogin(t *testing.T) {
 	}{
 		{
 			name: "valid",
-			input: model.LoginRequest{
+			input: models.LoginRequest{
 				Email:    "test@test.com",
 				Password: "test",
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: model.LoginResponse{
+			expectedResponse: models.LoginResponse{
 				Token: "<token-value>",
 			},
 		},
 		{
 			name: "invalid password",
-			input: model.LoginRequest{
+			input: models.LoginRequest{
 				Email:    "test@test.com",
 				Password: "invalidPassword",
 			},
 			expectedStatusCode: http.StatusUnauthorized,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: models.ErrorResponse{
 				Error: "invalid credentials",
 			},
 		},
 		{
 			name: "invalid email",
-			input: model.LoginRequest{
+			input: models.LoginRequest{
 				Email:    "invalidEmail@test.com",
 				Password: "test",
 			},
 			expectedStatusCode: http.StatusUnauthorized,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: models.ErrorResponse{
 				Error: "invalid credentials",
 			},
 		},
@@ -225,7 +225,7 @@ func TestHandleLogin(t *testing.T) {
 				Email: "test@test.com",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: models.ErrorResponse{
 				Error: "invalid request body",
 			},
 		},
@@ -237,7 +237,7 @@ func TestHandleLogin(t *testing.T) {
 				Password: "test",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: models.ErrorResponse{
 				Error: "invalid request body",
 			},
 		},
@@ -251,7 +251,7 @@ func TestHandleLogin(t *testing.T) {
 				Password: 123,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: models.ErrorResponse{
 				Error: "invalid request body",
 			},
 		},
@@ -270,17 +270,17 @@ func TestHandleLogin(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				loginResponse := model.LoginResponse{}
+				loginResponse := models.LoginResponse{}
 				err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 				require.NoError(t, err)
 				require.NotEmpty(t, loginResponse.Token)
 			case http.StatusUnauthorized, http.StatusBadRequest:
-				responseError := model.ErrorResponse{}
+				responseError := models.ErrorResponse{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
 				require.NotEmpty(t, responseError.Error)
-				require.Equal(t, d.expectedResponse.(model.ErrorResponse).Error, responseError.Error)
+				require.Equal(t, d.expectedResponse.(models.ErrorResponse).Error, responseError.Error)
 			default:
 				t.Fatalf("unexpected status code: %d", d.expectedStatusCode)
 			}
@@ -302,7 +302,7 @@ func TestHandlePostBook(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := model.CreateAccountRequest{
+	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
 		Password:  "test",
 		FirstName: "test",
@@ -319,7 +319,7 @@ func TestHandlePostBook(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginRequest := model.LoginRequest{
+	loginRequest := models.LoginRequest{
 		Email:    "test@test.com",
 		Password: "test",
 	}
@@ -333,7 +333,7 @@ func TestHandlePostBook(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginResponse := model.LoginResponse{}
+	loginResponse := models.LoginResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	require.NoError(t, err)
 	require.NotEmpty(t, loginResponse.Token)
@@ -346,12 +346,12 @@ func TestHandlePostBook(t *testing.T) {
 	}{
 		{
 			name: "valid",
-			input: model.Book{
+			input: models.Book{
 				Author: "test",
 				Title:  "test",
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: model.Book{
+			expectedResponse: models.Book{
 				ID:     4,
 				Author: "test",
 				Title:  "test",
@@ -359,11 +359,11 @@ func TestHandlePostBook(t *testing.T) {
 		},
 		{
 			name: "no title",
-			input: model.Book{
+			input: models.Book{
 				Author: "test",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: models.ErrorResponse{
 				Error: "invalid request body",
 			},
 		},
@@ -377,7 +377,7 @@ func TestHandlePostBook(t *testing.T) {
 				Title:  123,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: model.ErrorResponse{
+			expectedResponse: models.ErrorResponse{
 				Error: "invalid request body",
 			},
 		},
@@ -401,20 +401,20 @@ func TestHandlePostBook(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				responseBodyBook := model.Book{}
+				responseBodyBook := models.Book{}
 				err = json.NewDecoder(resp.Body).Decode(&responseBodyBook)
 				require.NoError(t, err)
 
-				require.Equal(t, d.expectedResponse.(model.Book).ID, responseBodyBook.ID)
-				require.Equal(t, d.expectedResponse.(model.Book).Author, responseBodyBook.Author)
-				require.Equal(t, d.expectedResponse.(model.Book).Title, responseBodyBook.Title)
+				require.Equal(t, d.expectedResponse.(models.Book).ID, responseBodyBook.ID)
+				require.Equal(t, d.expectedResponse.(models.Book).Author, responseBodyBook.Author)
+				require.Equal(t, d.expectedResponse.(models.Book).Title, responseBodyBook.Title)
 			case http.StatusBadRequest:
-				responseError := model.ErrorResponse{}
+				responseError := models.ErrorResponse{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
 				require.NotEmpty(t, responseError.Error)
-				require.Equal(t, d.expectedResponse.(model.ErrorResponse).Error, responseError.Error)
+				require.Equal(t, d.expectedResponse.(models.ErrorResponse).Error, responseError.Error)
 			default:
 				t.Fatalf("unexpected status code: %d", d.expectedStatusCode)
 			}
@@ -433,7 +433,7 @@ func TestHandlePostBook(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	responseError := model.ErrorResponse{}
+	responseError := models.ErrorResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -471,7 +471,7 @@ func TestHandleGetBookByID(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := model.CreateAccountRequest{
+	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
 		Password:  "test",
 		FirstName: "test",
@@ -488,7 +488,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginRequest := model.LoginRequest{
+	loginRequest := models.LoginRequest{
 		Email:    "test@test.com",
 		Password: "test",
 	}
@@ -502,7 +502,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginResponse := model.LoginResponse{}
+	loginResponse := models.LoginResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	require.NoError(t, err)
 	require.NotEmpty(t, loginResponse.Token)
@@ -517,7 +517,7 @@ func TestHandleGetBookByID(t *testing.T) {
 			name:               "valid",
 			inputID:            1,
 			expectedStatusCode: http.StatusOK,
-			expectedResponseBody: model.Book{
+			expectedResponseBody: models.Book{
 				ID:     1,
 				Author: "J.R.R. Tolkien",
 				Title:  "The Lord of the Rings",
@@ -527,7 +527,7 @@ func TestHandleGetBookByID(t *testing.T) {
 			name:               "invalid id",
 			inputID:            100,
 			expectedStatusCode: http.StatusNotFound,
-			expectedResponseBody: model.ErrorResponse{
+			expectedResponseBody: models.ErrorResponse{
 				Error: "not found",
 			},
 		},
@@ -548,13 +548,13 @@ func TestHandleGetBookByID(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				responseBody := model.Book{}
+				responseBody := models.Book{}
 				err = json.NewDecoder(resp.Body).Decode(&responseBody)
 				require.NoError(t, err)
 
 				require.Equal(t, d.expectedResponseBody, responseBody)
 			case http.StatusNotFound:
-				responseError := model.ErrorResponse{}
+				responseError := models.ErrorResponse{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
@@ -578,7 +578,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	responseError := model.ErrorResponse{}
+	responseError := models.ErrorResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -597,7 +597,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	responseError = model.ErrorResponse{}
+	responseError = models.ErrorResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -635,7 +635,7 @@ func TestHandleGetBooks(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := model.CreateAccountRequest{
+	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
 		Password:  "test",
 		FirstName: "test",
@@ -653,7 +653,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginRequest := model.LoginRequest{
+	loginRequest := models.LoginRequest{
 		Email:    "test@test.com",
 		Password: "test",
 	}
@@ -667,7 +667,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginResponse := model.LoginResponse{}
+	loginResponse := models.LoginResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	require.NoError(t, err)
 	require.NotEmpty(t, loginResponse.Token)
@@ -683,7 +683,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	responseBodyBooks := []model.Book{}
+	responseBodyBooks := []models.Book{}
 	err = json.NewDecoder(resp.Body).Decode(&responseBodyBooks)
 	require.NoError(t, err)
 
@@ -701,7 +701,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	responseError := model.ErrorResponse{}
+	responseError := models.ErrorResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -739,7 +739,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := model.CreateAccountRequest{
+	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
 		Password:  "test",
 		FirstName: "test",
@@ -756,7 +756,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginRequest := model.LoginRequest{
+	loginRequest := models.LoginRequest{
 		Email:    "test@test.com",
 		Password: "test",
 	}
@@ -770,7 +770,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginResponse := model.LoginResponse{}
+	loginResponse := models.LoginResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	require.NoError(t, err)
 	require.NotEmpty(t, loginResponse.Token)
@@ -791,7 +791,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 			name:               "invalid id",
 			inputID:            100,
 			expectedStatusCode: http.StatusNotFound,
-			expectedResponseBody: model.ErrorResponse{
+			expectedResponseBody: models.ErrorResponse{
 				Error: "not found",
 			},
 		},
@@ -817,7 +817,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 				require.Equal(t, d.expectedResponseBody, string(responseBody))
 			case http.StatusBadRequest, http.StatusNotFound:
-				responseError := model.ErrorResponse{}
+				responseError := models.ErrorResponse{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
@@ -841,7 +841,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	responseError := model.ErrorResponse{}
+	responseError := models.ErrorResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -860,7 +860,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	responseError = model.ErrorResponse{}
+	responseError = models.ErrorResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -898,7 +898,7 @@ func TestHandlePutBookByID(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := model.CreateAccountRequest{
+	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
 		Password:  "test",
 		FirstName: "test",
@@ -915,7 +915,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginRequest := model.LoginRequest{
+	loginRequest := models.LoginRequest{
 		Email:    "test@test.com",
 		Password: "test",
 	}
@@ -929,7 +929,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginResponse := model.LoginResponse{}
+	loginResponse := models.LoginResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	require.NoError(t, err)
 	require.NotEmpty(t, loginResponse.Token)
@@ -942,13 +942,13 @@ func TestHandlePutBookByID(t *testing.T) {
 	}{
 		{
 			name: "valid",
-			input: model.Book{
+			input: models.Book{
 				ID:     1,
 				Author: "J. K. Rowling",
 				Title:  "Harry Potter and the Philosopher's Stone",
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponseBody: model.Book{
+			expectedResponseBody: models.Book{
 				ID:     1,
 				Author: "J. K. Rowling",
 				Title:  "Harry Potter and the Philosopher's Stone",
@@ -956,13 +956,13 @@ func TestHandlePutBookByID(t *testing.T) {
 		},
 		{
 			name: "invalid id",
-			input: model.Book{
+			input: models.Book{
 				ID:     100,
 				Author: "J. K. Rowling",
 				Title:  "Harry Potter and the Philosopher's Stone",
 			},
 			expectedStatusCode: http.StatusNotFound,
-			expectedResponseBody: model.ErrorResponse{
+			expectedResponseBody: models.ErrorResponse{
 				Error: "not found",
 			},
 		},
@@ -978,7 +978,7 @@ func TestHandlePutBookByID(t *testing.T) {
 				Title:  1,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponseBody: model.ErrorResponse{
+			expectedResponseBody: models.ErrorResponse{
 				Error: "invalid request body",
 			},
 		},
@@ -997,7 +997,7 @@ func TestHandlePutBookByID(t *testing.T) {
 			if d.name == "invalid body" {
 				req, err = http.NewRequest(http.MethodPut, testServer.URL+"/books/1", bytes.NewReader(requestBody))
 			} else {
-				req, err = http.NewRequest(http.MethodPut, testServer.URL+"/books/"+strconv.Itoa(d.input.(model.Book).ID), bytes.NewReader(requestBody))
+				req, err = http.NewRequest(http.MethodPut, testServer.URL+"/books/"+strconv.Itoa(d.input.(models.Book).ID), bytes.NewReader(requestBody))
 			}
 			require.NoError(t, err)
 
@@ -1011,13 +1011,13 @@ func TestHandlePutBookByID(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				responseBody := model.Book{}
+				responseBody := models.Book{}
 				err = json.NewDecoder(resp.Body).Decode(&responseBody)
 				require.NoError(t, err)
 
 				require.Equal(t, d.expectedResponseBody, responseBody)
 			case http.StatusBadRequest, http.StatusNotFound:
-				responseError := model.ErrorResponse{}
+				responseError := models.ErrorResponse{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
@@ -1030,7 +1030,7 @@ func TestHandlePutBookByID(t *testing.T) {
 	}
 
 	// test id is not a number
-	requestBody, err := json.Marshal(model.Book{
+	requestBody, err := json.Marshal(models.Book{
 		ID:     3,
 		Author: "J. K. Rowling",
 		Title:  "Harry Potter and the Philosopher's Stone",
@@ -1048,7 +1048,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	responseError := model.ErrorResponse{}
+	responseError := models.ErrorResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -1067,7 +1067,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	responseError = model.ErrorResponse{}
+	responseError = models.ErrorResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -1075,7 +1075,7 @@ func TestHandlePutBookByID(t *testing.T) {
 	require.Equal(t, "unauthorized", responseError.Error)
 
 	// test no token
-	requestBody, err = json.Marshal(model.Book{
+	requestBody, err = json.Marshal(models.Book{
 		ID:     3,
 		Author: "J. K. Rowling",
 		Title:  "Harry Potter and the Philosopher's Stone",

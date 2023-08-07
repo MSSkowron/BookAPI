@@ -6,7 +6,7 @@ import (
 
 	"github.com/MSSkowron/BookRESTAPI/internal/config"
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
-	"github.com/MSSkowron/BookRESTAPI/internal/server"
+	"github.com/MSSkowron/BookRESTAPI/internal/transport/rest"
 )
 
 func Run() error {
@@ -18,12 +18,12 @@ func Run() error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	storage, err := database.NewPostgresqlDatabase(config.DatabaseURL)
+	database, err := database.NewPostgresqlDatabase(config.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("failed to create storage: %w", err)
 	}
 
-	if err := server.NewServer(config.HTTPServerListenAddress, config.TokenSecret, config.TokenDuration, storage).Run(); err != nil {
+	if err := rest.NewServer(config.HTTPServerListenAddress, config.TokenSecret, config.TokenDuration, database).Run(); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
 

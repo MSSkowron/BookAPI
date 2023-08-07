@@ -14,6 +14,6 @@ lint:
 	golint ./...
 
 clean:
-	@rm -rf bin/$(BINARY_NAME)
+	@rm -rf bin
 
 .PHONY: build run test lint clean

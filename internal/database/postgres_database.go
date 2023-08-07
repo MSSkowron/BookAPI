@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/MSSkowron/BookRESTAPI/internal/model"
+	"github.com/MSSkowron/BookRESTAPI/internal/models"
 	pgx "github.com/jackc/pgx/v5"
 )
 
@@ -33,7 +33,7 @@ func NewPostgresqlDatabase(connectionString string) (*PostgresqlDatabase, error)
 }
 
 // InsertUser inserts a new user
-func (db *PostgresqlDatabase) InsertUser(user *model.User) (int, error) {
+func (db *PostgresqlDatabase) InsertUser(user *models.User) (int, error) {
 	var (
 		query string = "INSERT INTO users (email, password, first_name, last_name, age) VALUES ($1, $2, $3, $4, $5) RETURNING id"
 		id    int    = -1
@@ -51,11 +51,11 @@ func (db *PostgresqlDatabase) InsertUser(user *model.User) (int, error) {
 }
 
 // SelectUserByEmail selects a user with given email
-func (db *PostgresqlDatabase) SelectUserByEmail(email string) (*model.User, error) {
+func (db *PostgresqlDatabase) SelectUserByEmail(email string) (*models.User, error) {
 	query := "SELECT * FROM users WHERE email=$1"
 
 	row := db.conn.QueryRow(context.Background(), query, email)
-	user := &model.User{}
+	user := &models.User{}
 	err := row.Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age)
 	if err != nil {
 		log.Printf("[PostgresqlDatabase] Error while selecting user with email %s: %s", email, err.Error())
@@ -68,7 +68,7 @@ func (db *PostgresqlDatabase) SelectUserByEmail(email string) (*model.User, erro
 }
 
 // InsertBook inserts a new book
-func (db *PostgresqlDatabase) InsertBook(book *model.Book) (int, error) {
+func (db *PostgresqlDatabase) InsertBook(book *models.Book) (int, error) {
 	var (
 		query string = "INSERT INTO books (author, title) VALUES ($1, $2) RETURNING id"
 		id    int    = -1
@@ -86,7 +86,7 @@ func (db *PostgresqlDatabase) InsertBook(book *model.Book) (int, error) {
 }
 
 // SelectAllBooks selects all books
-func (db *PostgresqlDatabase) SelectAllBooks() ([]*model.Book, error) {
+func (db *PostgresqlDatabase) SelectAllBooks() ([]*models.Book, error) {
 	query := "SELECT * FROM books"
 
 	rows, err := db.conn.Query(context.Background(), query)
@@ -95,9 +95,9 @@ func (db *PostgresqlDatabase) SelectAllBooks() ([]*model.Book, error) {
 	}
 	defer rows.Close()
 
-	books := []*model.Book{}
+	books := []*models.Book{}
 	for rows.Next() {
-		book := &model.Book{}
+		book := &models.Book{}
 		if err := rows.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author); err != nil {
 			log.Printf("[PostgresqlDatabase] Error while selecting all books: %s", err.Error())
 			return nil, err
@@ -112,11 +112,11 @@ func (db *PostgresqlDatabase) SelectAllBooks() ([]*model.Book, error) {
 }
 
 // SelectBookByID selects a book with given ID
-func (db *PostgresqlDatabase) SelectBookByID(id int) (*model.Book, error) {
+func (db *PostgresqlDatabase) SelectBookByID(id int) (*models.Book, error) {
 	query := "SELECT * FROM books WHERE id=$1"
 
 	row := db.conn.QueryRow(context.Background(), query, id)
-	book := &model.Book{}
+	book := &models.Book{}
 	if err := row.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author); err != nil {
 		log.Printf("[PostgresqlDatabase] Error while selecting book with ID %d: %s", id, err.Error())
 		return nil, err
@@ -142,7 +142,7 @@ func (db *PostgresqlDatabase) DeleteBook(id int) error {
 }
 
 // UpdateBook updates a book with given ID
-func (db *PostgresqlDatabase) UpdateBook(book *model.Book) error {
+func (db *PostgresqlDatabase) UpdateBook(book *models.Book) error {
 	query := "UPDATE books SET author = $1, title = $2 WHERE id = $3"
 
 	_, err := db.conn.Exec(context.Background(), query, book.Author, book.Title, book.ID)

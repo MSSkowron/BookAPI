@@ -1,4 +1,4 @@
-package server
+package rest
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
-	"github.com/MSSkowron/BookRESTAPI/internal/model"
+	"github.com/MSSkowron/BookRESTAPI/internal/models"
 	"github.com/MSSkowron/BookRESTAPI/pkg/crypto"
 	"github.com/MSSkowron/BookRESTAPI/pkg/token"
 	"github.com/gorilla/mux"
@@ -36,9 +36,9 @@ const (
 	ErrMsgInternalError = "internal error"
 )
 
-type serverHandlerFunc func(w http.ResponseWriter, r *http.Request) error
+type ServerHandlerFunc func(w http.ResponseWriter, r *http.Request) error
 
-func makeHTTPHandlerFunc(f serverHandlerFunc) http.HandlerFunc {
+func makeHTTPHandlerFunc(f ServerHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := f(w, r); err != nil {
 			log.Printf("[Server] Error while handling request: %v", err)
@@ -46,7 +46,7 @@ func makeHTTPHandlerFunc(f serverHandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Server is a server for handling REST API requests
+// Server is a HTTP server for handling REST API requests
 type Server struct {
 	listenAddr    string
 	database      database.Database
@@ -64,7 +64,7 @@ func NewServer(listenAddr, tokenSecret string, tokenDuration time.Duration, data
 	}
 }
 
-// Run runs the server
+// Run runs the Server
 func (s *Server) Run() error {
 	r := mux.NewRouter()
 	r.HandleFunc("/register", makeHTTPHandlerFunc(s.handleRegister)).Methods("POST")
@@ -83,7 +83,7 @@ func (s *Server) Run() error {
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	log.Println("[Server] Called POST /register")
 
-	createAccountRequest := &model.CreateAccountRequest{}
+	createAccountRequest := &models.CreateAccountRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
 		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
@@ -106,7 +106,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("error while hashing password: %w", err)
 	}
 
-	newUser := model.NewUser(createAccountRequest.Email, hashedPassword, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
+	newUser := models.NewUser(createAccountRequest.Email, hashedPassword, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
 	id, err := s.database.InsertUser(newUser)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
@@ -122,7 +122,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	log.Println("[Server] Called POST /login")
 
-	loginRequest := &model.LoginRequest{}
+	loginRequest := &models.LoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
 		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
@@ -150,7 +150,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("error while generating token: %w", err)
 	}
 
-	respondWithJSON(w, http.StatusOK, model.LoginResponse{Token: token})
+	respondWithJSON(w, http.StatusOK, models.LoginResponse{Token: token})
 
 	return nil
 }
@@ -172,7 +172,7 @@ func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
 func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 	log.Println("[Server] Called POST /books")
 
-	createBookRequest := &model.CreateBookRequest{}
+	createBookRequest := &models.CreateBookRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createBookRequest); err != nil {
 		respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
@@ -183,7 +183,7 @@ func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	newBook := model.NewBook(createBookRequest.Title, createBookRequest.Author)
+	newBook := models.NewBook(createBookRequest.Title, createBookRequest.Author)
 	id, err := s.database.InsertBook(newBook)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
@@ -237,7 +237,7 @@ func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error
 		return nil
 	}
 
-	book = &model.Book{
+	book = &models.Book{
 		ID:        id,
 		CreatedAt: book.CreatedAt,
 	}
@@ -313,7 +313,7 @@ func validateJWT(f http.HandlerFunc, tokenSecret string) http.HandlerFunc {
 }
 
 func respondWithError(w http.ResponseWriter, errCode int, errMessage string) {
-	respondWithJSON(w, errCode, model.ErrorResponse{Error: errMessage})
+	respondWithJSON(w, errCode, models.ErrorResponse{Error: errMessage})
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload any) {

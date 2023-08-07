@@ -1,4 +1,4 @@
-package model
+package models
 
 // LoginResponse represents a login response
 type LoginResponse struct {

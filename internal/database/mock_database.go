@@ -3,11 +3,11 @@ package database
 import (
 	"fmt"
 
-	"github.com/MSSkowron/BookRESTAPI/internal/model"
+	"github.com/MSSkowron/BookRESTAPI/internal/models"
 )
 
 var (
-	users []*model.User = []*model.User{
+	users []*models.User = []*models.User{
 		{
 			ID:        1,
 			Email:     "johndoe@net.eu",
@@ -33,7 +33,7 @@ var (
 			Age:       30,
 		},
 	}
-	books []*model.Book = []*model.Book{
+	books []*models.Book = []*models.Book{
 		{
 			ID:     1,
 			Author: "J.R.R. Tolkien",
@@ -61,7 +61,7 @@ func NewMockDatabase() *MockDatabase {
 }
 
 // InsertUser inserts a new user
-func (s *MockDatabase) InsertUser(user *model.User) (int, error) {
+func (s *MockDatabase) InsertUser(user *models.User) (int, error) {
 	for _, u := range users {
 		if u.Email == user.Email {
 			return -1, fmt.Errorf("user with email %s already exists", user.Email)
@@ -74,7 +74,7 @@ func (s *MockDatabase) InsertUser(user *model.User) (int, error) {
 }
 
 // SelectUserByEmail selects a user with given email
-func (s *MockDatabase) SelectUserByEmail(email string) (*model.User, error) {
+func (s *MockDatabase) SelectUserByEmail(email string) (*models.User, error) {
 	for _, user := range users {
 		if user.Email == email {
 			return user, nil
@@ -85,12 +85,12 @@ func (s *MockDatabase) SelectUserByEmail(email string) (*model.User, error) {
 }
 
 // InsertBook inserts a new book
-func (s *MockDatabase) InsertBook(book *model.Book) (int, error) {
+func (s *MockDatabase) InsertBook(book *models.Book) (int, error) {
 	return 4, nil
 }
 
 // SelectBookByID selects a book with given ID
-func (s *MockDatabase) SelectBookByID(id int) (*model.Book, error) {
+func (s *MockDatabase) SelectBookByID(id int) (*models.Book, error) {
 	for _, book := range books {
 		if book.ID == id {
 			return book, nil
@@ -101,7 +101,7 @@ func (s *MockDatabase) SelectBookByID(id int) (*model.Book, error) {
 }
 
 // SelectAllBooks selects all books
-func (s *MockDatabase) SelectAllBooks() ([]*model.Book, error) {
+func (s *MockDatabase) SelectAllBooks() ([]*models.Book, error) {
 	return books, nil
 }
 
@@ -118,13 +118,13 @@ func (s *MockDatabase) DeleteBook(id int) error {
 }
 
 // UpdateBook updates a book with given ID
-func (s *MockDatabase) UpdateBook(book *model.Book) error {
+func (s *MockDatabase) UpdateBook(book *models.Book) error {
 	return nil
 }
 
 // Reset resets the storage to its initial state
 func (s *MockDatabase) Reset() {
-	users = []*model.User{
+	users = []*models.User{
 		{
 			ID:        1,
 			Email:     "johndoe@net.eu",
@@ -150,7 +150,7 @@ func (s *MockDatabase) Reset() {
 			Age:       30,
 		},
 	}
-	books = []*model.Book{
+	books = []*models.Book{
 		{
 			ID:     1,
 			Author: "J.R.R. Tolkien",
