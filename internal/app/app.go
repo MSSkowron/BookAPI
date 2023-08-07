@@ -4,9 +4,9 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/MSSkowron/BookRESTAPI/internal/api"
 	"github.com/MSSkowron/BookRESTAPI/internal/config"
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
-	"github.com/MSSkowron/BookRESTAPI/internal/transport/rest"
 )
 
 func Run() error {
@@ -23,7 +23,7 @@ func Run() error {
 		return fmt.Errorf("failed to create storage: %w", err)
 	}
 
-	if err := rest.NewServer(config.HTTPServerListenAddress, config.TokenSecret, config.TokenDuration, database).Run(); err != nil {
+	if err := api.NewServer(config.HTTPServerListenAddress, config.TokenSecret, config.TokenDuration, database).Run(); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
 

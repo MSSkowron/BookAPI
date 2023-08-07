@@ -8,6 +8,18 @@ BookRESTAPI is a simple REST API written in Go language that allows you to manag
 - PostgreSQL 15
 - Docker
 
+## Architecture Overview
+
+The BookRESTAPI employs a meticulously designed layered architecture to ensure clear separation of responsibilities and to foster modularity. The system comprises the following key components:
+
+1. **Transport Layer**: Responsible for handling incoming HTTP requests and routing them appropriately through the Gorilla Mux router. It actively manages request authentication, authorization, and validation before onward transmission to the next layer.
+
+2. **Business Logic Layer**: The core of the application's business logic resides here. It interfaces with the data access layer to execute CRUD operations on both book and user data. Additionally, this layer governs user registration, login, and token generation functionalities.
+
+3. **Data Access Layer**: This layer shoulders the task of communicating with the PostgreSQL database. Utilizing the pgx library, it establishes connections and executes queries, abstracting the underlying database interactions from higher-level layers.
+
+By adhering to this architectural blueprint, the BookRESTAPI application achieves essential qualities such as separation of concerns, maintainability, and scalability. Each distinct layer can be developed, tested, and modified autonomously, ensuring an organized and cohesive codebase.
+
 ## Important dependencies
 
 - `bcrypt` (golang.org/x/crypto): Used for bcrypt hashing.
