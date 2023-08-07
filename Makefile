@@ -1,7 +1,7 @@
 BINARY_NAME=bookrestapi
 
 build:
-	@go build -o bin/$(BINARY_NAME) ./cmd/main.go
+	@go build -o bin/$(BINARY_NAME) ./cmd/bookrestapi/main.go
 
 run: build
 	@./bin/$(BINARY_NAME)
