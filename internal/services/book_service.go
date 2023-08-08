@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	ErrInvalidID            = errors.New("invalid ID")
 	ErrInvalidAuthor        = errors.New("invalid author")
 	ErrInvalidTitle         = errors.New("invalid title")
 	ErrInvalidAuthorOrTitle = errors.New("invalid author or title")
@@ -28,31 +29,98 @@ type BookServiceImpl struct {
 	db database.Database
 }
 
+// NewBookService returns an implementation of BookService interface
 func NewBookService(db database.Database) BookService {
 	return &BookServiceImpl{db: db}
 }
 
 // GetBooks returns all books from the database
-func (bs *BookServiceImpl) GetBooks() (books []*models.Book, err error) {
-	return nil, nil
+func (bs *BookServiceImpl) GetBooks() ([]*models.Book, error) {
+	books, err := bs.db.SelectAllBooks()
+	if err != nil {
+		return nil, err
+	}
+
+	return books, nil
 }
 
 // GetBook returns a book with the given id from the database
-func (bs *BookServiceImpl) GetBook(id int) (book *models.Book, err error) {
-	return nil, nil
+func (bs *BookServiceImpl) GetBook(id int) (*models.Book, error) {
+	book, err := bs.db.SelectBookByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return book, nil
 }
 
 // AddBook adds a book to the database
-func (bs *BookServiceImpl) AddBook(author, title string) (book *models.Book, err error) {
-	return nil, nil
+func (bs *BookServiceImpl) AddBook(author, title string) (*models.Book, error) {
+	if !bs.validateAuthor(author) {
+		return nil, ErrInvalidAuthor
+	}
+	if !bs.validateTitle(title) {
+		return nil, ErrInvalidTitle
+	}
+
+	book := &models.Book{
+		Author: author,
+		Title:  title,
+	}
+	id, err := bs.db.InsertBook(book)
+	if err != nil {
+		return nil, err
+	}
+
+	book.ID = id
+
+	return book, nil
 }
 
 // UpdateBook updates a book with the given id in the database
-func (bs *BookServiceImpl) UpdateBook(id int, author, title string) (updatedBook *models.Book, err error) {
-	return nil, nil
+func (bs *BookServiceImpl) UpdateBook(id int, author, title string) (*models.Book, error) {
+	if !bs.validateID(id) {
+		return nil, ErrInvalidID
+	}
+	if !bs.validateAuthor(author) {
+		return nil, ErrInvalidAuthor
+	}
+	if !bs.validateTitle(title) {
+		return nil, ErrInvalidTitle
+	}
+
+	book, err := bs.db.SelectBookByID(id)
+	if err != nil {
+		return nil, ErrBookNotFound
+	}
+
+	book.Author = author
+	book.Title = title
+
+	if err := bs.db.UpdateBook(book); err != nil {
+		return nil, err
+	}
+
+	return book, nil
 }
 
 // DeleteBook deletes a book with the given id from the database
-func (bs *BookServiceImpl) DeleteBook(id int) (err error) {
-	return nil
+func (bs *BookServiceImpl) DeleteBook(id int) error {
+	if !bs.validateID(id) {
+		return ErrInvalidID
+	}
+
+	return bs.db.DeleteBook(id)
+}
+
+func (bs *BookServiceImpl) validateID(id int) bool {
+	return id > 0
+}
+
+func (bs *BookServiceImpl) validateAuthor(author string) bool {
+	return author != ""
+}
+
+func (bs *BookServiceImpl) validateTitle(title string) bool {
+	return title != ""
 }
