@@ -7,6 +7,7 @@ import (
 	"github.com/MSSkowron/BookRESTAPI/internal/api"
 	"github.com/MSSkowron/BookRESTAPI/internal/config"
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
+	"github.com/MSSkowron/BookRESTAPI/internal/services"
 )
 
 func Run() error {
@@ -20,10 +21,13 @@ func Run() error {
 
 	database, err := database.NewPostgresqlDatabase(config.DatabaseURL)
 	if err != nil {
-		return fmt.Errorf("failed to create storage: %w", err)
+		return fmt.Errorf("failed to create database: %w", err)
 	}
 
-	if err := api.NewServer(config.HTTPServerListenAddress, config.TokenSecret, config.TokenDuration, database).Run(); err != nil {
+	userService := services.NewUserService(database, config.TokenSecret, config.TokenDuration)
+	bookService := services.NewBookService(database)
+
+	if err := api.NewServer(config.HTTPServerListenAddress, userService, bookService).Run(); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
 

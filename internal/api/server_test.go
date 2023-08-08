@@ -13,16 +13,25 @@ import (
 
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
+	"github.com/MSSkowron/BookRESTAPI/internal/services"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	testTokenSecret   = "test1234567890"
+	testTokenDuration = 1 * time.Minute
+)
+
 func TestHandleRegister(t *testing.T) {
-	mockStorage := database.NewMockDatabase()
+	mockDB := database.NewMockDatabase()
 
-	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	bookService := services.NewBookService(mockDB)
+
+	server := NewServer("", userService, bookService)
+
 	mux := mux.NewRouter()
-
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
 
 	testServer := httptest.NewServer(mux)
@@ -148,11 +157,14 @@ func TestHandleRegister(t *testing.T) {
 }
 
 func TestHandleLogin(t *testing.T) {
-	mockStorage := database.NewMockDatabase()
+	mockDB := database.NewMockDatabase()
 
-	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	bookService := services.NewBookService(mockDB)
+
+	server := NewServer("", userService, bookService)
+
 	mux := mux.NewRouter()
-
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
 
@@ -287,14 +299,17 @@ func TestHandleLogin(t *testing.T) {
 }
 
 func TestHandlePostBook(t *testing.T) {
-	mockStorage := database.NewMockDatabase()
+	mockDB := database.NewMockDatabase()
 
-	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	bookService := services.NewBookService(mockDB)
+
+	server := NewServer("", userService, bookService)
+
 	mux := mux.NewRouter()
-
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books", validateJWT(makeHTTPHandlerFunc(server.handlePostBook), server.tokenSecret)).Methods("POST")
+	mux.HandleFunc("/books", server.validateJWT(makeHTTPHandlerFunc(server.handlePostBook))).Methods("POST")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -455,14 +470,17 @@ func TestHandlePostBook(t *testing.T) {
 }
 
 func TestHandleGetBookByID(t *testing.T) {
-	mockStorage := database.NewMockDatabase()
+	mockDB := database.NewMockDatabase()
 
-	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	bookService := services.NewBookService(mockDB)
+
+	server := NewServer("", userService, bookService)
+
 	mux := mux.NewRouter()
-
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(server.handleGetBookByID), server.tokenSecret)).Methods("GET")
+	mux.HandleFunc("/books/{id}", server.validateJWT(makeHTTPHandlerFunc(server.handleGetBookByID))).Methods("GET")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -618,14 +636,17 @@ func TestHandleGetBookByID(t *testing.T) {
 }
 
 func TestHandleGetBooks(t *testing.T) {
-	mockStorage := database.NewMockDatabase()
+	mockDB := database.NewMockDatabase()
 
-	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	bookService := services.NewBookService(mockDB)
+
+	server := NewServer("", userService, bookService)
+
 	mux := mux.NewRouter()
-
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books", validateJWT(makeHTTPHandlerFunc(server.handleGetBooks), server.tokenSecret)).Methods("GET")
+	mux.HandleFunc("/books", server.validateJWT(makeHTTPHandlerFunc(server.handleGetBooks))).Methods("GET")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -721,14 +742,17 @@ func TestHandleGetBooks(t *testing.T) {
 }
 
 func TestHandleDeleteBookByID(t *testing.T) {
-	mockStorage := database.NewMockDatabase()
+	mockDB := database.NewMockDatabase()
 
-	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	bookService := services.NewBookService(mockDB)
+
+	server := NewServer("", userService, bookService)
+
 	mux := mux.NewRouter()
-
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(server.handleDeleteBookByID), server.tokenSecret)).Methods("DELETE")
+	mux.HandleFunc("/books/{id}", server.validateJWT(makeHTTPHandlerFunc(server.handleDeleteBookByID))).Methods("DELETE")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
@@ -879,14 +903,17 @@ func TestHandleDeleteBookByID(t *testing.T) {
 }
 
 func TestHandlePutBookByID(t *testing.T) {
-	mockStorage := database.NewMockDatabase()
+	mockDB := database.NewMockDatabase()
 
-	server := NewServer("", "secret1234567890", 1*time.Minute, mockStorage)
+	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	bookService := services.NewBookService(mockDB)
+
+	server := NewServer("", userService, bookService)
+
 	mux := mux.NewRouter()
-
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
 	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", validateJWT(makeHTTPHandlerFunc(server.handlePutBookByID), server.tokenSecret)).Methods("PUT")
+	mux.HandleFunc("/books/{id}", server.validateJWT(makeHTTPHandlerFunc(server.handlePutBookByID))).Methods("PUT")
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
