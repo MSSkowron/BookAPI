@@ -327,7 +327,7 @@ func (s *Server) respondWithJSON(w http.ResponseWriter, code int, payload any) {
 		log.Printf("[Server] Error while marshaling JSON response: %s", err.Error())
 
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(ErrMsgInternalError))
+		_, _ = w.Write([]byte(ErrMsgInternalError))
 
 		return
 	}
