@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
 	"github.com/MSSkowron/BookRESTAPI/internal/services"
+	"github.com/MSSkowron/BookRESTAPI/pkg/logger"
 	"github.com/gorilla/mux"
 )
 
@@ -40,7 +40,7 @@ type ServerHandlerFunc func(w http.ResponseWriter, r *http.Request) error
 func makeHTTPHandlerFunc(f ServerHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := f(w, r); err != nil {
-			log.Printf("[Server] Error while handling request: %v", err)
+			logger.Errorf("Error (%s) while handling request from client with IP address: %s ", err)
 		}
 	}
 }
@@ -72,13 +72,13 @@ func (s *Server) Run() error {
 	r.HandleFunc("/books/{id}", s.validateJWT(makeHTTPHandlerFunc(s.handlePutBookByID))).Methods("PUT")
 	r.HandleFunc("/books/{id}", s.validateJWT(makeHTTPHandlerFunc(s.handleDeleteBookByID))).Methods("DELETE")
 
-	log.Println("[Server] Server is running on: " + s.listenAddr)
+	logger.Infof("Server is listening on %s", s.listenAddr)
 
 	return http.ListenAndServe(s.listenAddr, r)
 }
 
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
-	log.Println("[Server] Called POST /register")
+	logger.Infof("Received POST /register from %s", r.RemoteAddr)
 
 	createAccountRequest := &models.CreateAccountRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
@@ -114,7 +114,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 		}
 
 		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while registering user: %w", err)
+		return fmt.Errorf("register user: %w", err)
 	}
 
 	s.respondWithJSON(w, http.StatusOK, user)
@@ -123,7 +123,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
-	log.Println("[Server] Called POST /login")
+	logger.Infof("Received POST /login from %s", r.RemoteAddr)
 
 	loginRequest := &models.LoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
@@ -139,7 +139,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 		}
 
 		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while registering user: %w", err)
+		return fmt.Errorf("login user: %w", err)
 	}
 
 	s.respondWithJSON(w, http.StatusOK, models.LoginResponse{Token: token})
@@ -148,12 +148,12 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
-	log.Println("[Server] Called GET /books")
+	logger.Infof("Received GET /books from %s", r.RemoteAddr)
 
 	books, err := s.bookService.GetBooks()
 	if err != nil {
 		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while getting books: %w", err)
+		return fmt.Errorf("get books: %w", err)
 	}
 
 	s.respondWithJSON(w, http.StatusOK, books)
@@ -162,7 +162,7 @@ func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
-	log.Println("[Server] Called POST /books")
+	logger.Infof("Received POST /books from %s", r.RemoteAddr)
 
 	createBookRequest := &models.CreateBookRequest{}
 	if err := json.NewDecoder(r.Body).Decode(createBookRequest); err != nil {
@@ -182,7 +182,7 @@ func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 		}
 
 		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while creating new book: %w", err)
+		return fmt.Errorf("add book: %w", err)
 	}
 
 	s.respondWithJSON(w, http.StatusOK, book)
@@ -191,7 +191,7 @@ func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) error {
-	log.Println("[Server] Called GET /books/{id}")
+	logger.Infof("Received GET /books/{id} from %s", r.RemoteAddr)
 
 	idString := mux.Vars(r)["id"]
 	defer r.Body.Close()
@@ -210,7 +210,7 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) error
 		}
 
 		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while getting book: %w", err)
+		return fmt.Errorf("get book: %w", err)
 	}
 
 	s.respondWithJSON(w, http.StatusOK, book)
@@ -219,7 +219,7 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) error
 }
 
 func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error {
-	log.Println("[Server] Called PUT /books/{id}")
+	logger.Infof("Received PUT /books/{id} from %s", r.RemoteAddr)
 
 	idString := mux.Vars(r)["id"]
 	defer r.Body.Close()
@@ -248,7 +248,7 @@ func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error
 		}
 
 		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while getting book: %w", err)
+		return fmt.Errorf("update book: %w", err)
 	}
 
 	s.respondWithJSON(w, http.StatusOK, updatedBook)
@@ -257,7 +257,7 @@ func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error
 }
 
 func (s *Server) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) error {
-	log.Println("[Server] Called DELETE /books/{id}")
+	logger.Infof("Received DELETE /books{id} from %s", r.RemoteAddr)
 
 	idString := mux.Vars(r)["id"]
 	defer r.Body.Close()
@@ -275,7 +275,7 @@ func (s *Server) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) er
 		}
 
 		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
-		return fmt.Errorf("error while getting book: %w", err)
+		return fmt.Errorf("delete book: %w", err)
 	}
 
 	s.respondWithJSON(w, http.StatusOK, nil)
@@ -284,14 +284,20 @@ func (s *Server) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) er
 
 func (s *Server) validateJWT(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		clientIP := r.RemoteAddr
+
+		logger.Infof("Validating JWT for client with IP address: %s", clientIP)
+
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
+			logger.Infof("Authorization header missing for client with IP address: %s", clientIP)
 			s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
 			return
 		}
 
 		authHeaderParts := strings.Split(authHeader, " ")
 		if len(authHeaderParts) != 2 || authHeaderParts[0] != "Bearer" {
+			logger.Infof("Invalid authorization format for client with IP address: %s", clientIP)
 			s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorized)
 			return
 		}
@@ -299,18 +305,22 @@ func (s *Server) validateJWT(f http.HandlerFunc) http.HandlerFunc {
 		tokenString := authHeaderParts[1]
 		if err := s.userService.ValidateToken(tokenString); err != nil {
 			if errors.Is(err, services.ErrExpiredToken) {
+				logger.Infof("Expired JWT detected for client with IP address: %s", clientIP)
 				s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedExpiredToken)
 				return
 			}
 			if errors.Is(err, services.ErrInvalidToken) {
+				logger.Infof("Invalid JWT detected for client with IP address: %s", clientIP)
 				s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedInvalidToken)
 				return
 			}
 
+			logger.Errorf("Error (%s) encountered during JWT validation for client with IP address: %s", err, clientIP)
 			s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 			return
 		}
 
+		logger.Infof("JWT validation successful for client with IP address: %s", clientIP)
 		f(w, r)
 	}
 }
@@ -324,7 +334,7 @@ func (s *Server) respondWithJSON(w http.ResponseWriter, code int, payload any) {
 
 	response, err := json.Marshal(payload)
 	if err != nil {
-		log.Printf("[Server] Error while marshaling JSON response: %s", err.Error())
+		logger.Errorf("Error (%s) while marshalling JSON response", err)
 
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(ErrMsgInternalError))
