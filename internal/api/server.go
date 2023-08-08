@@ -133,6 +133,14 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 
 	token, err := s.userService.LoginUser(loginRequest.Email, loginRequest.Password)
 	if err != nil {
+		if errors.Is(err, services.ErrInvalidEmail) {
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
+			return nil
+		}
+		if errors.Is(err, services.ErrEmptyPassword) {
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
+			return nil
+		}
 		if errors.Is(err, services.ErrInvalidCredentials) {
 			s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedInvalidCredentials)
 			return nil

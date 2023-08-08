@@ -14,20 +14,22 @@ import (
 
 var (
 	// ErrInvalidEmail is returned when an invalid email address is provided.
-	ErrInvalidEmail = errors.New("email must be a valid email address")
+	ErrInvalidEmail = errors.New("email must not be empty and must be a valid email address")
 	// ErrInvalidPassword is returned when an invalid password is provided.
 	// Password must have at least 6 characters, including 1 uppercase letter,
 	// 1 lowercase letter, and 1 digit.
-	ErrInvalidPassword = errors.New("password must have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit")
+	ErrInvalidPassword = errors.New("password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit")
+	// ErrEmptyPassword is returned when an empty password is provided.
+	ErrEmptyPassword = errors.New("password must not be empty")
 	// ErrInvalidFirstName is returned when an invalid first name is provided.
 	// First name must consist of alphabetic characters and spaces, with at least 2 characters.
-	ErrInvalidFirstName = errors.New("first name must consist of alphabetic characters and spaces, with at least 2 characters")
+	ErrInvalidFirstName = errors.New("first name must must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters")
 	// ErrInvalidLastName is returned when an invalid last name is provided.
 	// Last name must consist of alphabetic characters and spaces, with at least 2 characters.
-	ErrInvalidLastName = errors.New("last name must consist of alphabetic characters and spaces, with at least 2 characters")
+	ErrInvalidLastName = errors.New("last name must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters")
 	// ErrInvalidAge is returned when an invalid age is provided.
 	// Age must be between 18 and 120.
-	ErrInvalidAge = errors.New("age must be between 18 and 120")
+	ErrInvalidAge = errors.New("age must must not be empty and must be between 18 and 120")
 	// ErrInvalidCredentials is returned when invalid user credentials are provided.
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	// ErrUserAlreadyExists is returned when a user with the same details already exists.
@@ -79,7 +81,7 @@ func (us *UserServiceImpl) RegisterUser(email, password, firstName, lastName str
 		return nil, ErrInvalidAge
 	}
 
-	if _, err := us.db.SelectUserByEmail(email); err == nil {
+	if user, _ := us.db.SelectUserByEmail(email); user != nil {
 		return nil, ErrUserAlreadyExists
 	}
 
@@ -107,6 +109,13 @@ func (us *UserServiceImpl) RegisterUser(email, password, firstName, lastName str
 
 // LoginUser logs a user in and returns a token
 func (us *UserServiceImpl) LoginUser(email, password string) (string, error) {
+	if !us.validateEmail(email) {
+		return "", ErrInvalidEmail
+	}
+	if password == "" {
+		return "", ErrEmptyPassword
+	}
+
 	user, err := us.db.SelectUserByEmail(email)
 	if err != nil || user == nil {
 		return "", ErrInvalidCredentials

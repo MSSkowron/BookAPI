@@ -47,7 +47,7 @@ func TestHandleRegister(t *testing.T) {
 			name: "valid request",
 			input: models.CreateAccountRequest{
 				Email:     "test@test.com",
-				Password:  "test",
+				Password:  "Test123",
 				FirstName: "test",
 				LastName:  "test",
 				Age:       30,
@@ -82,6 +82,230 @@ func TestHandleRegister(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid password - too short",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "Sh0rt",
+				FirstName: "test",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
+			},
+		},
+		{
+			name: "invalid password - no capital lettetr",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "nocapitalletters123",
+				FirstName: "test",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
+			},
+		},
+		{
+			name: "invalid password - no uppercase lettetr",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "nouppercaseletter123",
+				FirstName: "test",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
+			},
+		},
+		{
+			name: "invalid password - no lowercase lettetr",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "NOLOWERCASELETTER123",
+				FirstName: "test",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
+			},
+		},
+		{
+			name: "invalid password - no digit",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "NODIGIT",
+				FirstName: "test",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
+			},
+		},
+		{
+			name: "invalid password - empty",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "",
+				FirstName: "test",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
+			},
+		},
+		{
+			name: "invalid email - invalid format",
+			input: models.CreateAccountRequest{
+				Email:     "test-test.com",
+				Password:  "Test123@",
+				FirstName: "test",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:email must not be empty and must be a valid email address",
+			},
+		},
+		{
+			name: "invalid email - empty",
+			input: models.CreateAccountRequest{
+				Email:     "",
+				Password:  "Test123@",
+				FirstName: "test",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:email must not be empty and must be a valid email address",
+			},
+		},
+		{
+			name: "invalid first name - too short",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "Test123@",
+				FirstName: "X",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:first name must must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
+			},
+		},
+		{
+			name: "invalid first name - no letters",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "Test123@",
+				FirstName: "123098",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:first name must must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
+			},
+		},
+		{
+			name: "invalid first name - empty",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "Test123@",
+				FirstName: "",
+				LastName:  "test",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:first name must must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
+			},
+		},
+		{
+			name: "invalid last name - too short",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "Test123@",
+				FirstName: "test",
+				LastName:  "X",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:last name must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
+			},
+		},
+		{
+			name: "invalid last name - no letters",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "Test123@",
+				FirstName: "test",
+				LastName:  "123098",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:last name must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
+			},
+		},
+		{
+			name: "invalid last name - empty",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "Test123@",
+				FirstName: "test",
+				LastName:  "",
+				Age:       30,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:last name must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
+			},
+		},
+		{
+			name: "invalid age - too young",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "Test123@",
+				FirstName: "test",
+				LastName:  "test",
+				Age:       10,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:age must must not be empty and must be between 18 and 120",
+			},
+		},
+		{
+			name: "invalid age - too old",
+			input: models.CreateAccountRequest{
+				Email:     "test@test.com",
+				Password:  "Test123@",
+				FirstName: "test",
+				LastName:  "test",
+				Age:       250,
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:age must must not be empty and must be between 18 and 120",
+			},
+		},
+		{
 			name: "missing required fields",
 			input: models.CreateAccountRequest{
 				FirstName: "test",
@@ -90,7 +314,7 @@ func TestHandleRegister(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedResponse: models.ErrorResponse{
-				Error: "invalid request body",
+				Error: "invalid request body:email must not be empty and must be a valid email address",
 			},
 		},
 	}
@@ -134,7 +358,7 @@ func TestHandleRegister(t *testing.T) {
 	// Test if user with this email already exists
 	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
-		Password:  "test",
+		Password:  "Test123",
 		FirstName: "test",
 		LastName:  "test",
 		Age:       30,
@@ -173,7 +397,7 @@ func TestHandleLogin(t *testing.T) {
 
 	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
-		Password:  "test",
+		Password:  "Test123@#",
 		FirstName: "test",
 		LastName:  "test",
 		Age:       30,
@@ -198,7 +422,7 @@ func TestHandleLogin(t *testing.T) {
 			name: "valid",
 			input: models.LoginRequest{
 				Email:    "test@test.com",
-				Password: "test",
+				Password: "Test123@#",
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse: models.LoginResponse{
@@ -206,10 +430,21 @@ func TestHandleLogin(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid password",
+			name: "invalid email - empty",
 			input: models.LoginRequest{
-				Email:    "test@test.com",
-				Password: "invalidPassword",
+				Email:    "",
+				Password: "Test123@#",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body:email must not be empty and must be a valid email address",
+			},
+		},
+		{
+			name: "invalid email",
+			input: models.LoginRequest{
+				Email:    "invalidEmail@test.com",
+				Password: "Test123@#",
 			},
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedResponse: models.ErrorResponse{
@@ -217,10 +452,10 @@ func TestHandleLogin(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid email",
+			name: "invalid password",
 			input: models.LoginRequest{
-				Email:    "invalidEmail@test.com",
-				Password: "test",
+				Email:    "test@test.com",
+				Password: "invalidPassword0#@",
 			},
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedResponse: models.ErrorResponse{
@@ -236,7 +471,7 @@ func TestHandleLogin(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedResponse: models.ErrorResponse{
-				Error: "invalid request body",
+				Error: "invalid request body:password must not be empty",
 			},
 		},
 		{
@@ -248,7 +483,7 @@ func TestHandleLogin(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedResponse: models.ErrorResponse{
-				Error: "invalid request body",
+				Error: "invalid request body:email must not be empty and must be a valid email address",
 			},
 		},
 		{
