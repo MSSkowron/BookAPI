@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
+	"github.com/MSSkowron/BookRESTAPI/pkg/logger"
 	pgx "github.com/jackc/pgx/v5"
 )
 
@@ -41,11 +42,11 @@ func (db *PostgresqlDatabase) InsertUser(user *models.User) (int, error) {
 
 	err := db.conn.QueryRow(context.Background(), query, user.Email, user.Password, user.FirstName, user.LastName, user.Age).Scan(&id)
 	if err != nil {
-		log.Printf("[PostgresqlDatabase] Error while inserting new user: %s", err.Error())
+		logger.Errorf("Error (%s) while inserting new user", err)
 		return id, err
 	}
 
-	log.Printf("[PostgresqlDatabase] Inserted new user with ID: %d", id)
+	logger.Infof("Inserted new user with ID: %d", id)
 
 	return id, nil
 }
@@ -58,11 +59,11 @@ func (db *PostgresqlDatabase) SelectUserByEmail(email string) (*models.User, err
 	user := &models.User{}
 	err := row.Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age)
 	if err != nil {
-		log.Printf("[PostgresqlDatabase] Error while selecting user with email %s: %s", email, err.Error())
+		logger.Errorf("Error (%s) while selecting user with email: %s", err, email)
 		return nil, err
 	}
 
-	log.Printf("[PostgresqlDatabase] Selected user with email: %s", email)
+	logger.Infof("Selected user with email: %s", email)
 
 	return user, nil
 }
@@ -76,11 +77,11 @@ func (db *PostgresqlDatabase) InsertBook(book *models.Book) (int, error) {
 
 	err := db.conn.QueryRow(context.Background(), query, book.Author, book.Title).Scan(&id)
 	if err != nil {
-		log.Printf("[PostgresqlDatabase] Error while inserting new book: %s", err.Error())
+		logger.Errorf("Error (%s) while inserting new book", err)
 		return id, err
 	}
 
-	log.Printf("[PostgresqlDatabase] Inserted new book with ID %d", id)
+	logger.Infof("Inserted new book with ID: %d", id)
 
 	return id, nil
 }
@@ -99,14 +100,14 @@ func (db *PostgresqlDatabase) SelectAllBooks() ([]*models.Book, error) {
 	for rows.Next() {
 		book := &models.Book{}
 		if err := rows.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author); err != nil {
-			log.Printf("[PostgresqlDatabase] Error while selecting all books: %s", err.Error())
+			logger.Errorf("Error (%s) while selecting all books", err)
 			return nil, err
 		}
 
 		books = append(books, book)
 	}
 
-	log.Println("[PostgresqlDatabase] Selected all books")
+	log.Println("Selected all books")
 
 	return books, nil
 }
@@ -118,11 +119,11 @@ func (db *PostgresqlDatabase) SelectBookByID(id int) (*models.Book, error) {
 	row := db.conn.QueryRow(context.Background(), query, id)
 	book := &models.Book{}
 	if err := row.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author); err != nil {
-		log.Printf("[PostgresqlDatabase] Error while selecting book with ID %d: %s", id, err.Error())
+		logger.Errorf("Error (%s) while selecting book with ID: %d", err, id)
 		return nil, err
 	}
 
-	log.Printf("[PostgresqlDatabase] Selected book with ID: %d", id)
+	logger.Infof("Selected book with ID: %d", id)
 
 	return book, nil
 }
@@ -132,11 +133,11 @@ func (db *PostgresqlDatabase) DeleteBook(id int) error {
 	query := "DELETE FROM books WHERE id=$1"
 
 	if _, err := db.conn.Exec(context.Background(), query, id); err != nil {
-		log.Printf("[PostgresqlDatabase] Error while deleting book with ID %d: %s", id, err.Error())
+		logger.Errorf("Error (%s) while deleting book with ID: %d", err, id)
 		return err
 	}
 
-	log.Printf("[PostgresqlDatabase] Deleted book with ID %d", id)
+	logger.Infof("Deleted book with ID: %d", id)
 
 	return nil
 }
@@ -147,11 +148,11 @@ func (db *PostgresqlDatabase) UpdateBook(book *models.Book) error {
 
 	_, err := db.conn.Exec(context.Background(), query, book.Author, book.Title, book.ID)
 	if err != nil {
-		log.Printf("[PostgresqlDatabase] Error while updating book with ID %d: %s", book.ID, err.Error())
+		logger.Errorf("Error (%s) while updating book with ID: %d", err, book.ID)
 		return err
 	}
 
-	log.Printf("[PostgresqlDatabase] Updated book with ID %d", book.ID)
+	logger.Infof("Updated book with ID: %d", book.ID)
 
 	return nil
 }
