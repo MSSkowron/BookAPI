@@ -32,7 +32,7 @@ const (
 	// ErrMsgNotFound is a message for not found
 	ErrMsgNotFound = "not found"
 	// ErrMsgInternalError is a message for internal error
-	ErrMsgInternalError = "internal error"
+	ErrMsgInternalError = "internal server error"
 )
 
 type ServerHandlerFunc func(w http.ResponseWriter, r *http.Request) error
@@ -88,28 +88,28 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 
 	user, err := s.userService.RegisterUser(createAccountRequest.Email, createAccountRequest.Password, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
 	if err != nil {
-		if errors.Is(err, services.ErrUserAlreadyExists) {
-			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestUserAlreadyExists)
-			return nil
-		}
 		if errors.Is(err, services.ErrInvalidEmail) {
-			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
 			return nil
 		}
 		if errors.Is(err, services.ErrInvalidPassword) {
-			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
 			return nil
 		}
 		if errors.Is(err, services.ErrInvalidFirstName) {
-			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
 			return nil
 		}
 		if errors.Is(err, services.ErrInvalidLastName) {
-			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
 			return nil
 		}
 		if errors.Is(err, services.ErrInvalidAge) {
-			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
+			return nil
+		}
+		if errors.Is(err, services.ErrUserAlreadyExists) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestUserAlreadyExists)
 			return nil
 		}
 
