@@ -113,6 +113,11 @@ func (bs *BookServiceImpl) DeleteBook(id int) error {
 		return ErrInvalidID
 	}
 
+	book, err := bs.db.SelectBookByID(id)
+	if err != nil || book == nil {
+		return ErrBookNotFound
+	}
+
 	return bs.db.DeleteBook(id)
 }
 

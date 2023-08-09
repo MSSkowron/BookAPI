@@ -285,6 +285,10 @@ func (s *Server) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) er
 	}
 
 	if err := s.bookService.DeleteBook(id); err != nil {
+		if errors.Is(err, services.ErrInvalidID) {
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
+			return nil
+		}
 		if errors.Is(err, services.ErrBookNotFound) {
 			s.respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
 			return nil

@@ -1042,7 +1042,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
-		Password:  "test",
+		Password:  "Test123!",
 		FirstName: "test",
 		LastName:  "test",
 		Age:       30,
@@ -1059,7 +1059,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	loginRequest := models.LoginRequest{
 		Email:    "test@test.com",
-		Password: "test",
+		Password: "Test123!",
 	}
 
 	loginRequestJSON, err := json.Marshal(loginRequest)
@@ -1089,7 +1089,15 @@ func TestHandleDeleteBookByID(t *testing.T) {
 			expectedResponseBody: "null",
 		},
 		{
-			name:               "invalid id",
+			name:               "invalid id - negative",
+			inputID:            -100,
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponseBody: models.ErrorResponse{
+				Error: "invalid request body:id must be a positive integer",
+			},
+		},
+		{
+			name:               "invalid id - not existing",
 			inputID:            100,
 			expectedStatusCode: http.StatusNotFound,
 			expectedResponseBody: models.ErrorResponse{
