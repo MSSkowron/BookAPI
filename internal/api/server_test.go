@@ -1211,7 +1211,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
-		Password:  "test",
+		Password:  "Test123!",
 		FirstName: "test",
 		LastName:  "test",
 		Age:       30,
@@ -1228,7 +1228,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	loginRequest := models.LoginRequest{
 		Email:    "test@test.com",
-		Password: "test",
+		Password: "Test123!",
 	}
 
 	loginRequestJSON, err := json.Marshal(loginRequest)
@@ -1266,7 +1266,7 @@ func TestHandlePutBookByID(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid id",
+			name: "invalid id - not existing",
 			input: models.Book{
 				ID:     100,
 				Author: "J. K. Rowling",
@@ -1275,6 +1275,54 @@ func TestHandlePutBookByID(t *testing.T) {
 			expectedStatusCode: http.StatusNotFound,
 			expectedResponseBody: models.ErrorResponse{
 				Error: "not found",
+			},
+		},
+		{
+			name: "invalid id - negative",
+			input: models.Book{
+				ID:     -100,
+				Author: "J. K. Rowling",
+				Title:  "Harry Potter and the Philosopher's Stone",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponseBody: models.ErrorResponse{
+				Error: "invalid request body:id must be a positive integer",
+			},
+		},
+		{
+			name: "invalid id - zero",
+			input: models.Book{
+				ID:     0,
+				Author: "J. K. Rowling",
+				Title:  "Harry Potter and the Philosopher's Stone",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponseBody: models.ErrorResponse{
+				Error: "invalid request body:id must be a positive integer",
+			},
+		},
+		{
+			name: "invalid author - empty",
+			input: models.Book{
+				ID:     1,
+				Author: "",
+				Title:  "Harry Potter and the Philosopher's Stone",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponseBody: models.ErrorResponse{
+				Error: "invalid request body:author must not be empty",
+			},
+		},
+		{
+			name: "invalid title - empty",
+			input: models.Book{
+				ID:     1,
+				Author: "J. K. Rowling",
+				Title:  "",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponseBody: models.ErrorResponse{
+				Error: "invalid request body:title must not be empty",
 			},
 		},
 		{

@@ -93,7 +93,7 @@ func (bs *BookServiceImpl) UpdateBook(id int, author, title string) (*models.Boo
 	}
 
 	book, err := bs.db.SelectBookByID(id)
-	if err != nil {
+	if err != nil || book == nil {
 		return nil, ErrBookNotFound
 	}
 
@@ -113,8 +113,7 @@ func (bs *BookServiceImpl) DeleteBook(id int) error {
 		return ErrInvalidID
 	}
 
-	book, err := bs.db.SelectBookByID(id)
-	if err != nil || book == nil {
+	if book, err := bs.db.SelectBookByID(id); err != nil || book == nil {
 		return ErrBookNotFound
 	}
 
