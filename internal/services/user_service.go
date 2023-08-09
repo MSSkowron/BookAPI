@@ -55,7 +55,7 @@ type UserServiceImpl struct {
 }
 
 // NewUserService creates a new UserServiceImpl
-func NewUserService(db database.Database, tokenSecret string, tokenDuration time.Duration) UserService {
+func NewUserService(db database.Database, tokenSecret string, tokenDuration time.Duration) *UserServiceImpl {
 	return &UserServiceImpl{
 		db:            db,
 		tokenSecret:   tokenSecret,

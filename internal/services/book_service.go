@@ -30,7 +30,7 @@ type BookServiceImpl struct {
 }
 
 // NewBookService returns an implementation of BookService interface
-func NewBookService(db database.Database) BookService {
+func NewBookService(db database.Database) *BookServiceImpl {
 	return &BookServiceImpl{db: db}
 }
 
