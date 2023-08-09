@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	ErrInvalidID            = errors.New("invalid ID")
-	ErrInvalidAuthor        = errors.New("invalid author")
-	ErrInvalidTitle         = errors.New("invalid title")
+	ErrInvalidID            = errors.New("id must be a positive integer")
+	ErrInvalidAuthor        = errors.New("author must not be empty")
+	ErrInvalidTitle         = errors.New("title must not be empty")
 	ErrInvalidAuthorOrTitle = errors.New("invalid author or title")
 	ErrBookNotFound         = errors.New("book not found")
 )

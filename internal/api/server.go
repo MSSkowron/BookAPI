@@ -246,12 +246,20 @@ func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error
 
 	updatedBook, err := s.bookService.UpdateBook(id, book.Author, book.Title)
 	if err != nil {
-		if errors.Is(err, services.ErrBookNotFound) {
-			s.respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
+		if errors.Is(err, services.ErrInvalidID) {
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
 			return nil
 		}
-		if errors.Is(err, services.ErrInvalidAuthorOrTitle) {
-			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
+		if errors.Is(err, services.ErrInvalidAuthor) {
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
+			return nil
+		}
+		if errors.Is(err, services.ErrInvalidTitle) {
+			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
+			return nil
+		}
+		if errors.Is(err, services.ErrBookNotFound) {
+			s.respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
 			return nil
 		}
 

@@ -551,7 +551,7 @@ func TestHandlePostBook(t *testing.T) {
 
 	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
-		Password:  "test",
+		Password:  "Test123@#",
 		FirstName: "test",
 		LastName:  "test",
 		Age:       30,
@@ -568,7 +568,7 @@ func TestHandlePostBook(t *testing.T) {
 
 	loginRequest := models.LoginRequest{
 		Email:    "test@test.com",
-		Password: "test",
+		Password: "Test123@#",
 	}
 
 	loginRequestJSON, err := json.Marshal(loginRequest)
@@ -605,10 +605,50 @@ func TestHandlePostBook(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid author - empty",
+			input: models.Book{
+				Author: "",
+				Title:  "test",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body",
+			},
+		},
+		{
+			name: "invalid title - empty",
+			input: models.Book{
+				Author: "test",
+				Title:  "",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body",
+			},
+		},
+		{
 			name: "no title",
 			input: models.Book{
 				Author: "test",
 			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body",
+			},
+		},
+		{
+			name: "no author",
+			input: models.Book{
+				Title: "test",
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse: models.ErrorResponse{
+				Error: "invalid request body",
+			},
+		},
+		{
+			name:               "no fields",
+			input:              models.Book{},
 			expectedStatusCode: http.StatusBadRequest,
 			expectedResponse: models.ErrorResponse{
 				Error: "invalid request body",
