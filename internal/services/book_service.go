@@ -50,6 +50,9 @@ func (bs *BookServiceImpl) GetBook(id int) (*models.Book, error) {
 	if err != nil {
 		return nil, err
 	}
+	if book == nil {
+		return nil, ErrBookNotFound
+	}
 
 	return book, nil
 }

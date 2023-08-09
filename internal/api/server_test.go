@@ -722,7 +722,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
-		Password:  "test",
+		Password:  "Test123!",
 		FirstName: "test",
 		LastName:  "test",
 		Age:       30,
@@ -739,7 +739,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	loginRequest := models.LoginRequest{
 		Email:    "test@test.com",
-		Password: "test",
+		Password: "Test123!",
 	}
 
 	loginRequestJSON, err := json.Marshal(loginRequest)
@@ -773,8 +773,16 @@ func TestHandleGetBookByID(t *testing.T) {
 			},
 		},
 		{
-			name:               "invalid id",
+			name:               "not existing id",
 			inputID:            100,
+			expectedStatusCode: http.StatusNotFound,
+			expectedResponseBody: models.ErrorResponse{
+				Error: "not found",
+			},
+		},
+		{
+			name:               "negative id",
+			inputID:            -200,
 			expectedStatusCode: http.StatusNotFound,
 			expectedResponseBody: models.ErrorResponse{
 				Error: "not found",
