@@ -888,7 +888,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	createAccountRequest := models.CreateAccountRequest{
 		Email:     "test@test.com",
-		Password:  "test",
+		Password:  "Test123!",
 		FirstName: "test",
 		LastName:  "test",
 		Age:       30,
@@ -906,7 +906,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	loginRequest := models.LoginRequest{
 		Email:    "test@test.com",
-		Password: "test",
+		Password: "Test123!",
 	}
 
 	loginRequestJSON, err := json.Marshal(loginRequest)

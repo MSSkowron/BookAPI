@@ -26,7 +26,7 @@ const (
 	// ErrMsgUnauthorizedExpiredToken is a message for unauthorized with expired token
 	ErrMsgUnauthorizedExpiredToken = "expired token"
 	// ErrMsgUnauthorizedInvalidToken is a message for unauthorized with invalid token
-	ErrMsgUnauthorizedInvalidToken = "invalid token"
+	ErrMsgUnauthorizedInvalidToken = "unauthorized"
 	// ErrMsgUnauthorizedInvalidCredentials is a message for unauthorized with invalid credentials
 	ErrMsgUnauthorizedInvalidCredentials = "invalid credentials"
 	// ErrMsgNotFound is a message for not found

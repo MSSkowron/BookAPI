@@ -144,11 +144,8 @@ func (us *UserServiceImpl) ValidateToken(tokenString string) error {
 		if errors.Is(err, token.ErrExpiredToken) {
 			return ErrExpiredToken
 		}
-		if errors.Is(err, token.ErrInvalidToken) || errors.Is(err, token.ErrInvalidSignature) {
-			return ErrInvalidToken
-		}
 
-		return err
+		return ErrInvalidToken
 	}
 
 	return nil
