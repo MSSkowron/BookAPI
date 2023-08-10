@@ -35,9 +35,9 @@ const (
 	ErrMsgInternalError = "internal server error"
 )
 
-type ServerHandlerFunc func(w http.ResponseWriter, r *http.Request) error
+type serverHandlerFunc func(w http.ResponseWriter, r *http.Request) error
 
-func makeHTTPHandlerFunc(f ServerHandlerFunc) http.HandlerFunc {
+func makeHTTPHandlerFunc(f serverHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := f(w, r); err != nil {
 			logger.Errorf("Error (%s) while handling request from client with IP address: %s ", err)
