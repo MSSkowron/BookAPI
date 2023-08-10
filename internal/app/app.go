@@ -10,6 +10,9 @@ import (
 	"github.com/MSSkowron/BookRESTAPI/internal/services"
 )
 
+// Run runs the BookRESTAPI application.
+// It loads configuration, creates database connection, creates services and runs the server.
+// It returns an error if any of the steps fails.
 func Run() error {
 	configFileFlag := flag.String("configFile", "./configs/default_config.env", "path to a configuration file")
 	flag.Parse()
