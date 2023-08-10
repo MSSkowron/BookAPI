@@ -1,8 +1,8 @@
-version: '3.5'
+version: '3.8'
 
 services:
   database:
-    container_name: bookrestapidatabase
+    container_name: bookrestapi_database
     image: postgres:15
     restart: on-failure
     environment:
@@ -14,22 +14,34 @@ services:
       - ./db/data:/var/lib/postgresql/data
       - ./db/scripts/:/docker-entrypoint-initdb.d/
     networks:
-      - bookrestapinet
+      - bookrestapi_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   server:
-    container_name: bookrestapiserver
+    container_name: bookrestapi_server  
     build: .
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     restart: on-failure
     networks:
-      - bookrestapinet
+      - bookrestapi_net
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
-  bookrestapidata:
+  bookrestapi_data:
     driver: local
 
 networks:
-  bookrestapinet:
+  bookrestapi_net:
     driver: bridge
