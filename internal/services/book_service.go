@@ -46,11 +46,12 @@ func (bs *BookServiceImpl) GetBooks() ([]*models.Book, error) {
 
 // GetBook returns a book with the given id from the database
 func (bs *BookServiceImpl) GetBook(id int) (*models.Book, error) {
-	book, err := bs.db.SelectBookByID(id)
-	if err != nil {
-		return nil, err
+	if !bs.validateID(id) {
+		return nil, ErrInvalidID
 	}
-	if book == nil {
+
+	book, err := bs.db.SelectBookByID(id)
+	if err != nil || book == nil {
 		return nil, ErrBookNotFound
 	}
 
