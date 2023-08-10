@@ -212,6 +212,10 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) error
 
 	book, err := s.bookService.GetBook(id)
 	if err != nil {
+		if errors.Is(err, services.ErrInvalidID) {
+			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidBookID)
+			return nil
+		}
 		if errors.Is(err, services.ErrBookNotFound) {
 			s.respondWithError(w, http.StatusNotFound, ErrMsgNotFound)
 			return nil

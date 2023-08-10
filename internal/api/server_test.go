@@ -823,9 +823,9 @@ func TestHandleGetBookByID(t *testing.T) {
 		{
 			name:               "negative id",
 			inputID:            -200,
-			expectedStatusCode: http.StatusNotFound,
+			expectedStatusCode: http.StatusBadRequest,
 			expectedResponseBody: models.ErrorResponse{
-				Error: "not found",
+				Error: "invalid book id",
 			},
 		},
 	}
@@ -850,7 +850,7 @@ func TestHandleGetBookByID(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, d.expectedResponseBody, responseBody)
-			case http.StatusNotFound:
+			case http.StatusNotFound, http.StatusBadRequest:
 				responseError := models.ErrorResponse{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
