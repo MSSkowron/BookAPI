@@ -4,11 +4,162 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MSSkowron/BookRESTAPI/internal/database"
+	"github.com/MSSkowron/BookRESTAPI/internal/models"
+	"github.com/MSSkowron/BookRESTAPI/pkg/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterUser(t *testing.T) {
+	mockDB := database.NewMockDatabase()
 
+	us := NewUserService(mockDB, "", 0)
+
+	hashedPassword, _ := crypto.HashPassword("Password1")
+
+	data := []struct {
+		name      string
+		email     string
+		password  string
+		firstName string
+		lastName  string
+		age       int
+		expected  struct {
+			user *models.User
+			err  error
+		}
+	}{
+		{
+			name:      "valid user",
+			email:     "user@email.com",
+			password:  "Password1",
+			firstName: "John",
+			lastName:  "Doe",
+			age:       20,
+			expected: struct {
+				user *models.User
+				err  error
+			}{
+				user: &models.User{
+					ID:        4,
+					Email:     "user@email.com",
+					Password:  hashedPassword,
+					FirstName: "John",
+					LastName:  "Doe",
+					Age:       20,
+				},
+				err: nil,
+			},
+		},
+		{
+			name:      "invalid email",
+			email:     "invalid email",
+			password:  "Password1",
+			firstName: "John",
+			lastName:  "Doe",
+			age:       20,
+			expected: struct {
+				user *models.User
+				err  error
+			}{
+				user: nil,
+				err:  ErrInvalidEmail,
+			},
+		},
+		{
+			name:      "invalid password",
+			email:     "user@email.com",
+			password:  "invalid password",
+			firstName: "John",
+			lastName:  "Doe",
+			age:       20,
+			expected: struct {
+				user *models.User
+				err  error
+			}{
+				user: nil,
+				err:  ErrInvalidPassword,
+			},
+		},
+		{
+			name:      "invalid first name",
+			email:     "user@email.com",
+			password:  "Password1",
+			firstName: "X07.@",
+			lastName:  "Doe",
+			age:       20,
+			expected: struct {
+				user *models.User
+				err  error
+			}{
+				user: nil,
+				err:  ErrInvalidFirstName,
+			},
+		},
+		{
+			name:      "invalid last name",
+			email:     "user@email.com",
+			password:  "Password1",
+			firstName: "John",
+			lastName:  "X07.@",
+			age:       20,
+			expected: struct {
+				user *models.User
+				err  error
+			}{
+				user: nil,
+				err:  ErrInvalidLastName,
+			},
+		},
+		{
+			name:      "invalid age",
+			email:     "user@email.com",
+			password:  "Password1",
+			firstName: "John",
+			lastName:  "Doe",
+			age:       -1,
+			expected: struct {
+				user *models.User
+				err  error
+			}{
+				user: nil,
+				err:  ErrInvalidAge,
+			},
+		},
+		{
+			name:      "user already exists",
+			email:     "johndoe@net.eu",
+			password:  "Password1",
+			firstName: "John",
+			lastName:  "Doe",
+			age:       20,
+			expected: struct {
+				user *models.User
+				err  error
+			}{
+				user: nil,
+				err:  ErrUserAlreadyExists,
+			},
+		},
+	}
+
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			user, err := us.RegisterUser(d.email, d.password, d.firstName, d.lastName, d.age)
+			if d.expected.user != nil {
+				assert.NotNil(t, user)
+				assert.Equal(t, d.expected.user.ID, user.ID)
+				assert.Equal(t, d.expected.user.Email, user.Email)
+				assert.Nil(t, crypto.CheckPassword("Password1", user.Password))
+				assert.Equal(t, d.expected.user.FirstName, user.FirstName)
+				assert.Equal(t, d.expected.user.LastName, user.LastName)
+				assert.Equal(t, d.expected.user.Age, user.Age)
+			} else {
+				assert.Nil(t, user)
+			}
+			assert.Equal(t, d.expected.err, err)
+		})
+	}
 }
 
 func TestLoginUser(t *testing.T) {
