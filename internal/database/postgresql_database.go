@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"log"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
 	"github.com/MSSkowron/BookRESTAPI/pkg/logger"
@@ -107,7 +106,7 @@ func (db *PostgresqlDatabase) SelectAllBooks() ([]*models.Book, error) {
 		books = append(books, book)
 	}
 
-	log.Println("Selected all books")
+	logger.Infoln("Selected all books")
 
 	return books, nil
 }
