@@ -1,6 +1,6 @@
 module github.com/MSSkowron/BookRESTAPI
 
-go 1.19
+go 1.21
 
 require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -8,10 +8,9 @@ require (
 	github.com/jackc/pgx/v5 v5.4.2
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
+	go.uber.org/zap v1.25.0
 	golang.org/x/crypto v0.11.0
 )
-
-require go.uber.org/multierr v1.10.0 // indirect
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -28,7 +27,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
-	go.uber.org/zap v1.25.0
+	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
