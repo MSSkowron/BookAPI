@@ -8,11 +8,16 @@ import (
 )
 
 var (
-	ErrInvalidID            = errors.New("id must be a positive integer")
-	ErrInvalidAuthor        = errors.New("author must not be empty")
-	ErrInvalidTitle         = errors.New("title must not be empty")
+	// ErrInvalidID is returned when the given id is not a positive integer
+	ErrInvalidID = errors.New("id must be a positive integer")
+	// ErrInvalidAuthor is returned when the given author is empty
+	ErrInvalidAuthor = errors.New("author must not be empty")
+	// ErrInvalidTitle is returned when the given title is empty
+	ErrInvalidTitle = errors.New("title must not be empty")
+	// ErrInvalidAuthorOrTitle is returned when the given author or title is empty
 	ErrInvalidAuthorOrTitle = errors.New("invalid author or title")
-	ErrBookNotFound         = errors.New("book not found")
+	// ErrBookNotFound is returned when the book with the given id does not exist in the database
+	ErrBookNotFound = errors.New("book not found")
 )
 
 // BookService is an interface that defines the methods that the BookService struct must implement
