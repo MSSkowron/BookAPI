@@ -163,6 +163,96 @@ func TestRegisterUser(t *testing.T) {
 }
 
 func TestLoginUser(t *testing.T) {
+	mockDB := database.NewMockDatabase()
+
+	us := NewUserService(mockDB, "secret12345", 3*time.Second)
+
+	user, err := us.RegisterUser("johntestdoe@net.eu", "Password1", "John", "Doe", 20)
+	assert.NotNil(t, user)
+	assert.Nil(t, err)
+
+	data := []struct {
+		name     string
+		email    string
+		password string
+		expected struct {
+			token bool
+			err   error
+		}
+	}{
+		{
+			name:     "valid user",
+			email:    "johntestdoe@net.eu",
+			password: "Password1",
+			expected: struct {
+				token bool
+				err   error
+			}{
+				token: true,
+				err:   nil,
+			},
+		},
+		{
+			name:     "invalid email",
+			email:    "invalid email",
+			password: "Password1",
+			expected: struct {
+				token bool
+				err   error
+			}{
+				token: false,
+				err:   ErrInvalidEmail,
+			},
+		},
+		{
+			name:     "empty password",
+			email:    "johntestdoe@net.eu",
+			password: "",
+			expected: struct {
+				token bool
+				err   error
+			}{
+				token: false,
+				err:   ErrEmptyPassword,
+			},
+		},
+		{
+			name:     "not existing user",
+			email:    "notexisting@net.eu",
+			password: "Password1",
+			expected: struct {
+				token bool
+				err   error
+			}{
+				token: false,
+				err:   ErrInvalidCredentials,
+			},
+		},
+		{
+			name:     "invalid password",
+			email:    "johntestdoe@net.eu",
+			password: "invalid password",
+			expected: struct {
+				token bool
+				err   error
+			}{
+				token: false,
+				err:   ErrInvalidCredentials,
+			},
+		},
+	}
+
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			token, err := us.LoginUser(d.email, d.password)
+			if d.expected.token {
+				assert.NotEmpty(t, token)
+			} else {
+				assert.Empty(t, token)
+			}
+			assert.Equal(t, d.expected.err, err)
+		})
+	}
 }
 
 func TestGenerateValidateToken(t *testing.T) {

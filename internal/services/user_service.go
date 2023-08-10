@@ -122,7 +122,11 @@ func (us *UserServiceImpl) LoginUser(email, password string) (string, error) {
 	}
 
 	if err := crypto.CheckPassword(password, user.Password); err != nil {
-		return "", ErrInvalidCredentials
+		if errors.Is(err, crypto.ErrInvalidCredentials) {
+			return "", ErrInvalidCredentials
+		}
+
+		return "", err
 	}
 
 	token, err := us.GenerateToken(user.ID, user.Email)

@@ -1,6 +1,15 @@
 package crypto
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"errors"
+
+	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	// ErrInvalidCredentials is returned when the credentials provided are invalid
+	ErrInvalidCredentials = errors.New("invalid credentials")
+)
 
 // HashPassword hashes a password with bcrypt
 func HashPassword(password string) (string, error) {
@@ -10,5 +19,13 @@ func HashPassword(password string) (string, error) {
 
 // CheckPassword checks if a password matches a hash
 func CheckPassword(password, hash string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return ErrInvalidCredentials
+		}
+
+		return err
+	}
+
+	return nil
 }
