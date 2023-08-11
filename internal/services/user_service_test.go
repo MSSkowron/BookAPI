@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
-	"github.com/MSSkowron/BookRESTAPI/internal/models"
+	"github.com/MSSkowron/BookRESTAPI/internal/dtos"
 	"github.com/MSSkowron/BookRESTAPI/pkg/crypto"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,29 +18,27 @@ func TestRegisterUser(t *testing.T) {
 	hashedPassword, _ := crypto.HashPassword("Password1")
 
 	data := []struct {
-		name      string
-		email     string
-		password  string
-		firstName string
-		lastName  string
-		age       int
-		expected  struct {
-			user *models.User
+		name     string
+		input    *dtos.AccountCreateDTO
+		expected struct {
+			user *dtos.UserDTO
 			err  error
 		}
 	}{
 		{
-			name:      "valid user",
-			email:     "user@email.com",
-			password:  "Password1",
-			firstName: "John",
-			lastName:  "Doe",
-			age:       20,
+			name: "valid user",
+			input: &dtos.AccountCreateDTO{
+				Email:     "user@email.com",
+				Password:  "Password1",
+				FirstName: "John",
+				LastName:  "Doe",
+				Age:       20,
+			},
 			expected: struct {
-				user *models.User
+				user *dtos.UserDTO
 				err  error
 			}{
-				user: &models.User{
+				user: &dtos.UserDTO{
 					ID:        4,
 					Email:     "user@email.com",
 					Password:  hashedPassword,
@@ -52,14 +50,16 @@ func TestRegisterUser(t *testing.T) {
 			},
 		},
 		{
-			name:      "invalid email",
-			email:     "invalid email",
-			password:  "Password1",
-			firstName: "John",
-			lastName:  "Doe",
-			age:       20,
+			name: "invalid email",
+			input: &dtos.AccountCreateDTO{
+				Email:     "invalid email",
+				Password:  "Password1",
+				FirstName: "John",
+				LastName:  "Doe",
+				Age:       20,
+			},
 			expected: struct {
-				user *models.User
+				user *dtos.UserDTO
 				err  error
 			}{
 				user: nil,
@@ -67,14 +67,16 @@ func TestRegisterUser(t *testing.T) {
 			},
 		},
 		{
-			name:      "invalid password",
-			email:     "user@email.com",
-			password:  "invalid password",
-			firstName: "John",
-			lastName:  "Doe",
-			age:       20,
+			name: "invalid password",
+			input: &dtos.AccountCreateDTO{
+				Email:     "user@email.com",
+				Password:  "invalid password",
+				FirstName: "John",
+				LastName:  "Doe",
+				Age:       20,
+			},
 			expected: struct {
-				user *models.User
+				user *dtos.UserDTO
 				err  error
 			}{
 				user: nil,
@@ -82,14 +84,16 @@ func TestRegisterUser(t *testing.T) {
 			},
 		},
 		{
-			name:      "invalid first name",
-			email:     "user@email.com",
-			password:  "Password1",
-			firstName: "X07.@",
-			lastName:  "Doe",
-			age:       20,
+			name: "invalid first name",
+			input: &dtos.AccountCreateDTO{
+				Email:     "user@email.com",
+				Password:  "Password1",
+				FirstName: "X07.@",
+				LastName:  "Doe",
+				Age:       20,
+			},
 			expected: struct {
-				user *models.User
+				user *dtos.UserDTO
 				err  error
 			}{
 				user: nil,
@@ -97,14 +101,16 @@ func TestRegisterUser(t *testing.T) {
 			},
 		},
 		{
-			name:      "invalid last name",
-			email:     "user@email.com",
-			password:  "Password1",
-			firstName: "John",
-			lastName:  "X07.@",
-			age:       20,
+			name: "invalid last name",
+			input: &dtos.AccountCreateDTO{
+				Email:     "user@email.com",
+				Password:  "Password1",
+				FirstName: "John",
+				LastName:  "X07.@",
+				Age:       20,
+			},
 			expected: struct {
-				user *models.User
+				user *dtos.UserDTO
 				err  error
 			}{
 				user: nil,
@@ -112,14 +118,16 @@ func TestRegisterUser(t *testing.T) {
 			},
 		},
 		{
-			name:      "invalid age",
-			email:     "user@email.com",
-			password:  "Password1",
-			firstName: "John",
-			lastName:  "Doe",
-			age:       -1,
+			name: "invalid age",
+			input: &dtos.AccountCreateDTO{
+				Email:     "user@email.com",
+				Password:  "Password1",
+				FirstName: "John",
+				LastName:  "Doe",
+				Age:       -1,
+			},
 			expected: struct {
-				user *models.User
+				user *dtos.UserDTO
 				err  error
 			}{
 				user: nil,
@@ -127,14 +135,16 @@ func TestRegisterUser(t *testing.T) {
 			},
 		},
 		{
-			name:      "user already exists",
-			email:     "johndoe@net.eu",
-			password:  "Password1",
-			firstName: "John",
-			lastName:  "Doe",
-			age:       20,
+			name: "user already exists",
+			input: &dtos.AccountCreateDTO{
+				Email:     "johndoe@net.eu",
+				Password:  "Password1",
+				FirstName: "John",
+				LastName:  "Doe",
+				Age:       20,
+			},
 			expected: struct {
-				user *models.User
+				user *dtos.UserDTO
 				err  error
 			}{
 				user: nil,
@@ -145,7 +155,7 @@ func TestRegisterUser(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			user, err := us.RegisterUser(d.email, d.password, d.firstName, d.lastName, d.age)
+			user, err := us.RegisterUser(d.input)
 			if d.expected.user != nil {
 				assert.NotNil(t, user)
 				assert.Equal(t, d.expected.user.ID, user.ID)
@@ -167,23 +177,30 @@ func TestLoginUser(t *testing.T) {
 
 	us := NewUserService(mockDB, "secret12345", 3*time.Second)
 
-	user, err := us.RegisterUser("johntestdoe@net.eu", "Password1", "John", "Doe", 20)
+	user, err := us.RegisterUser(&dtos.AccountCreateDTO{
+		Email:     "johntestdoe@net.eu",
+		Password:  "Password1",
+		FirstName: "John",
+		LastName:  "Doe",
+		Age:       20,
+	})
 	assert.NotNil(t, user)
 	assert.Nil(t, err)
 
 	data := []struct {
 		name     string
-		email    string
-		password string
+		input    *dtos.UserLoginDTO
 		expected struct {
 			token bool
 			err   error
 		}
 	}{
 		{
-			name:     "valid user",
-			email:    "johntestdoe@net.eu",
-			password: "Password1",
+			name: "valid user",
+			input: &dtos.UserLoginDTO{
+				Email:    "johntestdoe@net.eu",
+				Password: "Password1",
+			},
 			expected: struct {
 				token bool
 				err   error
@@ -193,9 +210,11 @@ func TestLoginUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "invalid email",
-			email:    "invalid email",
-			password: "Password1",
+			name: "invalid email",
+			input: &dtos.UserLoginDTO{
+				Email:    "invalid email",
+				Password: "Password1",
+			},
 			expected: struct {
 				token bool
 				err   error
@@ -205,9 +224,11 @@ func TestLoginUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "empty password",
-			email:    "johntestdoe@net.eu",
-			password: "",
+			name: "empty password",
+			input: &dtos.UserLoginDTO{
+				Email:    "johntestdoe@net.eu",
+				Password: "",
+			},
 			expected: struct {
 				token bool
 				err   error
@@ -217,9 +238,11 @@ func TestLoginUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "not existing user",
-			email:    "notexisting@net.eu",
-			password: "Password1",
+			name: "not existing user",
+			input: &dtos.UserLoginDTO{
+				Email:    "notexisting@net.eu",
+				Password: "Password1",
+			},
 			expected: struct {
 				token bool
 				err   error
@@ -229,9 +252,11 @@ func TestLoginUser(t *testing.T) {
 			},
 		},
 		{
-			name:     "invalid password",
-			email:    "johntestdoe@net.eu",
-			password: "invalid password",
+			name: "invalid password",
+			input: &dtos.UserLoginDTO{
+				Email:    "johntestdoe@net.eu",
+				Password: "invalid password",
+			},
 			expected: struct {
 				token bool
 				err   error
@@ -244,7 +269,7 @@ func TestLoginUser(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			token, err := us.LoginUser(d.email, d.password)
+			token, err := us.LoginUser(d.input)
 			if d.expected.token {
 				assert.NotEmpty(t, token)
 			} else {

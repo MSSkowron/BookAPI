@@ -78,7 +78,7 @@ func (us *UserServiceImpl) RegisterUser(dto *dtos.AccountCreateDTO) (*dtos.UserD
 	if !us.validateLastName(dto.LastName) {
 		return nil, ErrInvalidLastName
 	}
-	if !us.validateAge(dto.Age) {
+	if !us.validateAge(int(dto.Age)) {
 		return nil, ErrInvalidAge
 	}
 
@@ -187,6 +187,6 @@ func (us *UserServiceImpl) validateLastName(lastName string) bool {
 }
 
 // validateAge validates an age to be between 18 and 120
-func (us *UserServiceImpl) validateAge(age int64) bool {
+func (us *UserServiceImpl) validateAge(age int) bool {
 	return age >= 18 && age <= 120
 }

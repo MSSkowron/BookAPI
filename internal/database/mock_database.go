@@ -87,7 +87,10 @@ func (db *MockDatabase) SelectUserByEmail(email string) (*models.User, error) {
 
 // InsertBook inserts a new book
 func (db *MockDatabase) InsertBook(book *models.Book) (int, error) {
-	return 4, nil
+	book.ID = len(db.books) + 1
+	db.books = append(db.books, book)
+
+	return len(db.books), nil
 }
 
 // SelectBookByID selects a book with given ID

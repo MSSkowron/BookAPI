@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
-	"github.com/MSSkowron/BookRESTAPI/internal/models"
+	"github.com/MSSkowron/BookRESTAPI/internal/dtos"
 	"github.com/MSSkowron/BookRESTAPI/internal/services"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -45,7 +45,7 @@ func TestHandleRegister(t *testing.T) {
 	}{
 		{
 			name: "valid request",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "Test123",
 				FirstName: "test",
@@ -53,7 +53,7 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: models.User{
+			expectedResponse: dtos.UserDTO{
 				ID:        4,
 				Email:     "test@test.com",
 				FirstName: "test",
@@ -77,13 +77,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body",
 			},
 		},
 		{
 			name: "invalid password - too short",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "Sh0rt",
 				FirstName: "test",
@@ -91,13 +91,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
 			},
 		},
 		{
 			name: "invalid password - no capital lettetr",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "nocapitalletters123",
 				FirstName: "test",
@@ -105,13 +105,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
 			},
 		},
 		{
 			name: "invalid password - no uppercase lettetr",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "nouppercaseletter123",
 				FirstName: "test",
@@ -119,13 +119,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
 			},
 		},
 		{
 			name: "invalid password - no lowercase lettetr",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "NOLOWERCASELETTER123",
 				FirstName: "test",
@@ -133,13 +133,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
 			},
 		},
 		{
 			name: "invalid password - no digit",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "NODIGIT",
 				FirstName: "test",
@@ -147,13 +147,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
 			},
 		},
 		{
 			name: "invalid password - empty",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "",
 				FirstName: "test",
@@ -161,13 +161,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:password must not be empty and must be have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit",
 			},
 		},
 		{
 			name: "invalid email - invalid format",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test-test.com",
 				Password:  "Test123@",
 				FirstName: "test",
@@ -175,13 +175,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:email must not be empty and must be a valid email address",
 			},
 		},
 		{
 			name: "invalid email - empty",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "",
 				Password:  "Test123@",
 				FirstName: "test",
@@ -189,13 +189,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:email must not be empty and must be a valid email address",
 			},
 		},
 		{
 			name: "invalid first name - too short",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "Test123@",
 				FirstName: "X",
@@ -203,13 +203,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:first name must must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
 			},
 		},
 		{
 			name: "invalid first name - no letters",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "Test123@",
 				FirstName: "123098",
@@ -217,13 +217,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:first name must must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
 			},
 		},
 		{
 			name: "invalid first name - empty",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "Test123@",
 				FirstName: "",
@@ -231,13 +231,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:first name must must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
 			},
 		},
 		{
 			name: "invalid last name - too short",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "Test123@",
 				FirstName: "test",
@@ -245,13 +245,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:last name must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
 			},
 		},
 		{
 			name: "invalid last name - no letters",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "Test123@",
 				FirstName: "test",
@@ -259,13 +259,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:last name must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
 			},
 		},
 		{
 			name: "invalid last name - empty",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "Test123@",
 				FirstName: "test",
@@ -273,13 +273,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:last name must not be empty and must consists of alphabetic characters and spaces, with at least 2 characters",
 			},
 		},
 		{
 			name: "invalid age - too young",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "Test123@",
 				FirstName: "test",
@@ -287,13 +287,13 @@ func TestHandleRegister(t *testing.T) {
 				Age:       10,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:age must must not be empty and must be between 18 and 120",
 			},
 		},
 		{
 			name: "invalid age - too old",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				Email:     "test@test.com",
 				Password:  "Test123@",
 				FirstName: "test",
@@ -301,19 +301,19 @@ func TestHandleRegister(t *testing.T) {
 				Age:       250,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:age must must not be empty and must be between 18 and 120",
 			},
 		},
 		{
 			name: "missing required fields",
-			input: models.CreateAccountRequest{
+			input: dtos.AccountCreateDTO{
 				FirstName: "test",
 				LastName:  "test",
 				Age:       30,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:email must not be empty and must be a valid email address",
 			},
 		},
@@ -332,23 +332,23 @@ func TestHandleRegister(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				responseBody := models.User{}
+				responseBody := dtos.UserDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseBody)
 				require.NoError(t, err)
 
 				require.NotEmpty(t, responseBody.Password, "Password should not be empty")
-				require.Equal(t, d.expectedResponse.(models.User).ID, responseBody.ID, "ID should be equal")
-				require.Equal(t, d.expectedResponse.(models.User).Email, responseBody.Email, "Email should be equal")
-				require.Equal(t, d.expectedResponse.(models.User).FirstName, responseBody.FirstName, "First name should be equal")
-				require.Equal(t, d.expectedResponse.(models.User).LastName, responseBody.LastName, "Last name should be equal")
-				require.Equal(t, d.expectedResponse.(models.User).Age, responseBody.Age, "Age should be equal")
+				require.Equal(t, d.expectedResponse.(dtos.UserDTO).ID, responseBody.ID, "ID should be equal")
+				require.Equal(t, d.expectedResponse.(dtos.UserDTO).Email, responseBody.Email, "Email should be equal")
+				require.Equal(t, d.expectedResponse.(dtos.UserDTO).FirstName, responseBody.FirstName, "First name should be equal")
+				require.Equal(t, d.expectedResponse.(dtos.UserDTO).LastName, responseBody.LastName, "Last name should be equal")
+				require.Equal(t, d.expectedResponse.(dtos.UserDTO).Age, responseBody.Age, "Age should be equal")
 			case http.StatusBadRequest:
-				responseError := models.ErrorResponse{}
+				responseError := dtos.ErrorDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
 				require.NotEmpty(t, responseError.Error)
-				require.Equal(t, d.expectedResponse.(models.ErrorResponse).Error, responseError.Error)
+				require.Equal(t, d.expectedResponse.(dtos.ErrorDTO).Error, responseError.Error)
 			default:
 				t.Fatalf("unexpected status code: %d", d.expectedStatusCode)
 			}
@@ -356,7 +356,7 @@ func TestHandleRegister(t *testing.T) {
 	}
 
 	// Test if user with this email already exists
-	createAccountRequest := models.CreateAccountRequest{
+	createAccountRequest := dtos.AccountCreateDTO{
 		Email:     "test@test.com",
 		Password:  "Test123",
 		FirstName: "test",
@@ -373,7 +373,7 @@ func TestHandleRegister(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	responseError := models.ErrorResponse{}
+	responseError := dtos.ErrorDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -395,7 +395,7 @@ func TestHandleLogin(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := models.CreateAccountRequest{
+	createAccountRequest := dtos.AccountCreateDTO{
 		Email:     "test@test.com",
 		Password:  "Test123@#",
 		FirstName: "test",
@@ -420,45 +420,45 @@ func TestHandleLogin(t *testing.T) {
 	}{
 		{
 			name: "valid",
-			input: models.LoginRequest{
+			input: dtos.UserLoginDTO{
 				Email:    "test@test.com",
 				Password: "Test123@#",
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: models.LoginResponse{
+			expectedResponse: dtos.TokenDTO{
 				Token: "<token-value>",
 			},
 		},
 		{
 			name: "invalid email - empty",
-			input: models.LoginRequest{
+			input: dtos.UserLoginDTO{
 				Email:    "",
 				Password: "Test123@#",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:email must not be empty and must be a valid email address",
 			},
 		},
 		{
 			name: "invalid email",
-			input: models.LoginRequest{
+			input: dtos.UserLoginDTO{
 				Email:    "invalidEmail@test.com",
 				Password: "Test123@#",
 			},
 			expectedStatusCode: http.StatusUnauthorized,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid credentials",
 			},
 		},
 		{
 			name: "invalid password",
-			input: models.LoginRequest{
+			input: dtos.UserLoginDTO{
 				Email:    "test@test.com",
 				Password: "invalidPassword0#@",
 			},
 			expectedStatusCode: http.StatusUnauthorized,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid credentials",
 			},
 		},
@@ -470,7 +470,7 @@ func TestHandleLogin(t *testing.T) {
 				Email: "test@test.com",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:password must not be empty",
 			},
 		},
@@ -482,7 +482,7 @@ func TestHandleLogin(t *testing.T) {
 				Password: "test",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body:email must not be empty and must be a valid email address",
 			},
 		},
@@ -496,7 +496,7 @@ func TestHandleLogin(t *testing.T) {
 				Password: 123,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body",
 			},
 		},
@@ -515,17 +515,17 @@ func TestHandleLogin(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				loginResponse := models.LoginResponse{}
+				loginResponse := dtos.TokenDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 				require.NoError(t, err)
 				require.NotEmpty(t, loginResponse.Token)
 			case http.StatusUnauthorized, http.StatusBadRequest:
-				responseError := models.ErrorResponse{}
+				responseError := dtos.ErrorDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
 				require.NotEmpty(t, responseError.Error)
-				require.Equal(t, d.expectedResponse.(models.ErrorResponse).Error, responseError.Error)
+				require.Equal(t, d.expectedResponse.(dtos.ErrorDTO).Error, responseError.Error)
 			default:
 				t.Fatalf("unexpected status code: %d", d.expectedStatusCode)
 			}
@@ -549,7 +549,7 @@ func TestHandlePostBook(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := models.CreateAccountRequest{
+	createAccountRequest := dtos.AccountCreateDTO{
 		Email:     "test@test.com",
 		Password:  "Test123@#",
 		FirstName: "test",
@@ -566,7 +566,7 @@ func TestHandlePostBook(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginRequest := models.LoginRequest{
+	loginRequest := dtos.UserLoginDTO{
 		Email:    "test@test.com",
 		Password: "Test123@#",
 	}
@@ -580,7 +580,7 @@ func TestHandlePostBook(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginResponse := models.LoginResponse{}
+	loginResponse := dtos.TokenDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	require.NoError(t, err)
 	require.NotEmpty(t, loginResponse.Token)
@@ -593,12 +593,12 @@ func TestHandlePostBook(t *testing.T) {
 	}{
 		{
 			name: "valid",
-			input: models.Book{
+			input: dtos.BookCreateDTO{
 				Author: "test",
 				Title:  "test",
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: models.Book{
+			expectedResponse: dtos.BookDTO{
 				ID:     4,
 				Author: "test",
 				Title:  "test",
@@ -606,51 +606,51 @@ func TestHandlePostBook(t *testing.T) {
 		},
 		{
 			name: "invalid author - empty",
-			input: models.Book{
+			input: dtos.BookCreateDTO{
 				Author: "",
 				Title:  "test",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body",
 			},
 		},
 		{
 			name: "invalid title - empty",
-			input: models.Book{
+			input: dtos.BookCreateDTO{
 				Author: "test",
 				Title:  "",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body",
 			},
 		},
 		{
 			name: "no title",
-			input: models.Book{
+			input: dtos.BookCreateDTO{
 				Author: "test",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body",
 			},
 		},
 		{
 			name: "no author",
-			input: models.Book{
+			input: dtos.BookCreateDTO{
 				Title: "test",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body",
 			},
 		},
 		{
 			name:               "no fields",
-			input:              models.Book{},
+			input:              dtos.BookCreateDTO{},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body",
 			},
 		},
@@ -664,7 +664,7 @@ func TestHandlePostBook(t *testing.T) {
 				Title:  123,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse: models.ErrorResponse{
+			expectedResponse: dtos.ErrorDTO{
 				Error: "invalid request body",
 			},
 		},
@@ -688,20 +688,20 @@ func TestHandlePostBook(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				responseBodyBook := models.Book{}
+				responseBodyBook := dtos.BookDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseBodyBook)
 				require.NoError(t, err)
 
-				require.Equal(t, d.expectedResponse.(models.Book).ID, responseBodyBook.ID)
-				require.Equal(t, d.expectedResponse.(models.Book).Author, responseBodyBook.Author)
-				require.Equal(t, d.expectedResponse.(models.Book).Title, responseBodyBook.Title)
+				require.Equal(t, d.expectedResponse.(dtos.BookDTO).ID, responseBodyBook.ID)
+				require.Equal(t, d.expectedResponse.(dtos.BookDTO).Author, responseBodyBook.Author)
+				require.Equal(t, d.expectedResponse.(dtos.BookDTO).Title, responseBodyBook.Title)
 			case http.StatusBadRequest:
-				responseError := models.ErrorResponse{}
+				responseError := dtos.ErrorDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
 				require.NotEmpty(t, responseError.Error)
-				require.Equal(t, d.expectedResponse.(models.ErrorResponse).Error, responseError.Error)
+				require.Equal(t, d.expectedResponse.(dtos.ErrorDTO).Error, responseError.Error)
 			default:
 				t.Fatalf("unexpected status code: %d", d.expectedStatusCode)
 			}
@@ -720,7 +720,7 @@ func TestHandlePostBook(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	responseError := models.ErrorResponse{}
+	responseError := dtos.ErrorDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -760,7 +760,7 @@ func TestHandleGetBookByID(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := models.CreateAccountRequest{
+	createAccountRequest := dtos.AccountCreateDTO{
 		Email:     "test@test.com",
 		Password:  "Test123!",
 		FirstName: "test",
@@ -777,7 +777,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginRequest := models.LoginRequest{
+	loginRequest := dtos.UserLoginDTO{
 		Email:    "test@test.com",
 		Password: "Test123!",
 	}
@@ -791,7 +791,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginResponse := models.LoginResponse{}
+	loginResponse := dtos.TokenDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	require.NoError(t, err)
 	require.NotEmpty(t, loginResponse.Token)
@@ -806,7 +806,7 @@ func TestHandleGetBookByID(t *testing.T) {
 			name:               "valid",
 			inputID:            1,
 			expectedStatusCode: http.StatusOK,
-			expectedResponseBody: models.Book{
+			expectedResponseBody: dtos.BookDTO{
 				ID:     1,
 				Author: "J.R.R. Tolkien",
 				Title:  "The Lord of the Rings",
@@ -816,7 +816,7 @@ func TestHandleGetBookByID(t *testing.T) {
 			name:               "not existing id",
 			inputID:            100,
 			expectedStatusCode: http.StatusNotFound,
-			expectedResponseBody: models.ErrorResponse{
+			expectedResponseBody: dtos.ErrorDTO{
 				Error: "not found",
 			},
 		},
@@ -824,7 +824,7 @@ func TestHandleGetBookByID(t *testing.T) {
 			name:               "negative id",
 			inputID:            -200,
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponseBody: models.ErrorResponse{
+			expectedResponseBody: dtos.ErrorDTO{
 				Error: "invalid book id",
 			},
 		},
@@ -845,13 +845,13 @@ func TestHandleGetBookByID(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				responseBody := models.Book{}
+				responseBody := dtos.BookDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseBody)
 				require.NoError(t, err)
 
 				require.Equal(t, d.expectedResponseBody, responseBody)
 			case http.StatusNotFound, http.StatusBadRequest:
-				responseError := models.ErrorResponse{}
+				responseError := dtos.ErrorDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
@@ -875,7 +875,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	responseError := models.ErrorResponse{}
+	responseError := dtos.ErrorDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -894,7 +894,7 @@ func TestHandleGetBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	responseError = models.ErrorResponse{}
+	responseError = dtos.ErrorDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -934,7 +934,7 @@ func TestHandleGetBooks(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := models.CreateAccountRequest{
+	createAccountRequest := dtos.AccountCreateDTO{
 		Email:     "test@test.com",
 		Password:  "Test123!",
 		FirstName: "test",
@@ -952,7 +952,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginRequest := models.LoginRequest{
+	loginRequest := dtos.UserLoginDTO{
 		Email:    "test@test.com",
 		Password: "Test123!",
 	}
@@ -966,7 +966,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginResponse := models.LoginResponse{}
+	loginResponse := dtos.TokenDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	require.NoError(t, err)
 	require.NotEmpty(t, loginResponse.Token)
@@ -982,7 +982,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	responseBodyBooks := []models.Book{}
+	responseBodyBooks := []dtos.BookDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&responseBodyBooks)
 	require.NoError(t, err)
 
@@ -1000,7 +1000,7 @@ func TestHandleGetBooks(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	responseError := models.ErrorResponse{}
+	responseError := dtos.ErrorDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -1040,7 +1040,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := models.CreateAccountRequest{
+	createAccountRequest := dtos.AccountCreateDTO{
 		Email:     "test@test.com",
 		Password:  "Test123!",
 		FirstName: "test",
@@ -1057,7 +1057,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginRequest := models.LoginRequest{
+	loginRequest := dtos.UserLoginDTO{
 		Email:    "test@test.com",
 		Password: "Test123!",
 	}
@@ -1071,7 +1071,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginResponse := models.LoginResponse{}
+	loginResponse := dtos.TokenDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	require.NoError(t, err)
 	require.NotEmpty(t, loginResponse.Token)
@@ -1092,7 +1092,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 			name:               "invalid id - negative",
 			inputID:            -100,
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponseBody: models.ErrorResponse{
+			expectedResponseBody: dtos.ErrorDTO{
 				Error: "invalid request body:id must be a positive integer",
 			},
 		},
@@ -1100,7 +1100,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 			name:               "invalid id - not existing",
 			inputID:            100,
 			expectedStatusCode: http.StatusNotFound,
-			expectedResponseBody: models.ErrorResponse{
+			expectedResponseBody: dtos.ErrorDTO{
 				Error: "not found",
 			},
 		},
@@ -1126,7 +1126,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 				require.Equal(t, d.expectedResponseBody, string(responseBody))
 			case http.StatusBadRequest, http.StatusNotFound:
-				responseError := models.ErrorResponse{}
+				responseError := dtos.ErrorDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
@@ -1150,7 +1150,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	responseError := models.ErrorResponse{}
+	responseError := dtos.ErrorDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -1169,7 +1169,7 @@ func TestHandleDeleteBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	responseError = models.ErrorResponse{}
+	responseError = dtos.ErrorDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -1209,7 +1209,7 @@ func TestHandlePutBookByID(t *testing.T) {
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
 
-	createAccountRequest := models.CreateAccountRequest{
+	createAccountRequest := dtos.AccountCreateDTO{
 		Email:     "test@test.com",
 		Password:  "Test123!",
 		FirstName: "test",
@@ -1226,7 +1226,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginRequest := models.LoginRequest{
+	loginRequest := dtos.UserLoginDTO{
 		Email:    "test@test.com",
 		Password: "Test123!",
 	}
@@ -1240,7 +1240,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	loginResponse := models.LoginResponse{}
+	loginResponse := dtos.TokenDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
 	require.NoError(t, err)
 	require.NotEmpty(t, loginResponse.Token)
@@ -1253,13 +1253,13 @@ func TestHandlePutBookByID(t *testing.T) {
 	}{
 		{
 			name: "valid",
-			input: models.Book{
+			input: dtos.BookDTO{
 				ID:     1,
 				Author: "J. K. Rowling",
 				Title:  "Harry Potter and the Philosopher's Stone",
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponseBody: models.Book{
+			expectedResponseBody: dtos.BookDTO{
 				ID:     1,
 				Author: "J. K. Rowling",
 				Title:  "Harry Potter and the Philosopher's Stone",
@@ -1267,61 +1267,61 @@ func TestHandlePutBookByID(t *testing.T) {
 		},
 		{
 			name: "invalid id - not existing",
-			input: models.Book{
+			input: dtos.BookDTO{
 				ID:     100,
 				Author: "J. K. Rowling",
 				Title:  "Harry Potter and the Philosopher's Stone",
 			},
 			expectedStatusCode: http.StatusNotFound,
-			expectedResponseBody: models.ErrorResponse{
+			expectedResponseBody: dtos.ErrorDTO{
 				Error: "not found",
 			},
 		},
 		{
 			name: "invalid id - negative",
-			input: models.Book{
+			input: dtos.BookDTO{
 				ID:     -100,
 				Author: "J. K. Rowling",
 				Title:  "Harry Potter and the Philosopher's Stone",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponseBody: models.ErrorResponse{
+			expectedResponseBody: dtos.ErrorDTO{
 				Error: "invalid request body:id must be a positive integer",
 			},
 		},
 		{
 			name: "invalid id - zero",
-			input: models.Book{
+			input: dtos.BookDTO{
 				ID:     0,
 				Author: "J. K. Rowling",
 				Title:  "Harry Potter and the Philosopher's Stone",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponseBody: models.ErrorResponse{
+			expectedResponseBody: dtos.ErrorDTO{
 				Error: "invalid request body:id must be a positive integer",
 			},
 		},
 		{
 			name: "invalid author - empty",
-			input: models.Book{
+			input: dtos.BookDTO{
 				ID:     1,
 				Author: "",
 				Title:  "Harry Potter and the Philosopher's Stone",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponseBody: models.ErrorResponse{
+			expectedResponseBody: dtos.ErrorDTO{
 				Error: "invalid request body:author must not be empty",
 			},
 		},
 		{
 			name: "invalid title - empty",
-			input: models.Book{
+			input: dtos.BookDTO{
 				ID:     1,
 				Author: "J. K. Rowling",
 				Title:  "",
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponseBody: models.ErrorResponse{
+			expectedResponseBody: dtos.ErrorDTO{
 				Error: "invalid request body:title must not be empty",
 			},
 		},
@@ -1337,7 +1337,7 @@ func TestHandlePutBookByID(t *testing.T) {
 				Title:  1,
 			},
 			expectedStatusCode: http.StatusBadRequest,
-			expectedResponseBody: models.ErrorResponse{
+			expectedResponseBody: dtos.ErrorDTO{
 				Error: "invalid request body",
 			},
 		},
@@ -1356,7 +1356,7 @@ func TestHandlePutBookByID(t *testing.T) {
 			if d.name == "invalid body" {
 				req, err = http.NewRequest(http.MethodPut, testServer.URL+"/books/1", bytes.NewReader(requestBody))
 			} else {
-				req, err = http.NewRequest(http.MethodPut, testServer.URL+"/books/"+strconv.Itoa(d.input.(models.Book).ID), bytes.NewReader(requestBody))
+				req, err = http.NewRequest(http.MethodPut, testServer.URL+"/books/"+strconv.Itoa(int(d.input.(dtos.BookDTO).ID)), bytes.NewReader(requestBody))
 			}
 			require.NoError(t, err)
 
@@ -1370,13 +1370,13 @@ func TestHandlePutBookByID(t *testing.T) {
 
 			switch d.expectedStatusCode {
 			case http.StatusOK:
-				responseBody := models.Book{}
+				responseBody := dtos.BookDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseBody)
 				require.NoError(t, err)
 
 				require.Equal(t, d.expectedResponseBody, responseBody)
 			case http.StatusBadRequest, http.StatusNotFound:
-				responseError := models.ErrorResponse{}
+				responseError := dtos.ErrorDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
 				require.NoError(t, err)
 
@@ -1389,7 +1389,7 @@ func TestHandlePutBookByID(t *testing.T) {
 	}
 
 	// test id is not a number
-	requestBody, err := json.Marshal(models.Book{
+	requestBody, err := json.Marshal(dtos.BookDTO{
 		ID:     3,
 		Author: "J. K. Rowling",
 		Title:  "Harry Potter and the Philosopher's Stone",
@@ -1407,7 +1407,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	responseError := models.ErrorResponse{}
+	responseError := dtos.ErrorDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -1426,7 +1426,7 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-	responseError = models.ErrorResponse{}
+	responseError = dtos.ErrorDTO{}
 	err = json.NewDecoder(resp.Body).Decode(&responseError)
 	require.NoError(t, err)
 
@@ -1434,7 +1434,7 @@ func TestHandlePutBookByID(t *testing.T) {
 	require.Equal(t, "unauthorized", responseError.Error)
 
 	// test no token
-	requestBody, err = json.Marshal(models.Book{
+	requestBody, err = json.Marshal(dtos.BookDTO{
 		ID:     3,
 		Author: "J. K. Rowling",
 		Title:  "Harry Potter and the Philosopher's Stone",

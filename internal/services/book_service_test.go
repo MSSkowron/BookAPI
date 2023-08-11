@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
-	"github.com/MSSkowron/BookRESTAPI/internal/models"
+	"github.com/MSSkowron/BookRESTAPI/internal/dtos"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,15 +18,15 @@ func TestGetBooks(t *testing.T) {
 	assert.NotNil(t, books)
 	assert.Equal(t, 3, len(books))
 
-	assert.Equal(t, 1, books[0].ID)
+	assert.Equal(t, int64(1), books[0].ID)
 	assert.Equal(t, "J.R.R. Tolkien", books[0].Author)
 	assert.Equal(t, "The Lord of the Rings", books[0].Title)
 
-	assert.Equal(t, 2, books[1].ID)
+	assert.Equal(t, int64(2), books[1].ID)
 	assert.Equal(t, "J.K. Rowling", books[1].Author)
 	assert.Equal(t, "Harry Potter", books[1].Title)
 
-	assert.Equal(t, 3, books[2].ID)
+	assert.Equal(t, int64(3), books[2].ID)
 	assert.Equal(t, "Stephen King", books[2].Author)
 	assert.Equal(t, "The Shining", books[2].Title)
 }
@@ -40,13 +40,13 @@ func TestGetBook(t *testing.T) {
 		name         string
 		id           int
 		expectedErr  error
-		expectedBook *models.Book
+		expectedBook *dtos.BookDTO
 	}{
 		{
 			name:        "valid",
 			id:          1,
 			expectedErr: nil,
-			expectedBook: &models.Book{
+			expectedBook: &dtos.BookDTO{
 				ID:     1,
 				Author: "J.R.R. Tolkien",
 				Title:  "The Lord of the Rings",
@@ -96,33 +96,38 @@ func TestAddBook(t *testing.T) {
 
 	data := []struct {
 		name         string
-		author       string
-		title        string
+		inputBook    *dtos.BookCreateDTO
 		expectedErr  error
-		expectedBook *models.Book
+		expectedBook *dtos.BookDTO
 	}{
 		{
-			name:        "valid",
-			author:      "J.R.R. Tolkien",
-			title:       "The Lord of the Rings - The Fellowship of the Ring",
+			name: "valid",
+			inputBook: &dtos.BookCreateDTO{
+				Author: "J.R.R. Tolkien",
+				Title:  "The Lord of the Rings - The Fellowship of the Ring",
+			},
 			expectedErr: nil,
-			expectedBook: &models.Book{
+			expectedBook: &dtos.BookDTO{
 				ID:     4,
 				Author: "J.R.R. Tolkien",
 				Title:  "The Lord of the Rings - The Fellowship of the Ring",
 			},
 		},
 		{
-			name:         "invalid author - empty author",
-			author:       "",
-			title:        "The Lord of the Rings - The Fellowship of the Ring",
+			name: "invalid author - empty author",
+			inputBook: &dtos.BookCreateDTO{
+				Author: "",
+				Title:  "The Lord of the Rings - The Fellowship of the Ring",
+			},
 			expectedErr:  ErrInvalidAuthor,
 			expectedBook: nil,
 		},
 		{
-			name:         "invalid title - empty title",
-			author:       "J.R.R. Tolkien",
-			title:        "",
+			name: "invalid title - empty title",
+			inputBook: &dtos.BookCreateDTO{
+				Author: "J.R.R. Tolkien",
+				Title:  "",
+			},
 			expectedErr:  ErrInvalidTitle,
 			expectedBook: nil,
 		},
@@ -130,7 +135,7 @@ func TestAddBook(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			book, err := bs.AddBook(d.author, d.title)
+			book, err := bs.AddBook(d.inputBook)
 			assert.Equal(t, d.expectedErr, err)
 
 			if d.expectedErr != nil {
@@ -153,18 +158,19 @@ func TestUpdateBook(t *testing.T) {
 	data := []struct {
 		name         string
 		id           int
-		author       string
-		title        string
+		inputBook    *dtos.BookDTO
 		expectedErr  error
-		expectedBook *models.Book
+		expectedBook *dtos.BookDTO
 	}{
 		{
-			name:        "valid",
-			id:          1,
-			author:      "J.R.R. Tolkien",
-			title:       "The Lord of the Rings - The Fellowship of the Ring",
+			name: "valid",
+			id:   1,
+			inputBook: &dtos.BookDTO{
+				Author: "J.R.R. Tolkien",
+				Title:  "The Lord of the Rings - The Fellowship of the Ring",
+			},
 			expectedErr: nil,
-			expectedBook: &models.Book{
+			expectedBook: &dtos.BookDTO{
 				ID:     1,
 				Author: "J.R.R. Tolkien",
 				Title:  "The Lord of the Rings - The Fellowship of the Ring",
@@ -181,30 +187,36 @@ func TestUpdateBook(t *testing.T) {
 			expectedErr: ErrInvalidID,
 		},
 		{
-			name:        "invalid author - empty author",
-			id:          1,
-			author:      "",
+			name: "invalid author - empty author",
+			id:   1,
+			inputBook: &dtos.BookDTO{
+				Author: "",
+			},
 			expectedErr: ErrInvalidAuthor,
 		},
 		{
-			name:        "invalid title - empty title",
-			id:          1,
-			author:      "J.R.R. Tolkien",
-			title:       "",
+			name: "invalid title - empty title",
+			id:   1,
+			inputBook: &dtos.BookDTO{
+				Author: "J.R.R. Tolkien",
+				Title:  "",
+			},
 			expectedErr: ErrInvalidTitle,
 		},
 		{
-			name:        "invalid id - non-existent id",
-			id:          100,
-			author:      "J.R.R. Tolkien",
-			title:       "The Lord of the Rings - The Fellowship of the Ring",
+			name: "invalid id - non-existent id",
+			id:   100,
+			inputBook: &dtos.BookDTO{
+				Author: "J.R.R. Tolkien",
+				Title:  "The Lord of the Rings - The Fellowship of the Ring",
+			},
 			expectedErr: ErrBookNotFound,
 		},
 	}
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			book, err := bs.UpdateBook(d.id, d.author, d.title)
+			book, err := bs.UpdateBook(d.id, d.inputBook)
 			assert.Equal(t, d.expectedErr, err)
 
 			if d.expectedErr != nil {
