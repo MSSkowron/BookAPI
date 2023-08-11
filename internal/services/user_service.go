@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
+	"github.com/MSSkowron/BookRESTAPI/internal/dtos"
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
 	"github.com/MSSkowron/BookRESTAPI/pkg/crypto"
 	"github.com/MSSkowron/BookRESTAPI/pkg/token"
@@ -42,9 +43,9 @@ var (
 
 // UserService is an interface that defines the methods that the UserService must implement
 type UserService interface {
-	RegisterUser(email, password, firstName, lastName string, age int) (user *models.User, err error)
-	LoginUser(email, password string) (token string, err error)
-	ValidateToken(token string) (err error)
+	RegisterUser(*dtos.AccountCreateDTO) (*dtos.UserDTO, error)
+	LoginUser(*dtos.UserLoginDTO) (*dtos.TokenDTO, error)
+	ValidateToken(string) error
 }
 
 // UserServiceImpl implements the UserService interface
@@ -64,77 +65,84 @@ func NewUserService(db database.Database, tokenSecret string, tokenDuration time
 }
 
 // RegisterUser registers a user
-func (us *UserServiceImpl) RegisterUser(email, password, firstName, lastName string, age int) (*models.User, error) {
-	if !us.validateEmail(email) {
+func (us *UserServiceImpl) RegisterUser(dto *dtos.AccountCreateDTO) (*dtos.UserDTO, error) {
+	if !us.validateEmail(dto.Email) {
 		return nil, ErrInvalidEmail
 	}
-	if !us.validatePassword(password) {
+	if !us.validatePassword(dto.Password) {
 		return nil, ErrInvalidPassword
 	}
-	if !us.validateFirstName(firstName) {
+	if !us.validateFirstName(dto.FirstName) {
 		return nil, ErrInvalidFirstName
 	}
-	if !us.validateLastName(lastName) {
+	if !us.validateLastName(dto.LastName) {
 		return nil, ErrInvalidLastName
 	}
-	if !us.validateAge(age) {
+	if !us.validateAge(dto.Age) {
 		return nil, ErrInvalidAge
 	}
 
-	if user, _ := us.db.SelectUserByEmail(email); user != nil {
+	if user, _ := us.db.SelectUserByEmail(dto.Email); user != nil {
 		return nil, ErrUserAlreadyExists
 	}
 
-	hashedPassword, err := crypto.HashPassword(password)
+	hashedPassword, err := crypto.HashPassword(dto.Password)
 	if err != nil {
 		return nil, err
 	}
 
 	user := &models.User{
-		Email:     email,
+		Email:     dto.Email,
 		Password:  hashedPassword,
-		FirstName: firstName,
-		LastName:  lastName,
-		Age:       age,
+		FirstName: dto.FirstName,
+		LastName:  dto.LastName,
+		Age:       int(dto.Age),
 	}
 	id, err := us.db.InsertUser(user)
 	if err != nil {
 		return nil, err
 	}
 
-	user.ID = id
-
-	return user, nil
+	return &dtos.UserDTO{
+		ID:        int64(id),
+		Email:     user.Email,
+		Password:  user.Password,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Age:       int64(user.Age),
+	}, nil
 }
 
 // LoginUser logs a user in and returns a token
-func (us *UserServiceImpl) LoginUser(email, password string) (string, error) {
-	if !us.validateEmail(email) {
-		return "", ErrInvalidEmail
+func (us *UserServiceImpl) LoginUser(dto *dtos.UserLoginDTO) (*dtos.TokenDTO, error) {
+	if !us.validateEmail(dto.Email) {
+		return nil, ErrInvalidEmail
 	}
-	if password == "" {
-		return "", ErrEmptyPassword
+	if dto.Password == "" {
+		return nil, ErrEmptyPassword
 	}
 
-	user, err := us.db.SelectUserByEmail(email)
+	user, err := us.db.SelectUserByEmail(dto.Email)
 	if err != nil || user == nil {
-		return "", ErrInvalidCredentials
+		return nil, ErrInvalidCredentials
 	}
 
-	if err := crypto.CheckPassword(password, user.Password); err != nil {
+	if err := crypto.CheckPassword(dto.Password, user.Password); err != nil {
 		if errors.Is(err, crypto.ErrInvalidCredentials) {
-			return "", ErrInvalidCredentials
+			return nil, ErrInvalidCredentials
 		}
 
-		return "", err
+		return nil, err
 	}
 
 	token, err := us.GenerateToken(user.ID, user.Email)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return token, nil
+	return &dtos.TokenDTO{
+		Token: token,
+	}, nil
 }
 
 // GenerateToken generates a token
@@ -179,6 +187,6 @@ func (us *UserServiceImpl) validateLastName(lastName string) bool {
 }
 
 // validateAge validates an age to be between 18 and 120
-func (us *UserServiceImpl) validateAge(age int) bool {
+func (us *UserServiceImpl) validateAge(age int64) bool {
 	return age >= 18 && age <= 120
 }

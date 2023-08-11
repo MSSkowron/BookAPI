@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
+	"github.com/MSSkowron/BookRESTAPI/internal/dtos"
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
 )
 
@@ -22,11 +23,11 @@ var (
 
 // BookService is an interface that defines the methods that the BookService struct must implement
 type BookService interface {
-	GetBooks() (books []*models.Book, err error)
-	GetBook(id int) (book *models.Book, err error)
-	AddBook(author, title string) (book *models.Book, err error)
-	UpdateBook(id int, author, title string) (updatedBook *models.Book, err error)
-	DeleteBook(id int) (err error)
+	GetBooks() ([]*dtos.BookDTO, error)
+	GetBook(int) (*dtos.BookDTO, error)
+	AddBook(*dtos.BookCreateDTO) (*dtos.BookDTO, error)
+	UpdateBook(int, *dtos.BookDTO) (*dtos.BookDTO, error)
+	DeleteBook(int) error
 }
 
 // BookServiceImpl is a struct that implements the BookService interface
@@ -40,17 +41,27 @@ func NewBookService(db database.Database) *BookServiceImpl {
 }
 
 // GetBooks returns all books from the database
-func (bs *BookServiceImpl) GetBooks() ([]*models.Book, error) {
+func (bs *BookServiceImpl) GetBooks() ([]*dtos.BookDTO, error) {
 	books, err := bs.db.SelectAllBooks()
 	if err != nil {
 		return nil, err
 	}
 
-	return books, nil
+	booksDTO := []*dtos.BookDTO{}
+	for _, book := range books {
+		booksDTO = append(booksDTO, &dtos.BookDTO{
+			ID:        int64(book.ID),
+			Author:    book.Author,
+			Title:     book.Title,
+			CreatedAt: book.CreatedAt,
+		})
+	}
+
+	return booksDTO, nil
 }
 
 // GetBook returns a book with the given id from the database
-func (bs *BookServiceImpl) GetBook(id int) (*models.Book, error) {
+func (bs *BookServiceImpl) GetBook(id int) (*dtos.BookDTO, error) {
 	if !bs.validateID(id) {
 		return nil, ErrInvalidID
 	}
@@ -60,41 +71,53 @@ func (bs *BookServiceImpl) GetBook(id int) (*models.Book, error) {
 		return nil, ErrBookNotFound
 	}
 
-	return book, nil
+	return &dtos.BookDTO{
+		ID:        int64(book.ID),
+		Author:    book.Author,
+		Title:     book.Title,
+		CreatedAt: book.CreatedAt,
+	}, nil
 }
 
 // AddBook adds a book to the database
-func (bs *BookServiceImpl) AddBook(author, title string) (*models.Book, error) {
-	if !bs.validateAuthor(author) {
+func (bs *BookServiceImpl) AddBook(dto *dtos.BookCreateDTO) (*dtos.BookDTO, error) {
+	if !bs.validateAuthor(dto.Author) {
 		return nil, ErrInvalidAuthor
 	}
-	if !bs.validateTitle(title) {
+	if !bs.validateTitle(dto.Title) {
 		return nil, ErrInvalidTitle
 	}
 
-	book := &models.Book{
-		Author: author,
-		Title:  title,
-	}
-	id, err := bs.db.InsertBook(book)
+	id, err := bs.db.InsertBook(&models.Book{
+		Author: dto.Author,
+		Title:  dto.Title,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	book.ID = id
+	book, err := bs.db.SelectBookByID(id)
+	if err != nil {
+		return nil, err
+	}
 
-	return book, nil
+	return &dtos.BookDTO{
+		ID:        int64(book.ID),
+		CreatedAt: book.CreatedAt,
+		Author:    book.Author,
+		Title:     book.Title,
+	}, nil
 }
 
 // UpdateBook updates a book with the given id in the database
-func (bs *BookServiceImpl) UpdateBook(id int, author, title string) (*models.Book, error) {
+func (bs *BookServiceImpl) UpdateBook(id int, dto *dtos.BookDTO) (*dtos.BookDTO, error) {
 	if !bs.validateID(id) {
 		return nil, ErrInvalidID
 	}
-	if !bs.validateAuthor(author) {
+	if !bs.validateAuthor(dto.Author) {
 		return nil, ErrInvalidAuthor
 	}
-	if !bs.validateTitle(title) {
+	if !bs.validateTitle(dto.Title) {
 		return nil, ErrInvalidTitle
 	}
 
@@ -103,14 +126,18 @@ func (bs *BookServiceImpl) UpdateBook(id int, author, title string) (*models.Boo
 		return nil, ErrBookNotFound
 	}
 
-	book.Author = author
-	book.Title = title
-
+	book.Author = dto.Author
+	book.Title = dto.Title
 	if err := bs.db.UpdateBook(book); err != nil {
 		return nil, err
 	}
 
-	return book, nil
+	return &dtos.BookDTO{
+		ID:        int64(book.ID),
+		Author:    book.Author,
+		Title:     book.Title,
+		CreatedAt: book.CreatedAt,
+	}, nil
 }
 
 // DeleteBook deletes a book with the given id from the database

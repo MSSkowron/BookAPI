@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// User represents a user
+// User represents a user model
 type User struct {
 	ID        int       `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
@@ -11,15 +11,4 @@ type User struct {
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
 	Age       int       `json:"age"`
-}
-
-// NewUser creates a new user
-func NewUser(email string, password string, firstName string, lastName string, age int) *User {
-	return &User{
-		Email:     email,
-		Password:  password,
-		FirstName: firstName,
-		LastName:  lastName,
-		Age:       age,
-	}
 }

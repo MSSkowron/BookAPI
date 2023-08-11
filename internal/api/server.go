@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/MSSkowron/BookRESTAPI/internal/models"
+	"github.com/MSSkowron/BookRESTAPI/internal/dtos"
 	"github.com/MSSkowron/BookRESTAPI/internal/services"
 	"github.com/MSSkowron/BookRESTAPI/pkg/logger"
 	"github.com/gorilla/mux"
@@ -80,13 +80,13 @@ func (s *Server) Run() error {
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	logger.Infof("Received POST /register from %s", r.RemoteAddr)
 
-	createAccountRequest := &models.CreateAccountRequest{}
-	if err := json.NewDecoder(r.Body).Decode(createAccountRequest); err != nil {
+	accountCreateDTO := &dtos.AccountCreateDTO{}
+	if err := json.NewDecoder(r.Body).Decode(accountCreateDTO); err != nil {
 		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
 	}
 
-	user, err := s.userService.RegisterUser(createAccountRequest.Email, createAccountRequest.Password, createAccountRequest.FirstName, createAccountRequest.LastName, int(createAccountRequest.Age))
+	userDTO, err := s.userService.RegisterUser(accountCreateDTO)
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidEmail) {
 			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
@@ -117,7 +117,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("register user: %w", err)
 	}
 
-	s.respondWithJSON(w, http.StatusOK, user)
+	s.respondWithJSON(w, http.StatusOK, userDTO)
 
 	return nil
 }
@@ -125,13 +125,13 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	logger.Infof("Received POST /login from %s", r.RemoteAddr)
 
-	loginRequest := &models.LoginRequest{}
-	if err := json.NewDecoder(r.Body).Decode(loginRequest); err != nil {
+	userLoginDTO := &dtos.UserLoginDTO{}
+	if err := json.NewDecoder(r.Body).Decode(userLoginDTO); err != nil {
 		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
 	}
 
-	token, err := s.userService.LoginUser(loginRequest.Email, loginRequest.Password)
+	tokenDTO, err := s.userService.LoginUser(userLoginDTO)
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidEmail) {
 			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
@@ -150,7 +150,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("login user: %w", err)
 	}
 
-	s.respondWithJSON(w, http.StatusOK, models.LoginResponse{Token: token})
+	s.respondWithJSON(w, http.StatusOK, tokenDTO)
 
 	return nil
 }
@@ -158,13 +158,13 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) error {
 func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
 	logger.Infof("Received GET /books from %s", r.RemoteAddr)
 
-	books, err := s.bookService.GetBooks()
+	booksDTO, err := s.bookService.GetBooks()
 	if err != nil {
 		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 		return fmt.Errorf("get books: %w", err)
 	}
 
-	s.respondWithJSON(w, http.StatusOK, books)
+	s.respondWithJSON(w, http.StatusOK, booksDTO)
 
 	return nil
 }
@@ -172,13 +172,13 @@ func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) error {
 func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 	logger.Infof("Received POST /books from %s", r.RemoteAddr)
 
-	createBookRequest := &models.CreateBookRequest{}
-	if err := json.NewDecoder(r.Body).Decode(createBookRequest); err != nil {
+	bookCreateDTO := &dtos.BookCreateDTO{}
+	if err := json.NewDecoder(r.Body).Decode(bookCreateDTO); err != nil {
 		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
 	}
 
-	book, err := s.bookService.AddBook(createBookRequest.Author, createBookRequest.Title)
+	bookDTO, err := s.bookService.AddBook(bookCreateDTO)
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidAuthor) {
 			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
@@ -193,7 +193,7 @@ func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("add book: %w", err)
 	}
 
-	s.respondWithJSON(w, http.StatusOK, book)
+	s.respondWithJSON(w, http.StatusOK, bookDTO)
 
 	return nil
 }
@@ -210,7 +210,7 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) error
 		return nil
 	}
 
-	book, err := s.bookService.GetBook(id)
+	bookDTO, err := s.bookService.GetBook(id)
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidID) {
 			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidBookID)
@@ -225,7 +225,7 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("get book: %w", err)
 	}
 
-	s.respondWithJSON(w, http.StatusOK, book)
+	s.respondWithJSON(w, http.StatusOK, bookDTO)
 
 	return nil
 }
@@ -242,13 +242,13 @@ func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error
 		return nil
 	}
 
-	book := &models.Book{}
-	if err := json.NewDecoder(r.Body).Decode(book); err != nil {
+	bookDTO := &dtos.BookDTO{}
+	if err := json.NewDecoder(r.Body).Decode(bookDTO); err != nil {
 		s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
 		return nil
 	}
 
-	updatedBook, err := s.bookService.UpdateBook(id, book.Author, book.Title)
+	updatedBookDTO, err := s.bookService.UpdateBook(id, bookDTO)
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidID) {
 			s.respondWithError(w, http.StatusBadRequest, fmt.Sprintf("%s:%s", ErrMsgBadRequestInvalidRequestBody, err))
@@ -271,7 +271,7 @@ func (s *Server) handlePutBookByID(w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("update book: %w", err)
 	}
 
-	s.respondWithJSON(w, http.StatusOK, updatedBook)
+	s.respondWithJSON(w, http.StatusOK, updatedBookDTO)
 
 	return nil
 }
@@ -350,7 +350,7 @@ func (s *Server) validateJWT(f http.HandlerFunc) http.HandlerFunc {
 }
 
 func (s *Server) respondWithError(w http.ResponseWriter, errCode int, errMessage string) {
-	s.respondWithJSON(w, errCode, models.ErrorResponse{Error: errMessage})
+	s.respondWithJSON(w, errCode, dtos.ErrorDTO{Error: errMessage})
 }
 
 func (s *Server) respondWithJSON(w http.ResponseWriter, code int, payload any) {
