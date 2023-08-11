@@ -4,32 +4,33 @@ BookRESTAPI is a straightforward REST API implemented in Go language, designed t
 
 ## Technologies
 
-- Go 1.19
+- Go 1.21
 - PostgreSQL 15
 - Docker
 
 ## Architecture Overview
 
-The BookRESTAPI adopts a well-structured layered architecture to ensure clean separation of concerns and promote modularity. The system consists of the following key components:
+The architecture of BookRESTAPI is designed around a well-organized, layered approach that ensures clear separation of responsibilities and promotes modularity. The system comprises the following core components:
 
 ![Architecture](./docs/architecture.png)
 
-1. **Transport Layer**: Responsible for handling incoming HTTP requests and routing them appropriately through the Gorilla Mux router. It actively manages request authentication, authorization, and validation before onward transmission to the next layer. Implementation can be found in the `./internal/api` directory.
+1. **Transport Layer**:  Acts as the initial point of contact for incoming requests. It manages incoming HTTP requests, routing them efficiently through the Gorilla Mux router. Operating on Data Transfer Objects (DTOs), this layer handles request authentication, authorization, and validation before forwarding them to subsequent layers. Its primary responsibilities include request reception, input validation, and data transformation into DTOs. Processed DTOs are then passed to the Business Logic Layer for further handling. The implementation is located in the `./internal/api` directory.
 
-2. **Business Logic Layer**: The core of the application's business logic resides here. It interfaces with the data access layer to execute CRUD operations on both book and user data. Additionally, this layer governs user registration, login, and token generation functionalities. Implementation can be found in the `./internal/services` directory.
+2. **Business Logic Layer**: Responsible for processing DTOs received from the Transport Layer. Its core function involves translating these DTOs into domain-specific models that encapsulate key application concepts. The Business Logic Layer embodies the fundamental business rules and logic that govern the application's functionality. Furthermore, it manages user registration, login, and token generation functionalities. Once operations on models are executed, the Business Logic Layer interacts with the Data Access Layer for data storage and retrieval. The implementation resides in the `./internal/services` directory.
 
-3. **Data Access Layer**: This layer shoulders the task of communicating with the PostgreSQL database. Utilizing the pgx library, it establishes connections and executes queries, abstracting the underlying database interactions from higher-level layers. Implementation can be found in the `./internal/database` directory.
+3. **Data Access Layer**: Oversees interactions with the database and other data storage systems. It receives domain-specific models from the Business Logic Layer, transforming them into appropriate database queries or operations. The Data Access Layer handles data reading and writing, maintaining data integrity. Upon data retrieval, it converts database results back into models and relays them to the Business Logic Layer. Implementation details can be found in the `./internal/database` directory.
 
-Following this architectural model, the BookRESTAPI application attains crucial attributes such as separation of concerns, maintainability, and scalability. Each layer can be developed, tested, and modified independently, ensuring a well-organized and cohesive codebase.
+By adhering to this architectural paradigm, the BookRESTAPI application gains essential attributes such as clear separation of concerns, enhanced maintainability, and scalability. Each layer can be developed, tested, and modified independently, fostering a coherent and well-organized codebase.
 
 ## Key Dependencies
 
-- `bcrypt` (golang.org/x/crypto): Used for bcrypt hashing.
-- `jwt` (github.com/golang-jwt/jwt): Used for simplifying JWT token handling.
-- `mux` (github.com/gorilla/mux): Used for creating the API server.
-- `viper` (github.com/spf13/viper): Used for managing configurations.
-- `testify` (github.com/stretchr/testify): Used for enhanced testing.
-- `pqx` (github.com/jackc/pgx/v5): Used for working with PostgreSQL databases.
+- `mux` (github.com/gorilla/mux): Facilitates API server creation.
+- `jwt` (github.com/golang-jwt/jwt): Simplifies JWT token management.
+- `viper` (github.com/spf13/viper): Manages configurations efficiently.
+- `testify` (github.com/stretchr/testify): Enhances testing capabilities.
+- `pqx` (github.com/jackc/pgx/v5): Facilitates interaction with PostgreSQL databases.
+- `crypto` (golang.org/x/crypto): Utilized for bcrypt hashing.
+- `zap` (go.uber.org/zap): Employs structured and efficient logging.
 
 ## Requirements
 
