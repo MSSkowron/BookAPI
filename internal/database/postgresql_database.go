@@ -50,6 +50,23 @@ func (db *PostgresqlDatabase) InsertUser(user *models.User) (int, error) {
 	return id, nil
 }
 
+// SelectUserByID selects a user with given ID
+func (db *PostgresqlDatabase) SelectUserByID(id int) (*models.User, error) {
+	query := "SELECT * FROM users WHERE id=$1"
+
+	row := db.conn.QueryRow(context.Background(), query, id)
+	user := &models.User{}
+	err := row.Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age)
+	if err != nil {
+		logger.Errorf("Error (%s) while selecting user with ID: %d", err, id)
+		return nil, err
+	}
+
+	logger.Infof("Selected user with ID: %d", id)
+
+	return user, nil
+}
+
 // SelectUserByEmail selects a user with given email
 func (db *PostgresqlDatabase) SelectUserByEmail(email string) (*models.User, error) {
 	query := "SELECT * FROM users WHERE email=$1"

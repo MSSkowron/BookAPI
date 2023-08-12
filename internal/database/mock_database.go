@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
 )
@@ -18,6 +19,7 @@ func NewMockDatabase() Database {
 		users: []*models.User{
 			{
 				ID:        1,
+				CreatedAt: time.Now(),
 				Email:     "johndoe@net.eu",
 				Password:  "johnpassword",
 				FirstName: "John",
@@ -26,6 +28,7 @@ func NewMockDatabase() Database {
 			},
 			{
 				ID:        2,
+				CreatedAt: time.Now(),
 				Email:     "janedoe@net.eu",
 				Password:  "janepassword",
 				FirstName: "Jane",
@@ -34,6 +37,7 @@ func NewMockDatabase() Database {
 			},
 			{
 				ID:        3,
+				CreatedAt: time.Now(),
 				Email:     "jankowalski@net.pl",
 				Password:  "janpassword",
 				FirstName: "Jan",
@@ -43,19 +47,22 @@ func NewMockDatabase() Database {
 		},
 		books: []*models.Book{
 			{
-				ID:     1,
-				Author: "J.R.R. Tolkien",
-				Title:  "The Lord of the Rings",
+				ID:        1,
+				CreatedAt: time.Now(),
+				Author:    "J.R.R. Tolkien",
+				Title:     "The Lord of the Rings",
 			},
 			{
-				ID:     2,
-				Author: "J.K. Rowling",
-				Title:  "Harry Potter",
+				ID:        2,
+				CreatedAt: time.Now(),
+				Author:    "J.K. Rowling",
+				Title:     "Harry Potter",
 			},
 			{
-				ID:     3,
-				Author: "Stephen King",
-				Title:  "The Shining",
+				ID:        3,
+				CreatedAt: time.Now(),
+				Author:    "Stephen King",
+				Title:     "The Shining",
 			},
 		},
 	}
@@ -72,6 +79,17 @@ func (db *MockDatabase) InsertUser(user *models.User) (int, error) {
 	db.users = append(db.users, user)
 
 	return len(db.users), nil
+}
+
+// SelectUserByID selects a user with given ID
+func (db *MockDatabase) SelectUserByID(id int) (*models.User, error) {
+	for _, user := range db.users {
+		if user.ID == id {
+			return user, nil
+		}
+	}
+
+	return nil, nil
 }
 
 // SelectUserByEmail selects a user with given email

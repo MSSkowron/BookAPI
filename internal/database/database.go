@@ -6,11 +6,12 @@ import (
 
 // Database is an interface for database operations
 type Database interface {
-	InsertUser(user *models.User) (int, error)
-	SelectUserByEmail(email string) (*models.User, error)
-	InsertBook(book *models.Book) (int, error)
-	SelectBookByID(id int) (*models.Book, error)
+	InsertUser(*models.User) (int, error)
+	SelectUserByID(int) (*models.User, error)
+	SelectUserByEmail(string) (*models.User, error)
+	InsertBook(*models.Book) (int, error)
+	SelectBookByID(int) (*models.Book, error)
 	SelectAllBooks() ([]*models.Book, error)
-	DeleteBook(id int) error
-	UpdateBook(book *models.Book) error
+	DeleteBook(int) error
+	UpdateBook(*models.Book) error
 }
