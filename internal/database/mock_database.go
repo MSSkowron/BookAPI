@@ -70,6 +70,9 @@ func NewMockDatabase() Database {
 
 // InsertUser inserts a new user
 func (db *MockDatabase) InsertUser(user *models.User) (int, error) {
+	user.ID = len(db.users) + 1
+	user.CreatedAt = time.Now()
+
 	for _, u := range db.users {
 		if u.Email == user.Email {
 			return -1, fmt.Errorf("user with email %s already exists", user.Email)
@@ -106,6 +109,8 @@ func (db *MockDatabase) SelectUserByEmail(email string) (*models.User, error) {
 // InsertBook inserts a new book
 func (db *MockDatabase) InsertBook(book *models.Book) (int, error) {
 	book.ID = len(db.books) + 1
+	book.CreatedAt = time.Now()
+
 	db.books = append(db.books, book)
 
 	return len(db.books), nil

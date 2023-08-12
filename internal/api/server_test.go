@@ -336,12 +336,13 @@ func TestHandleRegister(t *testing.T) {
 				err = json.NewDecoder(resp.Body).Decode(&responseBody)
 				require.NoError(t, err)
 
-				require.NotEmpty(t, responseBody.Password, "Password should not be empty")
-				require.Equal(t, d.expectedResponse.(dtos.UserDTO).ID, responseBody.ID, "ID should be equal")
-				require.Equal(t, d.expectedResponse.(dtos.UserDTO).Email, responseBody.Email, "Email should be equal")
-				require.Equal(t, d.expectedResponse.(dtos.UserDTO).FirstName, responseBody.FirstName, "First name should be equal")
-				require.Equal(t, d.expectedResponse.(dtos.UserDTO).LastName, responseBody.LastName, "Last name should be equal")
-				require.Equal(t, d.expectedResponse.(dtos.UserDTO).Age, responseBody.Age, "Age should be equal")
+				require.NotEmpty(t, responseBody.Password)
+				require.Equal(t, d.expectedResponse.(dtos.UserDTO).ID, responseBody.ID)
+				require.LessOrEqual(t, d.expectedResponse.(dtos.UserDTO).CreatedAt, time.Now())
+				require.Equal(t, d.expectedResponse.(dtos.UserDTO).Email, responseBody.Email)
+				require.Equal(t, d.expectedResponse.(dtos.UserDTO).FirstName, responseBody.FirstName)
+				require.Equal(t, d.expectedResponse.(dtos.UserDTO).LastName, responseBody.LastName)
+				require.Equal(t, d.expectedResponse.(dtos.UserDTO).Age, responseBody.Age)
 			case http.StatusBadRequest:
 				responseError := dtos.ErrorDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
@@ -693,6 +694,7 @@ func TestHandlePostBook(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, d.expectedResponse.(dtos.BookDTO).ID, responseBodyBook.ID)
+				require.LessOrEqual(t, d.expectedResponse.(dtos.BookDTO).CreatedAt, time.Now())
 				require.Equal(t, d.expectedResponse.(dtos.BookDTO).Author, responseBodyBook.Author)
 				require.Equal(t, d.expectedResponse.(dtos.BookDTO).Title, responseBodyBook.Title)
 			case http.StatusBadRequest:
@@ -849,7 +851,12 @@ func TestHandleGetBookByID(t *testing.T) {
 				err = json.NewDecoder(resp.Body).Decode(&responseBody)
 				require.NoError(t, err)
 
-				require.Equal(t, d.expectedResponseBody, responseBody)
+				require.Equal(t, d.expectedResponseBody.(dtos.BookDTO).ID, responseBody.ID)
+				require.LessOrEqual(t, d.expectedResponseBody.(dtos.BookDTO).CreatedAt, time.Now())
+				require.Equal(t, d.expectedResponseBody.(dtos.BookDTO).Author, responseBody.Author)
+				require.Equal(t, d.expectedResponseBody.(dtos.BookDTO).Title, responseBody.Title)
+				require.NotEmpty(t, responseBody.CreatedAt)
+				require.Less(t, responseBody.CreatedAt, time.Now())
 			case http.StatusNotFound, http.StatusBadRequest:
 				responseError := dtos.ErrorDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)
@@ -1374,7 +1381,11 @@ func TestHandlePutBookByID(t *testing.T) {
 				err = json.NewDecoder(resp.Body).Decode(&responseBody)
 				require.NoError(t, err)
 
-				require.Equal(t, d.expectedResponseBody, responseBody)
+				require.Equal(t, d.expectedResponseBody.(dtos.BookDTO).ID, responseBody.ID)
+				require.LessOrEqual(t, responseBody.CreatedAt, time.Now())
+				require.Equal(t, d.expectedResponseBody.(dtos.BookDTO).Author, responseBody.Author)
+				require.Equal(t, d.expectedResponseBody.(dtos.BookDTO).Title, responseBody.Title)
+
 			case http.StatusBadRequest, http.StatusNotFound:
 				responseError := dtos.ErrorDTO{}
 				err = json.NewDecoder(resp.Body).Decode(&responseError)

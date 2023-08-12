@@ -91,20 +91,25 @@ func (us *UserServiceImpl) RegisterUser(dto *dtos.AccountCreateDTO) (*dtos.UserD
 		return nil, err
 	}
 
-	user := &models.User{
+	id, err := us.db.InsertUser(&models.User{
 		Email:     dto.Email,
 		Password:  hashedPassword,
 		FirstName: dto.FirstName,
 		LastName:  dto.LastName,
 		Age:       int(dto.Age),
+	})
+	if err != nil {
+		return nil, err
 	}
-	id, err := us.db.InsertUser(user)
+
+	user, err := us.db.SelectUserByID(id)
 	if err != nil {
 		return nil, err
 	}
 
 	return &dtos.UserDTO{
 		ID:        int64(id),
+		CreatedAt: user.CreatedAt,
 		Email:     user.Email,
 		Password:  user.Password,
 		FirstName: user.FirstName,

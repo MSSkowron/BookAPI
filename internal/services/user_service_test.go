@@ -7,7 +7,7 @@ import (
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
 	"github.com/MSSkowron/BookRESTAPI/internal/dtos"
 	"github.com/MSSkowron/BookRESTAPI/pkg/crypto"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterUser(t *testing.T) {
@@ -157,17 +157,18 @@ func TestRegisterUser(t *testing.T) {
 		t.Run(d.name, func(t *testing.T) {
 			user, err := us.RegisterUser(d.input)
 			if d.expected.user != nil {
-				assert.NotNil(t, user)
-				assert.Equal(t, d.expected.user.ID, user.ID)
-				assert.Equal(t, d.expected.user.Email, user.Email)
-				assert.Nil(t, crypto.CheckPassword("Password1", user.Password))
-				assert.Equal(t, d.expected.user.FirstName, user.FirstName)
-				assert.Equal(t, d.expected.user.LastName, user.LastName)
-				assert.Equal(t, d.expected.user.Age, user.Age)
+				require.NotNil(t, user)
+				require.Equal(t, d.expected.user.ID, user.ID)
+				require.LessOrEqual(t, user.CreatedAt, time.Now())
+				require.Equal(t, d.expected.user.Email, user.Email)
+				require.Nil(t, crypto.CheckPassword("Password1", user.Password))
+				require.Equal(t, d.expected.user.FirstName, user.FirstName)
+				require.Equal(t, d.expected.user.LastName, user.LastName)
+				require.Equal(t, d.expected.user.Age, user.Age)
 			} else {
-				assert.Nil(t, user)
+				require.Nil(t, user)
 			}
-			assert.Equal(t, d.expected.err, err)
+			require.Equal(t, d.expected.err, err)
 		})
 	}
 }
@@ -184,8 +185,8 @@ func TestLoginUser(t *testing.T) {
 		LastName:  "Doe",
 		Age:       20,
 	})
-	assert.NotNil(t, user)
-	assert.Nil(t, err)
+	require.NotNil(t, user)
+	require.Nil(t, err)
 
 	data := []struct {
 		name     string
@@ -271,11 +272,11 @@ func TestLoginUser(t *testing.T) {
 		t.Run(d.name, func(t *testing.T) {
 			token, err := us.LoginUser(d.input)
 			if d.expected.token {
-				assert.NotEmpty(t, token)
+				require.NotEmpty(t, token)
 			} else {
-				assert.Empty(t, token)
+				require.Empty(t, token)
 			}
-			assert.Equal(t, d.expected.err, err)
+			require.Equal(t, d.expected.err, err)
 		})
 	}
 }
@@ -284,15 +285,15 @@ func TestGenerateValidateToken(t *testing.T) {
 	us := NewUserService(nil, "secret12345", 3*time.Second)
 
 	token, err := us.GenerateToken(1, "email@net.com")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, token)
+	require.NoError(t, err)
+	require.NotEmpty(t, token)
 
-	assert.NoError(t, us.ValidateToken(token))
+	require.NoError(t, us.ValidateToken(token))
 
 	time.Sleep(4 * time.Second)
-	assert.ErrorIs(t, us.ValidateToken(token), ErrExpiredToken)
+	require.ErrorIs(t, us.ValidateToken(token), ErrExpiredToken)
 
-	assert.ErrorIs(t, us.ValidateToken("invalid token"), ErrInvalidToken)
+	require.ErrorIs(t, us.ValidateToken("invalid token"), ErrInvalidToken)
 }
 
 func TestValidateEmail(t *testing.T) {
@@ -337,7 +338,7 @@ func TestValidateEmail(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			assert.Equal(t, d.expected, us.validateEmail(d.email))
+			require.Equal(t, d.expected, us.validateEmail(d.email))
 		})
 	}
 }
@@ -384,7 +385,7 @@ func TestValidatePassword(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			assert.Equal(t, d.expected, us.validatePassword(d.password))
+			require.Equal(t, d.expected, us.validatePassword(d.password))
 		})
 	}
 }
@@ -426,7 +427,7 @@ func TestValidateFirstName(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			assert.Equal(t, d.expected, us.validateFirstName(d.firstName))
+			require.Equal(t, d.expected, us.validateFirstName(d.firstName))
 		})
 	}
 }
@@ -468,7 +469,7 @@ func TestValidateLastName(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			assert.Equal(t, d.expected, us.validateLastName(d.lastName))
+			require.Equal(t, d.expected, us.validateLastName(d.lastName))
 		})
 	}
 }
@@ -510,7 +511,7 @@ func TestValidateAge(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			assert.Equal(t, d.expected, us.validateAge(d.age))
+			require.Equal(t, d.expected, us.validateAge(d.age))
 		})
 	}
 }
