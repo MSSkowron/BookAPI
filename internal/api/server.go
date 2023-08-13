@@ -15,6 +15,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type contextKey string
+
 const (
 	// ErrMsgBadRequestInvalidRequestBody is a message for bad request with invalid request body
 	ErrMsgBadRequestInvalidRequestBody = "invalid request body"
@@ -34,15 +36,13 @@ const (
 	ErrMsgNotFound = "not found"
 	// ErrMsgInternalError is a message for internal error
 	ErrMsgInternalError = "internal server error"
+	// ContextKeyUserID is a context key for user id
+	ContextKeyUserID = contextKey("user_id")
 )
-
-type contextKey string
 
 var (
 	// ErrUserIDNotSetInContext is returned when user id is not set in context
 	ErrUserIDNotSetInContext = errors.New("user id not set in context")
-	// ContextKeyUserID is a context key for user id
-	ContextKeyUserID = contextKey("user_id")
 )
 
 type serverHandlerFunc func(w http.ResponseWriter, r *http.Request) error
