@@ -87,11 +87,11 @@ func (db *PostgresqlDatabase) SelectUserByEmail(email string) (*models.User, err
 // InsertBook inserts a new book
 func (db *PostgresqlDatabase) InsertBook(book *models.Book) (int, error) {
 	var (
-		query string = "INSERT INTO books (author, title) VALUES ($1, $2) RETURNING id"
+		query string = "INSERT INTO books (author, title, created_by) VALUES ($1, $2, $3) RETURNING id"
 		id    int    = -1
 	)
 
-	err := db.conn.QueryRow(context.Background(), query, book.Author, book.Title).Scan(&id)
+	err := db.conn.QueryRow(context.Background(), query, book.Author, book.Title, book.CreatedBy).Scan(&id)
 	if err != nil {
 		logger.Errorf("Error (%s) while inserting new book", err)
 		return id, err
@@ -115,7 +115,7 @@ func (db *PostgresqlDatabase) SelectAllBooks() ([]*models.Book, error) {
 	books := []*models.Book{}
 	for rows.Next() {
 		book := &models.Book{}
-		if err := rows.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author); err != nil {
+		if err := rows.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author, &book.CreatedBy); err != nil {
 			logger.Errorf("Error (%s) while selecting all books", err)
 			return nil, err
 		}
@@ -134,7 +134,7 @@ func (db *PostgresqlDatabase) SelectBookByID(id int) (*models.Book, error) {
 
 	row := db.conn.QueryRow(context.Background(), query, id)
 	book := &models.Book{}
-	if err := row.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author); err != nil {
+	if err := row.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author, &book.CreatedBy); err != nil {
 		logger.Errorf("Error (%s) while selecting book with ID: %d", err, id)
 		return nil, err
 	}
@@ -159,16 +159,16 @@ func (db *PostgresqlDatabase) DeleteBook(id int) error {
 }
 
 // UpdateBook updates a book with given ID
-func (db *PostgresqlDatabase) UpdateBook(book *models.Book) error {
+func (db *PostgresqlDatabase) UpdateBook(id int, book *models.Book) error {
 	query := "UPDATE books SET author = $1, title = $2 WHERE id = $3"
 
-	_, err := db.conn.Exec(context.Background(), query, book.Author, book.Title, book.ID)
+	_, err := db.conn.Exec(context.Background(), query, book.Author, book.Title, id)
 	if err != nil {
-		logger.Errorf("Error (%s) while updating book with ID: %d", err, book.ID)
+		logger.Errorf("Error (%s) while updating book with ID: %d", err, id)
 		return err
 	}
 
-	logger.Infof("Updated book with ID: %d", book.ID)
+	logger.Infof("Updated book with ID: %d", id)
 
 	return nil
 }

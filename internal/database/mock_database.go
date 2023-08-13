@@ -48,18 +48,21 @@ func NewMockDatabase() Database {
 		books: []*models.Book{
 			{
 				ID:        1,
+				CreatedBy: 1,
 				CreatedAt: time.Now(),
 				Author:    "J.R.R. Tolkien",
 				Title:     "The Lord of the Rings",
 			},
 			{
 				ID:        2,
+				CreatedBy: 2,
 				CreatedAt: time.Now(),
 				Author:    "J.K. Rowling",
 				Title:     "Harry Potter",
 			},
 			{
 				ID:        3,
+				CreatedBy: 3,
 				CreatedAt: time.Now(),
 				Author:    "Stephen King",
 				Title:     "The Shining",
@@ -71,7 +74,6 @@ func NewMockDatabase() Database {
 // InsertUser inserts a new user
 func (db *MockDatabase) InsertUser(user *models.User) (int, error) {
 	user.ID = len(db.users) + 1
-	user.CreatedAt = time.Now()
 
 	for _, u := range db.users {
 		if u.Email == user.Email {
@@ -109,7 +111,6 @@ func (db *MockDatabase) SelectUserByEmail(email string) (*models.User, error) {
 // InsertBook inserts a new book
 func (db *MockDatabase) InsertBook(book *models.Book) (int, error) {
 	book.ID = len(db.books) + 1
-	book.CreatedAt = time.Now()
 
 	db.books = append(db.books, book)
 
@@ -145,6 +146,15 @@ func (db *MockDatabase) DeleteBook(id int) error {
 }
 
 // UpdateBook updates a book with given ID
-func (db *MockDatabase) UpdateBook(book *models.Book) error {
+func (db *MockDatabase) UpdateBook(id int, book *models.Book) error {
+	for i, b := range db.books {
+		if b.ID == id {
+			db.books[i].Author = book.Author
+			db.books[i].Title = book.Title
+
+			return nil
+		}
+	}
+
 	return nil
 }

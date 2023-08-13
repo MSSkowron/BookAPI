@@ -40,7 +40,7 @@ func Validate(tokenString, secret string) error {
 		return []byte(secret), nil
 	})
 	if err != nil {
-		return err
+		return ErrInvalidToken
 	}
 
 	if !token.Valid {
@@ -57,4 +57,26 @@ func Validate(tokenString, secret string) error {
 	}
 
 	return nil
+}
+
+// GetUserID returns the user ID from the JWT token
+func GetUserID(tokenString, secret string) (int, error) {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		_, ok := t.Method.(*jwt.SigningMethodHMAC)
+		if !ok {
+			return nil, ErrInvalidSignature
+		}
+
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return 0, ErrInvalidToken
+	}
+
+	userID, ok := token.Claims.(jwt.MapClaims)["id"].(float64)
+	if !ok {
+		return 0, ErrInvalidToken
+	}
+
+	return int(userID), nil
 }

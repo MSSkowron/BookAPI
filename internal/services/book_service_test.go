@@ -100,13 +100,15 @@ func TestAddBook(t *testing.T) {
 	bs := NewBookService(mockDB)
 
 	data := []struct {
-		name         string
-		inputBook    *dtos.BookCreateDTO
-		expectedErr  error
-		expectedBook *dtos.BookDTO
+		name             string
+		inputCreatedByID int
+		inputBook        *dtos.BookCreateDTO
+		expectedErr      error
+		expectedBook     *dtos.BookDTO
 	}{
 		{
-			name: "valid",
+			name:             "valid",
+			inputCreatedByID: 1,
 			inputBook: &dtos.BookCreateDTO{
 				Author: "J.R.R. Tolkien",
 				Title:  "The Lord of the Rings - The Fellowship of the Ring",
@@ -119,7 +121,8 @@ func TestAddBook(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid author - empty author",
+			name:             "invalid author - empty author",
+			inputCreatedByID: 1,
 			inputBook: &dtos.BookCreateDTO{
 				Author: "",
 				Title:  "The Lord of the Rings - The Fellowship of the Ring",
@@ -128,7 +131,8 @@ func TestAddBook(t *testing.T) {
 			expectedBook: nil,
 		},
 		{
-			name: "invalid title - empty title",
+			name:             "invalid title - empty title",
+			inputCreatedByID: 1,
 			inputBook: &dtos.BookCreateDTO{
 				Author: "J.R.R. Tolkien",
 				Title:  "",
@@ -140,7 +144,7 @@ func TestAddBook(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
-			book, err := bs.AddBook(d.inputBook)
+			book, err := bs.AddBook(d.inputCreatedByID, d.inputBook)
 			require.Equal(t, d.expectedErr, err)
 
 			if d.expectedErr != nil {

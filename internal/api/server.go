@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -33,6 +34,15 @@ const (
 	ErrMsgNotFound = "not found"
 	// ErrMsgInternalError is a message for internal error
 	ErrMsgInternalError = "internal server error"
+)
+
+type contextKey string
+
+var (
+	// ErrUserIDNotSetInContext is returned when user id is not set in context
+	ErrUserIDNotSetInContext = errors.New("user id not set in context")
+	// ContextKeyUserID is a context key for user id
+	ContextKeyUserID = contextKey("user_id")
 )
 
 type serverHandlerFunc func(w http.ResponseWriter, r *http.Request) error
@@ -178,7 +188,13 @@ func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	bookDTO, err := s.bookService.AddBook(bookCreateDTO)
+	userID := r.Context().Value(ContextKeyUserID).(int)
+	if userID == 0 {
+		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
+		return ErrUserIDNotSetInContext
+	}
+
+	bookDTO, err := s.bookService.AddBook(userID, bookCreateDTO)
 	if err != nil {
 		if errors.Is(err, services.ErrInvalidAuthor) {
 			s.respondWithError(w, http.StatusBadRequest, ErrMsgBadRequestInvalidRequestBody)
@@ -345,6 +361,25 @@ func (s *Server) validateJWT(f http.HandlerFunc) http.HandlerFunc {
 		}
 
 		logger.Infof("JWT validation successful for client with IP address: %s", clientIP)
+
+		userID, err := s.userService.GetUserIDFromToken(tokenString)
+		if err != nil {
+			logger.Errorf("Error (%s) encountered while retrieving user ID from JWT for client with IP address: %s", err, clientIP)
+
+			if errors.Is(err, services.ErrInvalidToken) {
+				s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedInvalidToken)
+				return
+			}
+
+			s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
+			return
+		}
+
+		logger.Infof("User ID (%d) retrieved from JWT for client with IP address: %s", userID, clientIP)
+
+		ctx := context.WithValue(r.Context(), ContextKeyUserID, userID)
+		r = r.WithContext(ctx)
+
 		f(w, r)
 	}
 }

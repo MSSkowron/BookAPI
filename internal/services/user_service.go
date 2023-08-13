@@ -46,6 +46,7 @@ type UserService interface {
 	RegisterUser(*dtos.AccountCreateDTO) (*dtos.UserDTO, error)
 	LoginUser(*dtos.UserLoginDTO) (*dtos.TokenDTO, error)
 	ValidateToken(string) error
+	GetUserIDFromToken(string) (int, error)
 }
 
 // UserServiceImpl implements the UserService interface
@@ -92,6 +93,7 @@ func (us *UserServiceImpl) RegisterUser(dto *dtos.AccountCreateDTO) (*dtos.UserD
 	}
 
 	id, err := us.db.InsertUser(&models.User{
+		CreatedAt: time.Now(),
 		Email:     dto.Email,
 		Password:  hashedPassword,
 		FirstName: dto.FirstName,
@@ -166,6 +168,20 @@ func (us *UserServiceImpl) ValidateToken(tokenString string) error {
 	}
 
 	return nil
+}
+
+// GetUserByIDFromToken gets a user ID from a token
+func (us *UserServiceImpl) GetUserIDFromToken(tokenString string) (int, error) {
+	id, err := token.GetUserID(tokenString, us.tokenSecret)
+	if err != nil {
+		if errors.Is(err, token.ErrInvalidToken) {
+			return 0, ErrExpiredToken
+		}
+
+		return 0, err
+	}
+
+	return id, nil
 }
 
 // validateEmail validates an email address

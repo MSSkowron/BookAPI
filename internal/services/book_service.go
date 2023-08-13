@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"time"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/database"
 	"github.com/MSSkowron/BookRESTAPI/internal/dtos"
@@ -11,6 +12,8 @@ import (
 var (
 	// ErrInvalidID is returned when the given id is not a positive integer
 	ErrInvalidID = errors.New("id must be a positive integer")
+	// ErrInvalidCreatedByID is returned when the given createdByID is not a positive integer
+	ErrInvalidCreatedByID = errors.New("createdByID must be a positive integer")
 	// ErrInvalidAuthor is returned when the given author is empty
 	ErrInvalidAuthor = errors.New("author must not be empty")
 	// ErrInvalidTitle is returned when the given title is empty
@@ -25,7 +28,7 @@ var (
 type BookService interface {
 	GetBooks() ([]*dtos.BookDTO, error)
 	GetBook(int) (*dtos.BookDTO, error)
-	AddBook(*dtos.BookCreateDTO) (*dtos.BookDTO, error)
+	AddBook(int, *dtos.BookCreateDTO) (*dtos.BookDTO, error)
 	UpdateBook(int, *dtos.BookDTO) (*dtos.BookDTO, error)
 	DeleteBook(int) error
 }
@@ -80,7 +83,10 @@ func (bs *BookServiceImpl) GetBook(id int) (*dtos.BookDTO, error) {
 }
 
 // AddBook adds a book to the database
-func (bs *BookServiceImpl) AddBook(dto *dtos.BookCreateDTO) (*dtos.BookDTO, error) {
+func (bs *BookServiceImpl) AddBook(createdByID int, dto *dtos.BookCreateDTO) (*dtos.BookDTO, error) {
+	if !bs.validateID(createdByID) {
+		return nil, ErrInvalidCreatedByID
+	}
 	if !bs.validateAuthor(dto.Author) {
 		return nil, ErrInvalidAuthor
 	}
@@ -89,8 +95,10 @@ func (bs *BookServiceImpl) AddBook(dto *dtos.BookCreateDTO) (*dtos.BookDTO, erro
 	}
 
 	id, err := bs.db.InsertBook(&models.Book{
-		Author: dto.Author,
-		Title:  dto.Title,
+		CreatedBy: createdByID,
+		CreatedAt: time.Now(),
+		Author:    dto.Author,
+		Title:     dto.Title,
 	})
 	if err != nil {
 		return nil, err
@@ -128,7 +136,7 @@ func (bs *BookServiceImpl) UpdateBook(id int, dto *dtos.BookDTO) (*dtos.BookDTO,
 
 	book.Author = dto.Author
 	book.Title = dto.Title
-	if err := bs.db.UpdateBook(book); err != nil {
+	if err := bs.db.UpdateBook(id, book); err != nil {
 		return nil, err
 	}
 
