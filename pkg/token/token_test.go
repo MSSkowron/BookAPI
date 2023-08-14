@@ -7,14 +7,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestToken(t *testing.T) {
-	var (
-		testSecret         = "testsecret123"
-		testUserID         = 1
-		testUserEmail      = "test@example.com"
-		testExpirationTime = time.Hour
-	)
+const (
+	testSecret         = "testsecret123"
+	testUserID         = 1
+	testUserEmail      = "test@example.com"
+	testExpirationTime = time.Hour
+)
 
+func TestToken(t *testing.T) {
 	tests := []struct {
 		name                   string
 		tokenUserID            int
