@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTokenFunctions(t *testing.T) {
+func TestToken(t *testing.T) {
 	var (
 		testSecret         = "testsecret123"
 		testUserID         = 1
