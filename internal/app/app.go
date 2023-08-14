@@ -27,10 +27,11 @@ func Run() error {
 		return fmt.Errorf("failed to create database: %w", err)
 	}
 
-	userService := services.NewUserService(database, config.TokenSecret, config.TokenDuration)
+	tokenService := services.NewTokenService(config.TokenSecret, config.TokenDuration)
+	userService := services.NewUserService(database, tokenService)
 	bookService := services.NewBookService(database)
 
-	if err := api.NewServer(config.HTTPServerListenAddress, userService, bookService).Run(); err != nil {
+	if err := api.NewServer(config.HTTPServerListenAddress, userService, bookService, tokenService).Run(); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
 

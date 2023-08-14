@@ -26,10 +26,11 @@ const (
 func TestHandleRegister(t *testing.T) {
 	mockDB := database.NewMockDatabase()
 
-	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	tokenService := services.NewTokenService(testTokenSecret, testTokenDuration)
+	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService)
+	server := NewServer("", userService, bookService, tokenService)
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
@@ -384,10 +385,11 @@ func TestHandleRegister(t *testing.T) {
 func TestHandleLogin(t *testing.T) {
 	mockDB := database.NewMockDatabase()
 
-	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	tokenService := services.NewTokenService(testTokenSecret, testTokenDuration)
+	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService)
+	server := NewServer("", userService, bookService, tokenService)
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
@@ -537,10 +539,11 @@ func TestHandleLogin(t *testing.T) {
 func TestHandlePostBook(t *testing.T) {
 	mockDB := database.NewMockDatabase()
 
-	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	tokenService := services.NewTokenService(testTokenSecret, testTokenDuration)
+	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService)
+	server := NewServer("", userService, bookService, tokenService)
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
@@ -749,10 +752,11 @@ func TestHandlePostBook(t *testing.T) {
 func TestHandleGetBookByID(t *testing.T) {
 	mockDB := database.NewMockDatabase()
 
-	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	tokenService := services.NewTokenService(testTokenSecret, testTokenDuration)
+	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService)
+	server := NewServer("", userService, bookService, tokenService)
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
@@ -928,10 +932,11 @@ func TestHandleGetBookByID(t *testing.T) {
 func TestHandleGetBooks(t *testing.T) {
 	mockDB := database.NewMockDatabase()
 
-	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	tokenService := services.NewTokenService(testTokenSecret, testTokenDuration)
+	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService)
+	server := NewServer("", userService, bookService, tokenService)
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
@@ -1034,10 +1039,11 @@ func TestHandleGetBooks(t *testing.T) {
 func TestHandleDeleteBookByID(t *testing.T) {
 	mockDB := database.NewMockDatabase()
 
-	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	tokenService := services.NewTokenService(testTokenSecret, testTokenDuration)
+	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService)
+	server := NewServer("", userService, bookService, tokenService)
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
@@ -1203,10 +1209,11 @@ func TestHandleDeleteBookByID(t *testing.T) {
 func TestHandlePutBookByID(t *testing.T) {
 	mockDB := database.NewMockDatabase()
 
-	userService := services.NewUserService(mockDB, testTokenSecret, testTokenDuration)
+	tokenService := services.NewTokenService(testTokenSecret, testTokenDuration)
+	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService)
+	server := NewServer("", userService, bookService, tokenService)
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")

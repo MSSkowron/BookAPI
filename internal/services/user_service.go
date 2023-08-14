@@ -10,7 +10,6 @@ import (
 	"github.com/MSSkowron/BookRESTAPI/internal/dtos"
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
 	"github.com/MSSkowron/BookRESTAPI/pkg/crypto"
-	"github.com/MSSkowron/BookRESTAPI/pkg/token"
 )
 
 var (
@@ -35,33 +34,25 @@ var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	// ErrUserAlreadyExists is returned when a user with the same details already exists.
 	ErrUserAlreadyExists = errors.New("user already exists")
-	// ErrInvalidToken is returned when an invalid token is provided.
-	ErrInvalidToken = errors.New("invalid token")
-	// ErrExpiredToken is returned when an expired token is provided.
-	ErrExpiredToken = errors.New("token is expired")
 )
 
 // UserService is an interface that defines the methods that the UserService must implement
 type UserService interface {
 	RegisterUser(*dtos.AccountCreateDTO) (*dtos.UserDTO, error)
 	LoginUser(*dtos.UserLoginDTO) (*dtos.TokenDTO, error)
-	ValidateToken(string) error
-	GetUserIDFromToken(string) (int, error)
 }
 
 // UserServiceImpl implements the UserService interface
 type UserServiceImpl struct {
-	db            database.Database
-	tokenSecret   string
-	tokenDuration time.Duration
+	db           database.Database
+	tokenService TokenService
 }
 
 // NewUserService creates a new UserServiceImpl
-func NewUserService(db database.Database, tokenSecret string, tokenDuration time.Duration) *UserServiceImpl {
+func NewUserService(db database.Database, tokenService TokenService) *UserServiceImpl {
 	return &UserServiceImpl{
-		db:            db,
-		tokenSecret:   tokenSecret,
-		tokenDuration: tokenDuration,
+		db:           db,
+		tokenService: tokenService,
 	}
 }
 
@@ -142,7 +133,7 @@ func (us *UserServiceImpl) LoginUser(dto *dtos.UserLoginDTO) (*dtos.TokenDTO, er
 		return nil, err
 	}
 
-	token, err := us.GenerateToken(user.ID, user.Email)
+	token, err := us.tokenService.GenerateToken(user.ID, user.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -150,38 +141,6 @@ func (us *UserServiceImpl) LoginUser(dto *dtos.UserLoginDTO) (*dtos.TokenDTO, er
 	return &dtos.TokenDTO{
 		Token: token,
 	}, nil
-}
-
-// GenerateToken generates a token
-func (us *UserServiceImpl) GenerateToken(userID int, userEmail string) (string, error) {
-	return token.Generate(userID, userEmail, us.tokenSecret, us.tokenDuration)
-}
-
-// ValidateToken validates a token
-func (us *UserServiceImpl) ValidateToken(tokenString string) error {
-	if err := token.Validate(tokenString, us.tokenSecret); err != nil {
-		if errors.Is(err, token.ErrExpiredToken) {
-			return ErrExpiredToken
-		}
-
-		return ErrInvalidToken
-	}
-
-	return nil
-}
-
-// GetUserByIDFromToken gets a user ID from a token
-func (us *UserServiceImpl) GetUserIDFromToken(tokenString string) (int, error) {
-	id, err := token.GetUserID(tokenString, us.tokenSecret)
-	if err != nil {
-		if errors.Is(err, token.ErrInvalidToken) {
-			return 0, ErrExpiredToken
-		}
-
-		return 0, err
-	}
-
-	return id, nil
 }
 
 // validateEmail validates an email address

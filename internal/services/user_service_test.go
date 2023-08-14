@@ -13,7 +13,8 @@ import (
 func TestRegisterUser(t *testing.T) {
 	mockDB := database.NewMockDatabase()
 
-	us := NewUserService(mockDB, "", 0)
+	ts := NewTokenService("", 0)
+	us := NewUserService(mockDB, ts)
 
 	hashedPassword, _ := crypto.HashPassword("Password1")
 
@@ -176,7 +177,8 @@ func TestRegisterUser(t *testing.T) {
 func TestLoginUser(t *testing.T) {
 	mockDB := database.NewMockDatabase()
 
-	us := NewUserService(mockDB, "secret12345", 3*time.Second)
+	ts := NewTokenService("secret12345", 3*time.Second)
+	us := NewUserService(mockDB, ts)
 
 	user, err := us.RegisterUser(&dtos.AccountCreateDTO{
 		Email:     "johntestdoe@net.eu",
@@ -281,23 +283,9 @@ func TestLoginUser(t *testing.T) {
 	}
 }
 
-func TestGenerateValidateToken(t *testing.T) {
-	us := NewUserService(nil, "secret12345", 3*time.Second)
-
-	token, err := us.GenerateToken(1, "email@net.com")
-	require.NoError(t, err)
-	require.NotEmpty(t, token)
-
-	require.NoError(t, us.ValidateToken(token))
-
-	time.Sleep(4 * time.Second)
-	require.ErrorIs(t, us.ValidateToken(token), ErrExpiredToken)
-
-	require.ErrorIs(t, us.ValidateToken("invalid token"), ErrInvalidToken)
-}
-
 func TestValidateEmail(t *testing.T) {
-	us := NewUserService(nil, "", 0)
+	ts := NewTokenService("", 0)
+	us := NewUserService(nil, ts)
 
 	data := []struct {
 		name     string
@@ -344,7 +332,8 @@ func TestValidateEmail(t *testing.T) {
 }
 
 func TestValidatePassword(t *testing.T) {
-	us := NewUserService(nil, "", 0)
+	ts := NewTokenService("", 0)
+	us := NewUserService(nil, ts)
 
 	data := []struct {
 		name     string
@@ -391,7 +380,8 @@ func TestValidatePassword(t *testing.T) {
 }
 
 func TestValidateFirstName(t *testing.T) {
-	us := NewUserService(nil, "", 0)
+	ts := NewTokenService("", 0)
+	us := NewUserService(nil, ts)
 
 	data := []struct {
 		name      string
@@ -433,7 +423,8 @@ func TestValidateFirstName(t *testing.T) {
 }
 
 func TestValidateLastName(t *testing.T) {
-	us := NewUserService(nil, "", 0)
+	ts := NewTokenService("", 0)
+	us := NewUserService(nil, ts)
 
 	data := []struct {
 		name     string
@@ -475,7 +466,8 @@ func TestValidateLastName(t *testing.T) {
 }
 
 func TestValidateAge(t *testing.T) {
-	us := NewUserService(nil, "", 0)
+	ts := NewTokenService("", 0)
+	us := NewUserService(nil, ts)
 
 	data := []struct {
 		name     string

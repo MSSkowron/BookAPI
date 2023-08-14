@@ -57,17 +57,19 @@ func makeHTTPHandlerFunc(f serverHandlerFunc) http.HandlerFunc {
 
 // Server is a HTTP server for handling REST API requests
 type Server struct {
-	listenAddr  string
-	userService services.UserService
-	bookService services.BookService
+	listenAddr   string
+	userService  services.UserService
+	tokenService services.TokenService
+	bookService  services.BookService
 }
 
 // NewServer creates a new Server
-func NewServer(listenAddr string, userService services.UserService, bookService services.BookService) *Server {
+func NewServer(listenAddr string, userService services.UserService, bookService services.BookService, tokenService services.TokenService) *Server {
 	return &Server{
-		listenAddr:  listenAddr,
-		userService: userService,
-		bookService: bookService,
+		listenAddr:   listenAddr,
+		userService:  userService,
+		tokenService: tokenService,
+		bookService:  bookService,
 	}
 }
 
@@ -343,7 +345,7 @@ func (s *Server) validateJWT(f http.HandlerFunc) http.HandlerFunc {
 		}
 
 		tokenString := authHeaderParts[1]
-		if err := s.userService.ValidateToken(tokenString); err != nil {
+		if err := s.tokenService.ValidateToken(tokenString); err != nil {
 			if errors.Is(err, services.ErrExpiredToken) {
 				logger.Infof("Expired JWT detected for client with IP address: %s", clientIP)
 				s.respondWithError(w, http.StatusUnauthorized, ErrMsgUnauthorizedExpiredToken)
@@ -362,7 +364,7 @@ func (s *Server) validateJWT(f http.HandlerFunc) http.HandlerFunc {
 
 		logger.Infof("JWT validation successful for client with IP address: %s", clientIP)
 
-		userID, err := s.userService.GetUserIDFromToken(tokenString)
+		userID, err := s.tokenService.GetUserIDFromToken(tokenString)
 		if err != nil {
 			logger.Errorf("Error (%s) encountered while retrieving user ID from JWT for client with IP address: %s", err, clientIP)
 
