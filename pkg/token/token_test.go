@@ -4,86 +4,100 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateAndValidateToken(t *testing.T) {
-	// Test cases
+func TestTokenFunctions(t *testing.T) {
+	var (
+		testSecret         = "testsecret123"
+		testUserID         = 1
+		testUserEmail      = "test@example.com"
+		testExpirationTime = time.Hour
+	)
+
 	tests := []struct {
-		name                  string
-		userID                int
-		userEmail             string
-		secret                string
-		expirationTime        time.Duration
-		expectedGenerateError error
-		expectedValidateError error
+		name                   string
+		tokenUserID            int
+		tokenUserEmail         string
+		tokenExpirationTime    time.Duration
+		generateSecret         string
+		validateSecret         string
+		getUserIDSecret        string
+		expectedGenerateError  error
+		expectedValidateError  error
+		expectedGetUserIDError error
+		expectedUserID         int
 	}{
 		{
-			name:                  "valid token",
-			userID:                1,
-			userEmail:             "test@example.com",
-			secret:                "secret",
-			expirationTime:        time.Hour,
-			expectedGenerateError: nil,
-			expectedValidateError: nil,
+			name:                   "valid token",
+			tokenUserID:            testUserID,
+			tokenUserEmail:         testUserEmail,
+			tokenExpirationTime:    testExpirationTime,
+			generateSecret:         testSecret,
+			validateSecret:         testSecret,
+			getUserIDSecret:        testSecret,
+			expectedGenerateError:  nil,
+			expectedValidateError:  nil,
+			expectedGetUserIDError: nil,
+			expectedUserID:         testUserID,
 		},
 		{
-			name:                  "expired token",
-			userID:                1,
-			userEmail:             "test@example.com",
-			secret:                "secret",
-			expirationTime:        -time.Hour, // Negative expiration time
-			expectedGenerateError: nil,
-			expectedValidateError: ErrExpiredToken,
+			name:                   "expired token",
+			tokenUserID:            testUserID,
+			tokenUserEmail:         testUserEmail,
+			tokenExpirationTime:    -testExpirationTime,
+			generateSecret:         testSecret,
+			validateSecret:         testSecret,
+			getUserIDSecret:        testSecret,
+			expectedGenerateError:  nil,
+			expectedValidateError:  ErrExpiredToken,
+			expectedGetUserIDError: nil,
+			expectedUserID:         0,
+		},
+		{
+			name:                   "validate token with incorrect secret",
+			tokenUserID:            testUserID,
+			tokenUserEmail:         testUserEmail,
+			tokenExpirationTime:    testExpirationTime,
+			generateSecret:         testSecret,
+			validateSecret:         "invalidsecret321",
+			getUserIDSecret:        testSecret,
+			expectedGenerateError:  nil,
+			expectedValidateError:  ErrInvalidToken,
+			expectedGetUserIDError: nil,
+			expectedUserID:         0,
+		},
+		{
+			name:                   "get user id from token with incorrect secret",
+			tokenUserID:            testUserID,
+			tokenUserEmail:         testUserEmail,
+			tokenExpirationTime:    testExpirationTime,
+			generateSecret:         testSecret,
+			validateSecret:         testSecret,
+			getUserIDSecret:        "invalidsecret321",
+			expectedGenerateError:  nil,
+			expectedValidateError:  nil,
+			expectedGetUserIDError: ErrInvalidToken,
+			expectedUserID:         0,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			tokenString, err := Generate(test.userID, test.userEmail, test.secret, test.expirationTime)
-			assert.Equal(t, test.expectedGenerateError, err)
+			tokenString, err := Generate(test.tokenUserID, test.tokenUserEmail, test.generateSecret, test.tokenExpirationTime)
+			require.Equal(t, test.expectedGenerateError, err)
 
-			err = Validate(tokenString, test.secret)
-			assert.Equal(t, test.expectedValidateError, err)
-		})
-	}
-}
+			err = Validate(tokenString, test.validateSecret)
+			require.Equal(t, test.expectedValidateError, err)
 
-func TestGetUserID(t *testing.T) {
-	// Test cases
-	tests := []struct {
-		name                  string
-		userID                int
-		userEmail             string
-		secret                string
-		expirationTime        time.Duration
-		expectedUserID        int
-		expectedGenerateError error
-	}{
-		{
-			name:                  "valid token",
-			userID:                1,
-			userEmail:             "test@net.com",
-			secret:                "secret1234567890",
-			expirationTime:        time.Minute,
-			expectedUserID:        1,
-			expectedGenerateError: nil,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			tokenString, err := Generate(test.userID, test.userEmail, test.secret, test.expirationTime)
-			assert.ErrorIs(t, err, test.expectedGenerateError)
-
-			userID, err := GetUserID(tokenString, test.secret)
-			assert.NoError(t, err)
-			assert.Equal(t, test.expectedUserID, userID)
+			if err == nil {
+				userID, err := GetUserID(tokenString, test.getUserIDSecret)
+				require.Equal(t, test.expectedGetUserIDError, err)
+				require.Equal(t, test.expectedUserID, userID)
+			}
 		})
 	}
 
-	// Test invalid token
-	userID, err := GetUserID("invalid_token123", "secret1234567890")
-	assert.ErrorIs(t, err, ErrInvalidToken)
-	assert.Equal(t, 0, userID)
+	// Invalid token format
+	require.ErrorIs(t, Validate("123XDTOKEN", testSecret), ErrInvalidToken)
 }
