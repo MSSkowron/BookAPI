@@ -8,15 +8,17 @@ import (
 )
 
 var (
-	// ErrInvalidToken is returned when the token is invalid
+	// ErrInvalidToken is returned when the token is invalid.
 	ErrInvalidToken = errors.New("invalid token")
-	// ErrExpiredToken is returned when the token is expired
+	// ErrExpiredToken is returned when the token is expired.
 	ErrExpiredToken = errors.New("token is expired")
-	// ErrInvalidSignature is returned when the token signature is invalid
+	// ErrInvalidSignature is returned when the token signature is invalid.
 	ErrInvalidSignature = errors.New("invalid signature")
 )
 
-// Generate generates a new JWT token
+// Generate generates a new JWT token.
+// The token is signed with the given secret.
+// The token contains the user ID, email address and expiration time.
 func Generate(userID int, userEmail, secret string, expirationTime time.Duration) (tokenString string, err error) {
 	claims := &jwt.MapClaims{
 		"id":        userID,
@@ -29,9 +31,9 @@ func Generate(userID int, userEmail, secret string, expirationTime time.Duration
 	return token.SignedString([]byte(secret))
 }
 
-// Validate validates a JWT token
+// Validate validates the given JWT token.
 func Validate(tokenString, secret string) error {
-	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
 			return nil, ErrInvalidSignature
@@ -59,9 +61,9 @@ func Validate(tokenString, secret string) error {
 	return nil
 }
 
-// GetUserID returns the user ID from the JWT token
+// GetUserID retrieves the user ID from the given JWT token.
 func GetUserID(tokenString, secret string) (int, error) {
-	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
 			return nil, ErrInvalidSignature

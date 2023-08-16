@@ -10,21 +10,21 @@ import (
 )
 
 var (
-	// ErrInvalidID is returned when the given id is not a positive integer
+	// ErrInvalidID is returned when the given id is not a positive integer.
 	ErrInvalidID = errors.New("id must be a positive integer")
-	// ErrInvalidCreatedByID is returned when the given createdByID is not a positive integer
+	// ErrInvalidCreatedByID is returned when the given createdByID is not a positive integer.
 	ErrInvalidCreatedByID = errors.New("createdByID must be a positive integer")
-	// ErrInvalidAuthor is returned when the given author is empty
+	// ErrInvalidAuthor is returned when the given author is empty.
 	ErrInvalidAuthor = errors.New("author must not be empty")
-	// ErrInvalidTitle is returned when the given title is empty
+	// ErrInvalidTitle is returned when the given title is empty.
 	ErrInvalidTitle = errors.New("title must not be empty")
-	// ErrInvalidAuthorOrTitle is returned when the given author or title is empty
+	// ErrInvalidAuthorOrTitle is returned when the given author or title is empty.
 	ErrInvalidAuthorOrTitle = errors.New("invalid author or title")
-	// ErrBookNotFound is returned when the book with the given id does not exist in the database
+	// ErrBookNotFound is returned when the book with the given id does not exist in the database.
 	ErrBookNotFound = errors.New("book not found")
 )
 
-// BookService is an interface that defines the methods that the BookService struct must implement
+// BookService is an interface that defines the methods that the BookService struct must implement.
 type BookService interface {
 	GetBooks() ([]*dtos.BookDTO, error)
 	GetBook(int) (*dtos.BookDTO, error)
@@ -33,17 +33,17 @@ type BookService interface {
 	DeleteBook(int) error
 }
 
-// BookServiceImpl is a struct that implements the BookService interface
+// BookServiceImpl is a struct that implements the BookService interface.
 type BookServiceImpl struct {
 	db database.Database
 }
 
-// NewBookService returns an implementation of BookService interface
+// NewBookService creates a new BookServiceImpl.
 func NewBookService(db database.Database) *BookServiceImpl {
 	return &BookServiceImpl{db: db}
 }
 
-// GetBooks returns all books from the database
+// GetBooks returns all books from the database.
 func (bs *BookServiceImpl) GetBooks() ([]*dtos.BookDTO, error) {
 	books, err := bs.db.SelectAllBooks()
 	if err != nil {
@@ -63,7 +63,7 @@ func (bs *BookServiceImpl) GetBooks() ([]*dtos.BookDTO, error) {
 	return booksDTO, nil
 }
 
-// GetBook returns a book with the given id from the database
+// GetBook returns a book with the given id from the database.
 func (bs *BookServiceImpl) GetBook(id int) (*dtos.BookDTO, error) {
 	if !bs.validateID(id) {
 		return nil, ErrInvalidID
@@ -82,7 +82,7 @@ func (bs *BookServiceImpl) GetBook(id int) (*dtos.BookDTO, error) {
 	}, nil
 }
 
-// AddBook adds a book to the database
+// AddBook adds a book.
 func (bs *BookServiceImpl) AddBook(createdByID int, dto *dtos.BookCreateDTO) (*dtos.BookDTO, error) {
 	if !bs.validateID(createdByID) {
 		return nil, ErrInvalidCreatedByID
@@ -117,7 +117,7 @@ func (bs *BookServiceImpl) AddBook(createdByID int, dto *dtos.BookCreateDTO) (*d
 	}, nil
 }
 
-// UpdateBook updates a book with the given id in the database
+// UpdateBook updates a book with the given id.
 func (bs *BookServiceImpl) UpdateBook(id int, dto *dtos.BookDTO) (*dtos.BookDTO, error) {
 	if !bs.validateID(id) {
 		return nil, ErrInvalidID
@@ -148,7 +148,7 @@ func (bs *BookServiceImpl) UpdateBook(id int, dto *dtos.BookDTO) (*dtos.BookDTO,
 	}, nil
 }
 
-// DeleteBook deletes a book with the given id from the database
+// DeleteBook deletes a book with the given id.
 func (bs *BookServiceImpl) DeleteBook(id int) error {
 	if !bs.validateID(id) {
 		return ErrInvalidID
@@ -161,14 +161,17 @@ func (bs *BookServiceImpl) DeleteBook(id int) error {
 	return bs.db.DeleteBook(id)
 }
 
+// validateID validates the given id.
 func (bs *BookServiceImpl) validateID(id int) bool {
 	return id > 0
 }
 
+// validateAuthor validates the given author.
 func (bs *BookServiceImpl) validateAuthor(author string) bool {
 	return author != ""
 }
 
+// validateTitle validates the given title.
 func (bs *BookServiceImpl) validateTitle(title string) bool {
 	return title != ""
 }

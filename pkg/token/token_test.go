@@ -15,7 +15,7 @@ const (
 )
 
 func TestToken(t *testing.T) {
-	tests := []struct {
+	data := []struct {
 		name                   string
 		tokenUserID            int
 		tokenUserEmail         string
@@ -82,22 +82,21 @@ func TestToken(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			tokenString, err := Generate(test.tokenUserID, test.tokenUserEmail, test.generateSecret, test.tokenExpirationTime)
-			require.Equal(t, test.expectedGenerateError, err)
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			tokenString, err := Generate(d.tokenUserID, d.tokenUserEmail, d.generateSecret, d.tokenExpirationTime)
+			require.Equal(t, d.expectedGenerateError, err)
 
-			err = Validate(tokenString, test.validateSecret)
-			require.Equal(t, test.expectedValidateError, err)
+			err = Validate(tokenString, d.validateSecret)
+			require.Equal(t, d.expectedValidateError, err)
 
 			if err == nil {
-				userID, err := GetUserID(tokenString, test.getUserIDSecret)
-				require.Equal(t, test.expectedGetUserIDError, err)
-				require.Equal(t, test.expectedUserID, userID)
+				userID, err := GetUserID(tokenString, d.getUserIDSecret)
+				require.Equal(t, d.expectedGetUserIDError, err)
+				require.Equal(t, d.expectedUserID, userID)
 			}
 		})
 	}
 
-	// Invalid token format
 	require.ErrorIs(t, Validate("123XDTOKEN", testSecret), ErrInvalidToken)
 }

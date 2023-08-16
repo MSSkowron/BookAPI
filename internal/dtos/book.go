@@ -2,7 +2,7 @@ package dtos
 
 import "time"
 
-// BookDTO represents a data transfer object (DTO) for a book
+// BookDTO represents a data transfer object (DTO) for a book.
 type BookDTO struct {
 	ID        int64     `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
@@ -10,7 +10,7 @@ type BookDTO struct {
 	Title     string    `json:"title"`
 }
 
-// BookCreateDTO represents a data transfer object (DTO) for creating a book request
+// BookCreateDTO represents a data transfer object (DTO) for creating a book request.
 type BookCreateDTO struct {
 	Author string `json:"author"`
 	Title  string `json:"title"`

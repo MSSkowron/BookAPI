@@ -4,7 +4,7 @@ import (
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
 )
 
-// Database is an interface for database operations
+// Database is an interface for database operations.
 type Database interface {
 	InsertUser(*models.User) (int, error)
 	SelectUserByID(int) (*models.User, error)

@@ -30,16 +30,16 @@ func TestCrypto(t *testing.T) {
 		},
 	}
 
-	for _, tt := range data {
-		t.Run(tt.name, func(t *testing.T) {
-			hash, err := HashPassword(tt.inputPassword)
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			hash, err := HashPassword(d.inputPassword)
 			require.NoError(t, err)
 			require.NotEmpty(t, hash)
 
-			err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(tt.inputPassword))
+			err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(d.inputPassword))
 			require.NoError(t, err)
 
-			err = CheckPassword(tt.inputPassword, string(hash))
+			err = CheckPassword(d.inputPassword, string(hash))
 			require.NoError(t, err)
 
 			err = CheckPassword("wrongPassword123@", string(hash))

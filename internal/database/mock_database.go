@@ -7,13 +7,13 @@ import (
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
 )
 
-// MockDatabase is a mock implementation of Database interface
+// MockDatabase is a mock implementation of Database interface.
 type MockDatabase struct {
 	users []*models.User
 	books []*models.Book
 }
 
-// NewMockDatabase creates a new MockDatabase
+// NewMockDatabase creates a new MockDatabase.
 func NewMockDatabase() Database {
 	return &MockDatabase{
 		users: []*models.User{
@@ -71,7 +71,7 @@ func NewMockDatabase() Database {
 	}
 }
 
-// InsertUser inserts a new user
+// InsertUser inserts a new user into the database.
 func (db *MockDatabase) InsertUser(user *models.User) (int, error) {
 	user.ID = len(db.users) + 1
 
@@ -86,7 +86,7 @@ func (db *MockDatabase) InsertUser(user *models.User) (int, error) {
 	return len(db.users), nil
 }
 
-// SelectUserByID selects a user with given ID
+// SelectUserByID selects a user with given ID from the database.
 func (db *MockDatabase) SelectUserByID(id int) (*models.User, error) {
 	for _, user := range db.users {
 		if user.ID == id {
@@ -97,7 +97,7 @@ func (db *MockDatabase) SelectUserByID(id int) (*models.User, error) {
 	return nil, nil
 }
 
-// SelectUserByEmail selects a user with given email
+// SelectUserByEmail selects a user with given email from the database.
 func (db *MockDatabase) SelectUserByEmail(email string) (*models.User, error) {
 	for _, user := range db.users {
 		if user.Email == email {
@@ -108,7 +108,7 @@ func (db *MockDatabase) SelectUserByEmail(email string) (*models.User, error) {
 	return nil, nil
 }
 
-// InsertBook inserts a new book
+// InsertBook inserts a new book into the database.
 func (db *MockDatabase) InsertBook(book *models.Book) (int, error) {
 	book.ID = len(db.books) + 1
 
@@ -117,7 +117,7 @@ func (db *MockDatabase) InsertBook(book *models.Book) (int, error) {
 	return len(db.books), nil
 }
 
-// SelectBookByID selects a book with given ID
+// SelectBookByID selects a book with given ID from the database.
 func (db *MockDatabase) SelectBookByID(id int) (*models.Book, error) {
 	for _, book := range db.books {
 		if book.ID == id {
@@ -128,12 +128,12 @@ func (db *MockDatabase) SelectBookByID(id int) (*models.Book, error) {
 	return nil, nil
 }
 
-// SelectAllBooks selects all books
+// SelectAllBooks selects all books from the database.
 func (db *MockDatabase) SelectAllBooks() ([]*models.Book, error) {
 	return db.books, nil
 }
 
-// DeleteBook deletes a book with given ID
+// DeleteBook deletes a book with given ID from the database.
 func (db *MockDatabase) DeleteBook(id int) error {
 	for i, book := range db.books {
 		if book.ID == id {
@@ -145,7 +145,7 @@ func (db *MockDatabase) DeleteBook(id int) error {
 	return nil
 }
 
-// UpdateBook updates a book with given ID
+// UpdateBook updates a book with given ID in the database.
 func (db *MockDatabase) UpdateBook(id int, book *models.Book) error {
 	for i, b := range db.books {
 		if b.ID == id {

@@ -1,6 +1,6 @@
 package dtos
 
-// ErrorDTO represents a data transfer object (DTO) for an error
+// ErrorDTO represents a data transfer object (DTO) for an error.
 type ErrorDTO struct {
 	Error string `json:"error"`
 }

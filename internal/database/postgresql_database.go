@@ -8,40 +8,38 @@ import (
 	pgx "github.com/jackc/pgx/v5"
 )
 
-// PostgresqlDatabase is a Postgresql implementation of Database interface
+// PostgresqlDatabase is a Postgresql implementation of Database interface.
+// It uses pgx as a Postgresql driver.
 type PostgresqlDatabase struct {
 	conn *pgx.Conn
 }
 
-// NewPostgresqlDatabase creates a new PostgresqlDatabase
+// NewPostgresqlDatabase creates a new PostgresqlDatabase.
 func NewPostgresqlDatabase(connectionString string) (Database, error) {
 	conn, err := pgx.Connect(context.Background(), connectionString)
 	if err != nil {
 		return nil, err
 	}
 
-	err = conn.Ping(context.Background())
-	if err != nil {
+	if err := conn.Ping(context.Background()); err != nil {
 		return nil, err
 	}
 
-	PostgresqlDatabase := &PostgresqlDatabase{
+	return &PostgresqlDatabase{
 		conn: conn,
-	}
-
-	return PostgresqlDatabase, nil
+	}, nil
 }
 
-// InsertUser inserts a new user
+// InsertUser inserts a new user into the database.
 func (db *PostgresqlDatabase) InsertUser(user *models.User) (int, error) {
 	var (
 		query string = "INSERT INTO users (email, password, first_name, last_name, age) VALUES ($1, $2, $3, $4, $5) RETURNING id"
 		id    int    = -1
 	)
 
-	err := db.conn.QueryRow(context.Background(), query, user.Email, user.Password, user.FirstName, user.LastName, user.Age).Scan(&id)
-	if err != nil {
+	if err := db.conn.QueryRow(context.Background(), query, user.Email, user.Password, user.FirstName, user.LastName, user.Age).Scan(&id); err != nil {
 		logger.Errorf("Error (%s) while inserting new user", err)
+
 		return id, err
 	}
 
@@ -50,15 +48,14 @@ func (db *PostgresqlDatabase) InsertUser(user *models.User) (int, error) {
 	return id, nil
 }
 
-// SelectUserByID selects a user with given ID
+// SelectUserByID selects a user with given ID from the database.
 func (db *PostgresqlDatabase) SelectUserByID(id int) (*models.User, error) {
 	query := "SELECT * FROM users WHERE id=$1"
 
-	row := db.conn.QueryRow(context.Background(), query, id)
 	user := &models.User{}
-	err := row.Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age)
-	if err != nil {
+	if err := db.conn.QueryRow(context.Background(), query, id).Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age); err != nil {
 		logger.Errorf("Error (%s) while selecting user with ID: %d", err, id)
+
 		return nil, err
 	}
 
@@ -71,11 +68,10 @@ func (db *PostgresqlDatabase) SelectUserByID(id int) (*models.User, error) {
 func (db *PostgresqlDatabase) SelectUserByEmail(email string) (*models.User, error) {
 	query := "SELECT * FROM users WHERE email=$1"
 
-	row := db.conn.QueryRow(context.Background(), query, email)
 	user := &models.User{}
-	err := row.Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age)
-	if err != nil {
+	if err := db.conn.QueryRow(context.Background(), query, email).Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age); err != nil {
 		logger.Errorf("Error (%s) while selecting user with email: %s", err, email)
+
 		return nil, err
 	}
 
@@ -84,16 +80,16 @@ func (db *PostgresqlDatabase) SelectUserByEmail(email string) (*models.User, err
 	return user, nil
 }
 
-// InsertBook inserts a new book
+// InsertBook inserts a new book into the database.
 func (db *PostgresqlDatabase) InsertBook(book *models.Book) (int, error) {
 	var (
 		query string = "INSERT INTO books (author, title, created_by) VALUES ($1, $2, $3) RETURNING id"
 		id    int    = -1
 	)
 
-	err := db.conn.QueryRow(context.Background(), query, book.Author, book.Title, book.CreatedBy).Scan(&id)
-	if err != nil {
+	if err := db.conn.QueryRow(context.Background(), query, book.Author, book.Title, book.CreatedBy).Scan(&id); err != nil {
 		logger.Errorf("Error (%s) while inserting new book", err)
+
 		return id, err
 	}
 
@@ -102,7 +98,7 @@ func (db *PostgresqlDatabase) InsertBook(book *models.Book) (int, error) {
 	return id, nil
 }
 
-// SelectAllBooks selects all books
+// SelectAllBooks selects all books from the database.
 func (db *PostgresqlDatabase) SelectAllBooks() ([]*models.Book, error) {
 	query := "SELECT * FROM books"
 
@@ -117,6 +113,7 @@ func (db *PostgresqlDatabase) SelectAllBooks() ([]*models.Book, error) {
 		book := &models.Book{}
 		if err := rows.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author, &book.CreatedBy); err != nil {
 			logger.Errorf("Error (%s) while selecting all books", err)
+
 			return nil, err
 		}
 
@@ -128,7 +125,7 @@ func (db *PostgresqlDatabase) SelectAllBooks() ([]*models.Book, error) {
 	return books, nil
 }
 
-// SelectBookByID selects a book with given ID
+// SelectBookByID selects a book with given ID from the database.
 func (db *PostgresqlDatabase) SelectBookByID(id int) (*models.Book, error) {
 	query := "SELECT * FROM books WHERE id=$1"
 
@@ -136,6 +133,7 @@ func (db *PostgresqlDatabase) SelectBookByID(id int) (*models.Book, error) {
 	book := &models.Book{}
 	if err := row.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author, &book.CreatedBy); err != nil {
 		logger.Errorf("Error (%s) while selecting book with ID: %d", err, id)
+
 		return nil, err
 	}
 
@@ -144,12 +142,13 @@ func (db *PostgresqlDatabase) SelectBookByID(id int) (*models.Book, error) {
 	return book, nil
 }
 
-// DeleteBook deletes a book with given ID
+// DeleteBook deletes a book with given ID from the database.
 func (db *PostgresqlDatabase) DeleteBook(id int) error {
 	query := "DELETE FROM books WHERE id=$1"
 
 	if _, err := db.conn.Exec(context.Background(), query, id); err != nil {
 		logger.Errorf("Error (%s) while deleting book with ID: %d", err, id)
+
 		return err
 	}
 
@@ -158,13 +157,13 @@ func (db *PostgresqlDatabase) DeleteBook(id int) error {
 	return nil
 }
 
-// UpdateBook updates a book with given ID
+// UpdateBook updates a book with given ID in the database.
 func (db *PostgresqlDatabase) UpdateBook(id int, book *models.Book) error {
 	query := "UPDATE books SET author = $1, title = $2 WHERE id = $3"
 
-	_, err := db.conn.Exec(context.Background(), query, book.Author, book.Title, id)
-	if err != nil {
+	if _, err := db.conn.Exec(context.Background(), query, book.Author, book.Title, id); err != nil {
 		logger.Errorf("Error (%s) while updating book with ID: %d", err, id)
+
 		return err
 	}
 

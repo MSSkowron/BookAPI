@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// Book represents a model for a book
+// Book represents a model for a book.
 type Book struct {
 	ID        int       `json:"id"`
 	CreatedBy int       `json:"created_by"`

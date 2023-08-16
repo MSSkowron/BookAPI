@@ -36,19 +36,19 @@ var (
 	ErrUserAlreadyExists = errors.New("user already exists")
 )
 
-// UserService is an interface that defines the methods that the UserService must implement
+// UserService is an interface that defines the methods that the UserService must implement.
 type UserService interface {
 	RegisterUser(*dtos.AccountCreateDTO) (*dtos.UserDTO, error)
 	LoginUser(*dtos.UserLoginDTO) (*dtos.TokenDTO, error)
 }
 
-// UserServiceImpl implements the UserService interface
+// UserServiceImpl implements the UserService interface.
 type UserServiceImpl struct {
 	db           database.Database
 	tokenService TokenService
 }
 
-// NewUserService creates a new UserServiceImpl
+// NewUserService creates a new UserServiceImpl.
 func NewUserService(db database.Database, tokenService TokenService) *UserServiceImpl {
 	return &UserServiceImpl{
 		db:           db,
@@ -56,7 +56,7 @@ func NewUserService(db database.Database, tokenService TokenService) *UserServic
 	}
 }
 
-// RegisterUser registers a user
+// RegisterUser registers a user.
 func (us *UserServiceImpl) RegisterUser(dto *dtos.AccountCreateDTO) (*dtos.UserDTO, error) {
 	if !us.validateEmail(dto.Email) {
 		return nil, ErrInvalidEmail
@@ -111,7 +111,7 @@ func (us *UserServiceImpl) RegisterUser(dto *dtos.AccountCreateDTO) (*dtos.UserD
 	}, nil
 }
 
-// LoginUser logs a user in and returns a token
+// LoginUser logs a user in and returns a token.
 func (us *UserServiceImpl) LoginUser(dto *dtos.UserLoginDTO) (*dtos.TokenDTO, error) {
 	if !us.validateEmail(dto.Email) {
 		return nil, ErrInvalidEmail
@@ -143,12 +143,12 @@ func (us *UserServiceImpl) LoginUser(dto *dtos.UserLoginDTO) (*dtos.TokenDTO, er
 	}, nil
 }
 
-// validateEmail validates an email address
+// validateEmail validates an email address.
 func (us *UserServiceImpl) validateEmail(email string) bool {
 	return regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$`).MatchString(email)
 }
 
-// validatePassword validates a password for at least 6 characters, at least 1 uppercase letter, 1 lowercase letter, and 1 digit
+// validatePassword validates a password for at least 6 characters, at least 1 uppercase letter, 1 lowercase letter, and 1 digit.
 func (us *UserServiceImpl) validatePassword(password string) bool {
 	return len(password) >= 6 &&
 		strings.ContainsAny(password, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") &&
@@ -156,17 +156,17 @@ func (us *UserServiceImpl) validatePassword(password string) bool {
 		strings.ContainsAny(password, "0123456789")
 }
 
-// validateFirstName validates a name field for alphabetic characters and spaces with a minimum length
+// validateFirstName validates a name field for alphabetic characters and spaces with a minimum length.
 func (us *UserServiceImpl) validateFirstName(firstName string) bool {
 	return len(firstName) >= 2 && regexp.MustCompile(`^[a-zA-Z ]+$`).MatchString(firstName)
 }
 
-// validateLastName validates a name field for alphabetic characters and spaces with a minimum length
+// validateLastName validates a name field for alphabetic characters and spaces with a minimum length.
 func (us *UserServiceImpl) validateLastName(lastName string) bool {
 	return len(lastName) >= 2 && regexp.MustCompile(`^[a-zA-Z ]+$`).MatchString(lastName)
 }
 
-// validateAge validates an age to be between 18 and 120
+// validateAge validates an age to be between 18 and 120.
 func (us *UserServiceImpl) validateAge(age int) bool {
 	return age >= 18 && age <= 120
 }
