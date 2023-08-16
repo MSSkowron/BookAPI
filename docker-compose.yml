@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./db/data:/var/lib/postgresql/data
+      - bookrestapi_data:/var/lib/postgresql/data
       - ./db/scripts/:/docker-entrypoint-initdb.d/
     networks:
       - bookrestapi_net
