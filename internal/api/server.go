@@ -8,14 +8,13 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/dtos"
 	"github.com/MSSkowron/BookRESTAPI/internal/services"
 	"github.com/MSSkowron/BookRESTAPI/pkg/logger"
 	"github.com/gorilla/mux"
 )
-
-type contextKey string
 
 const (
 	// ErrMsgBadRequestInvalidRequestBody is a message for bad request with invalid request body
@@ -38,12 +37,20 @@ const (
 	ErrMsgInternalError = "internal server error"
 	// ContextKeyUserID is a context key for user id
 	ContextKeyUserID = contextKey("user_id")
+	// DefaultAddress
+	DefaultAddress = ":8080"
+	// DefaultWriteTimeout
+	DefaultWriteTimeout = 15 * time.Second
+	// DefaultReadTimeout
+	DefaultReadTimeout = 15 * time.Second
 )
 
 var (
 	// ErrUserIDNotSetInContext is returned when user id is not set in context
 	ErrUserIDNotSetInContext = errors.New("user id not set in context")
 )
+
+type contextKey string
 
 type serverHandlerFunc func(w http.ResponseWriter, r *http.Request) error
 
@@ -57,36 +64,70 @@ func makeHTTPHandlerFunc(f serverHandlerFunc) http.HandlerFunc {
 
 // Server is a HTTP server for handling REST API requests
 type Server struct {
-	listenAddr   string
+	*http.Server
 	userService  services.UserService
 	tokenService services.TokenService
 	bookService  services.BookService
 }
 
 // NewServer creates a new Server
-func NewServer(listenAddr string, userService services.UserService, bookService services.BookService, tokenService services.TokenService) *Server {
-	return &Server{
-		listenAddr:   listenAddr,
+func NewServer(userService services.UserService, bookService services.BookService, tokenService services.TokenService, opts ...ServerOpt) *Server {
+	server := &Server{
+		Server: &http.Server{
+			Addr:         DefaultAddress,
+			WriteTimeout: DefaultWriteTimeout,
+			ReadTimeout:  DefaultReadTimeout,
+		},
 		userService:  userService,
 		tokenService: tokenService,
 		bookService:  bookService,
 	}
+
+	for _, opt := range opts {
+		opt(server)
+	}
+
+	server.initRoutes()
+
+	return server
+}
+
+type ServerOpt func(*Server)
+
+func WithAddress(addr string) func(*Server) {
+	return func(s *Server) {
+		s.Addr = addr
+	}
+}
+
+func WithReadTimeout(timeout time.Duration) func(*Server) {
+	return func(s *Server) {
+		s.ReadTimeout = timeout
+	}
+}
+
+func WithWriteTimeout(timeout time.Duration) func(*Server) {
+	return func(s *Server) {
+		s.WriteTimeout = timeout
+	}
 }
 
 // Run runs the Server
-func (s *Server) Run() error {
+func (s *Server) initRoutes() {
 	r := mux.NewRouter()
+
 	r.HandleFunc("/register", makeHTTPHandlerFunc(s.handleRegister)).Methods("POST")
 	r.HandleFunc("/login", makeHTTPHandlerFunc(s.handleLogin)).Methods("POST")
-	r.HandleFunc("/books", s.validateJWT(makeHTTPHandlerFunc(s.handleGetBooks))).Methods("GET")
-	r.HandleFunc("/books", s.validateJWT(makeHTTPHandlerFunc(s.handlePostBook))).Methods("POST")
-	r.HandleFunc("/books/{id}", s.validateJWT(makeHTTPHandlerFunc(s.handleGetBookByID))).Methods("GET")
-	r.HandleFunc("/books/{id}", s.validateJWT(makeHTTPHandlerFunc(s.handlePutBookByID))).Methods("PUT")
-	r.HandleFunc("/books/{id}", s.validateJWT(makeHTTPHandlerFunc(s.handleDeleteBookByID))).Methods("DELETE")
 
-	logger.Infof("Server is listening on %s", s.listenAddr)
+	bookRouter := r.PathPrefix("/books").Subrouter()
+	bookRouter.Use(s.validateJWT)
+	bookRouter.HandleFunc("", makeHTTPHandlerFunc(s.handleGetBooks)).Methods("GET")
+	bookRouter.HandleFunc("", makeHTTPHandlerFunc(s.handlePostBook)).Methods("POST")
+	bookRouter.HandleFunc("/{id}", makeHTTPHandlerFunc(s.handleGetBookByID)).Methods("GET")
+	bookRouter.HandleFunc("/{id}", makeHTTPHandlerFunc(s.handlePutBookByID)).Methods("PUT")
+	bookRouter.HandleFunc("/{id}", makeHTTPHandlerFunc(s.handleDeleteBookByID)).Methods("DELETE")
 
-	return http.ListenAndServe(s.listenAddr, r)
+	s.Handler = r
 }
 
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) error {
@@ -324,8 +365,8 @@ func (s *Server) handleDeleteBookByID(w http.ResponseWriter, r *http.Request) er
 	return nil
 }
 
-func (s *Server) validateJWT(f http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (s *Server) validateJWT(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		clientIP := r.RemoteAddr
 
 		logger.Infof("Validating JWT for client with IP address: %s", clientIP)
@@ -382,8 +423,8 @@ func (s *Server) validateJWT(f http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), ContextKeyUserID, userID)
 		r = r.WithContext(ctx)
 
-		f(w, r)
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) respondWithError(w http.ResponseWriter, errCode int, errMessage string) {

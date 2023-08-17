@@ -30,12 +30,12 @@ func TestHandleRegister(t *testing.T) {
 	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService, tokenService)
+	server := NewServer(userService, bookService, tokenService)
 
-	mux := mux.NewRouter()
-	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	router := mux.NewRouter()
+	router.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
 
-	testServer := httptest.NewServer(mux)
+	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
 	data := []struct {
@@ -389,13 +389,13 @@ func TestHandleLogin(t *testing.T) {
 	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService, tokenService)
+	server := NewServer(userService, bookService, tokenService)
 
-	mux := mux.NewRouter()
-	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
+	router := mux.NewRouter()
+	router.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	router.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
 
-	testServer := httptest.NewServer(mux)
+	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
 	createAccountRequest := dtos.AccountCreateDTO{
@@ -543,14 +543,17 @@ func TestHandlePostBook(t *testing.T) {
 	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService, tokenService)
+	server := NewServer(userService, bookService, tokenService)
 
-	mux := mux.NewRouter()
-	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books", server.validateJWT(makeHTTPHandlerFunc(server.handlePostBook))).Methods("POST")
+	router := mux.NewRouter()
+	router.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	router.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
 
-	testServer := httptest.NewServer(mux)
+	bookRouter := router.PathPrefix("/books").Subrouter()
+	bookRouter.Use(server.validateJWT)
+	bookRouter.HandleFunc("", makeHTTPHandlerFunc(server.handlePostBook)).Methods("POST")
+
+	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
 	createAccountRequest := dtos.AccountCreateDTO{
@@ -756,14 +759,17 @@ func TestHandleGetBookByID(t *testing.T) {
 	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService, tokenService)
+	server := NewServer(userService, bookService, tokenService)
 
-	mux := mux.NewRouter()
-	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", server.validateJWT(makeHTTPHandlerFunc(server.handleGetBookByID))).Methods("GET")
+	router := mux.NewRouter()
+	router.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	router.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
 
-	testServer := httptest.NewServer(mux)
+	bookRouter := router.PathPrefix("/books").Subrouter()
+	bookRouter.Use(server.validateJWT)
+	bookRouter.HandleFunc("/{id}", makeHTTPHandlerFunc(server.handleGetBookByID)).Methods("GET")
+
+	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
 	createAccountRequest := dtos.AccountCreateDTO{
@@ -936,14 +942,17 @@ func TestHandleGetBooks(t *testing.T) {
 	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService, tokenService)
+	server := NewServer(userService, bookService, tokenService)
 
-	mux := mux.NewRouter()
-	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books", server.validateJWT(makeHTTPHandlerFunc(server.handleGetBooks))).Methods("GET")
+	router := mux.NewRouter()
+	router.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	router.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
 
-	testServer := httptest.NewServer(mux)
+	bookRouter := router.PathPrefix("/books").Subrouter()
+	bookRouter.Use(server.validateJWT)
+	bookRouter.HandleFunc("", makeHTTPHandlerFunc(server.handleGetBooks)).Methods("GET")
+
+	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
 	createAccountRequest := dtos.AccountCreateDTO{
@@ -1043,14 +1052,17 @@ func TestHandleDeleteBookByID(t *testing.T) {
 	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService, tokenService)
+	server := NewServer(userService, bookService, tokenService)
 
-	mux := mux.NewRouter()
-	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", server.validateJWT(makeHTTPHandlerFunc(server.handleDeleteBookByID))).Methods("DELETE")
+	router := mux.NewRouter()
+	router.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	router.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
 
-	testServer := httptest.NewServer(mux)
+	bookRouter := router.PathPrefix("/books").Subrouter()
+	bookRouter.Use(server.validateJWT)
+	bookRouter.HandleFunc("/{id}", makeHTTPHandlerFunc(server.handleDeleteBookByID)).Methods("DELETE")
+
+	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
 	createAccountRequest := dtos.AccountCreateDTO{
@@ -1213,14 +1225,17 @@ func TestHandlePutBookByID(t *testing.T) {
 	userService := services.NewUserService(mockDB, tokenService)
 	bookService := services.NewBookService(mockDB)
 
-	server := NewServer("", userService, bookService, tokenService)
+	server := NewServer(userService, bookService, tokenService)
 
-	mux := mux.NewRouter()
-	mux.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
-	mux.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
-	mux.HandleFunc("/books/{id}", server.validateJWT(makeHTTPHandlerFunc(server.handlePutBookByID))).Methods("PUT")
+	router := mux.NewRouter()
+	router.HandleFunc("/register", makeHTTPHandlerFunc(server.handleRegister)).Methods("POST")
+	router.HandleFunc("/login", makeHTTPHandlerFunc(server.handleLogin)).Methods("POST")
 
-	testServer := httptest.NewServer(mux)
+	bookRouter := router.PathPrefix("/books").Subrouter()
+	bookRouter.Use(server.validateJWT)
+	bookRouter.HandleFunc("/{id}", makeHTTPHandlerFunc(server.handlePutBookByID)).Methods("PUT")
+
+	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
 	createAccountRequest := dtos.AccountCreateDTO{

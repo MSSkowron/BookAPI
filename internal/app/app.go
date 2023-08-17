@@ -31,7 +31,7 @@ func Run() error {
 	userService := services.NewUserService(database, tokenService)
 	bookService := services.NewBookService(database)
 
-	if err := api.NewServer(config.HTTPServerListenAddress, userService, bookService, tokenService).Run(); err != nil {
+	if err := api.NewServer(userService, bookService, tokenService, api.WithAddress(config.HTTPServerListenAddress)).ListenAndServe(); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
 
