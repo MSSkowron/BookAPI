@@ -55,10 +55,10 @@ cd BookRESTAPI
 Start the application using Docker Compose:
 
 ```
-docker-compose up
+docker compose up
 ```
 
-The application will be accessible at http://localhost:8080.
+The application will be accessible at <http://localhost:8080>.
 
 ## How to use the API
 
