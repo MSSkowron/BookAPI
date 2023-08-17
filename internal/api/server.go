@@ -23,7 +23,7 @@ const (
 	contextKeyUserID = contextKey("user_id")
 
 	// DefaultAddress is the default server address.
-	DefaultAddress = ":8080"
+	DefaultAddress = "127.0.0.1:8080"
 	// DefaultWriteTimeout is the default write timeout for server responses.
 	DefaultWriteTimeout = 15 * time.Second
 	// DefaultReadTimeout is the default read timeout for incoming requests.
