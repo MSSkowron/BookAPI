@@ -1,6 +1,6 @@
-# BookRESTAPI
+# BookRESTAPI - Book Management REST API
 
-BookRESTAPI is a straightforward REST API implemented in Go language, designed to facilitate book management. It offers fundamental CRUD operations on a PostgreSQL database through its HTTP API.
+BookRESTAPI is a straightforward REST API implemented in Go language, designed to facilitate book management. It offers fundamental CRUD operations on a PostgreSQL database through its HTTP RESTful API.
 
 ## Technologies
 
@@ -36,35 +36,35 @@ By adhering to this architectural paradigm, the BookRESTAPI application gains es
 
 To run the application, make sure you have Docker installed on your system.
 
-## Installation
+## Getting Started
 
-Clone the repository:
+### Installation and Running the `BookRESTAPI Server`
+
+1. Clone the repository:
 
 ```
 git clone https://github.com/MSSkowron/BookRESTAPI
 ```
 
-## How to run
-
-Navigate to the project directory:
+2. Navigate to the project directory:
 
 ```
 cd BookRESTAPI
 ```
 
-Start the application using Docker Compose:
+3. Start the server using Docker Compose:
 
 ```
 docker compose up
 ```
 
-The application will be accessible at <http://localhost:8080>.
+The server will be accessible at <http://localhost:8080>.
 
-## How to use the API
+### Using the API
 
 The BookRESTAPI exposes the following endpoints and methods:
 
-### User Registration
+#### User Registration
 
 `\register` Method: `POST`
 
@@ -96,7 +96,7 @@ Response Body:
 }
 ```
 
-### User Login
+#### User Login
 
 `\login` Method: `POST`
 
@@ -119,7 +119,7 @@ Response Body:
 }
 ```
 
-### Book Management
+#### Book Management
 
 Authentication bearer token received during login must be included to perform book management requests. Set the bearer token with the key "Authorization" in the request header for the above endpoints. The bearer authentication header should be set as follows:
 
@@ -167,7 +167,7 @@ Available endpoints:
 
   Deletes a specific book by ID.
 
-### Errors
+#### Errors
 
 In case of errors, the server returns an appropriate status code and JSON in the following format:
 
