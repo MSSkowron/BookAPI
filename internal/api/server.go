@@ -16,41 +16,43 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type contextKey string
+
 const (
-	// ErrMsgBadRequestInvalidRequestBody is a message for bad request with invalid request body
-	ErrMsgBadRequestInvalidRequestBody = "invalid request body"
-	// ErrMsgBadRequestUserAlreadyExists is a message for bad request with user already exists
-	ErrMsgBadRequestUserAlreadyExists = "user already exists"
-	// ErrMsgBadRequestInvalidBookID is a message for bad request with invalid book id
-	ErrMsgBadRequestInvalidBookID = "invalid book id"
-	// ErrMsgUnauthorized is a message for unauthorized
-	ErrMsgUnauthorized = "unauthorized"
-	// ErrMsgUnauthorizedExpiredToken is a message for unauthorized with expired token
-	ErrMsgUnauthorizedExpiredToken = "expired token"
-	// ErrMsgUnauthorizedInvalidToken is a message for unauthorized with invalid token
-	ErrMsgUnauthorizedInvalidToken = "unauthorized"
-	// ErrMsgUnauthorizedInvalidCredentials is a message for unauthorized with invalid credentials
-	ErrMsgUnauthorizedInvalidCredentials = "invalid credentials"
-	// ErrMsgNotFound is a message for not found
-	ErrMsgNotFound = "not found"
-	// ErrMsgInternalError is a message for internal error
-	ErrMsgInternalError = "internal server error"
-	// ContextKeyUserID is a context key for user id
-	ContextKeyUserID = contextKey("user_id")
-	// DefaultAddress
+	// contextKeyUserID is a context key for user id.
+	contextKeyUserID = contextKey("user_id")
+
+	// DefaultAddress is the default server address.
 	DefaultAddress = ":8080"
-	// DefaultWriteTimeout
+	// DefaultWriteTimeout is the default write timeout for server responses.
 	DefaultWriteTimeout = 15 * time.Second
-	// DefaultReadTimeout
+	// DefaultReadTimeout is the default read timeout for incoming requests.
 	DefaultReadTimeout = 15 * time.Second
+
+	// ErrMsgBadRequestInvalidRequestBody is a message for bad request with invalid request body.
+	ErrMsgBadRequestInvalidRequestBody = "invalid request body"
+	// ErrMsgBadRequestUserAlreadyExists is a message for bad request with user already exists.
+	ErrMsgBadRequestUserAlreadyExists = "user already exists"
+	// ErrMsgBadRequestInvalidBookID is a message for bad request with invalid book id.
+	ErrMsgBadRequestInvalidBookID = "invalid book id"
+	// ErrMsgUnauthorized is a message for unauthorized.
+	ErrMsgUnauthorized = "unauthorized"
+	// ErrMsgUnauthorizedExpiredToken is a message for unauthorized with expired token.
+	ErrMsgUnauthorizedExpiredToken = "expired token"
+	// ErrMsgUnauthorizedInvalidToken is a message for unauthorized with invalid token.
+	ErrMsgUnauthorizedInvalidToken = "unauthorized"
+	// ErrMsgUnauthorizedInvalidCredentials is a message for unauthorized with invalid credentials.
+	ErrMsgUnauthorizedInvalidCredentials = "invalid credentials"
+	// ErrMsgNotFound is a message for not found.
+	ErrMsgNotFound = "not found"
+	// ErrMsgInternalError is a message for internal error.
+	ErrMsgInternalError = "internal server error"
 )
 
 var (
-	// ErrUserIDNotSetInContext is returned when user id is not set in context
+	// ErrUserIDNotSetInContext is returned when the user id is not set in the context.
 	ErrUserIDNotSetInContext = errors.New("user id not set in context")
 )
-
-type contextKey string
 
 type serverHandlerFunc func(w http.ResponseWriter, r *http.Request) error
 
@@ -62,7 +64,7 @@ func makeHTTPHandlerFunc(f serverHandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Server is a HTTP server for handling REST API requests
+// Server is a HTTP server for handling REST API requests.
 type Server struct {
 	*http.Server
 	userService  services.UserService
@@ -70,8 +72,8 @@ type Server struct {
 	bookService  services.BookService
 }
 
-// NewServer creates a new Server
-func NewServer(userService services.UserService, bookService services.BookService, tokenService services.TokenService, opts ...ServerOpt) *Server {
+// NewServer creates a new Server instance.
+func NewServer(userService services.UserService, bookService services.BookService, tokenService services.TokenService, opts ...ServerOption) *Server {
 	server := &Server{
 		Server: &http.Server{
 			Addr:         DefaultAddress,
@@ -92,27 +94,30 @@ func NewServer(userService services.UserService, bookService services.BookServic
 	return server
 }
 
-type ServerOpt func(*Server)
+// ServerOption is a function signature for providing options to configure the Server.
+type ServerOption func(*Server)
 
-func WithAddress(addr string) func(*Server) {
+// WithAddress is an option to set the server address.
+func WithAddress(addr string) ServerOption {
 	return func(s *Server) {
 		s.Addr = addr
 	}
 }
 
-func WithReadTimeout(timeout time.Duration) func(*Server) {
+// WithReadTimeout is an option to set the read timeout for the server.
+func WithReadTimeout(timeout time.Duration) ServerOption {
 	return func(s *Server) {
 		s.ReadTimeout = timeout
 	}
 }
 
-func WithWriteTimeout(timeout time.Duration) func(*Server) {
+// WithWriteTimeout is an option to set the write timeout for the server.
+func WithWriteTimeout(timeout time.Duration) ServerOption {
 	return func(s *Server) {
 		s.WriteTimeout = timeout
 	}
 }
 
-// Run runs the Server
 func (s *Server) initRoutes() {
 	r := mux.NewRouter()
 
@@ -231,7 +236,7 @@ func (s *Server) handlePostBook(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	userID := r.Context().Value(ContextKeyUserID).(int)
+	userID := r.Context().Value(contextKeyUserID).(int)
 	if userID == 0 {
 		s.respondWithError(w, http.StatusInternalServerError, ErrMsgInternalError)
 		return ErrUserIDNotSetInContext
@@ -420,7 +425,7 @@ func (s *Server) validateJWT(next http.Handler) http.Handler {
 
 		logger.Infof("User ID (%d) retrieved from JWT for client with IP address: %s", userID, clientIP)
 
-		ctx := context.WithValue(r.Context(), ContextKeyUserID, userID)
+		ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
