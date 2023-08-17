@@ -14,23 +14,33 @@ The architecture of BookRESTAPI is designed around a well-organized, layered app
 
 ![Architecture](./docs/architecture.png)
 
-1. **Transport Layer**:  Acts as the initial point of contact for incoming requests. It manages incoming HTTP requests, routing them efficiently through the Gorilla Mux router. Operating on Data Transfer Objects (DTOs), this layer handles request authentication, authorization, and validation before forwarding them to subsequent layers. Its primary responsibilities include request reception, input validation, and data transformation into DTOs. Processed DTOs are then passed to the Business Logic Layer for further handling. The implementation is located in the `./internal/api` directory.
+1. **Transport Layer**:  Acts as the initial point of contact for incoming requests. It manages incoming HTTP requests, routing them efficiently through the Gorilla Mux router. Operating on Data Transfer Objects (DTOs), this layer handles request authentication, authorization, and validation before forwarding them to subsequent layers. Its primary responsibilities include request reception, input validation, and data transformation into DTOs. Processed DTOs are then passed to the Business Logic Layer for further handling. The implementation is located in the [**api**](./internal/api) directory.
 
-2. **Business Logic Layer**: Responsible for processing DTOs received from the Transport Layer. Its core function involves translating these DTOs into domain-specific models that encapsulate key application concepts. The Business Logic Layer embodies the fundamental business rules and logic that govern the application's functionality. Furthermore, it manages user registration, login, and token generation functionalities. Once operations on models are executed, the Business Logic Layer interacts with the Data Access Layer for data storage and retrieval. The implementation resides in the `./internal/services` directory.
+2. **Business Logic Layer**: Responsible for processing DTOs received from the Transport Layer. Its core function involves translating these DTOs into domain-specific models that encapsulate key application concepts. The Business Logic Layer embodies the fundamental business rules and logic that govern the application's functionality. Furthermore, it manages user registration, login, and token generation functionalities. Once operations on models are executed, the Business Logic Layer interacts with the Data Access Layer for data storage and retrieval. The implementation resides in the [**services**](./internal/services) directory.
 
-3. **Data Access Layer**: Oversees interactions with the database and other data storage systems. It receives domain-specific models from the Business Logic Layer, transforming them into appropriate database queries or operations. The Data Access Layer handles data reading and writing, maintaining data integrity. Upon data retrieval, it converts database results back into models and relays them to the Business Logic Layer. Implementation details can be found in the `./internal/database` directory.
+3. **Data Access Layer**: Oversees interactions with the database and other data storage systems. It receives domain-specific models from the Business Logic Layer, transforming them into appropriate database queries or operations. The Data Access Layer handles data reading and writing, maintaining data integrity. Upon data retrieval, it converts database results back into models and relays them to the Business Logic Layer. Implementation details can be found in the [**database**](./internal/database) directory.
 
 By adhering to this architectural paradigm, the BookRESTAPI application gains essential attributes such as clear separation of concerns, enhanced maintainability, and scalability. Each layer can be developed, tested, and modified independently, fostering a coherent and well-organized codebase.
 
+## Database schema
+
+![Database schema](./docs/database_schema.png)
+
+The database schema consists of two primary tables:
+
+- **Users Table**: Stores user information and is referenced by the books table through a foreign key constraint.
+
+- **Books Table**: Stores books details and includes a foreign key reference to the users table, establishing a relationship between users and the books they've created.
+
 ## Key Dependencies
 
-- `mux` (github.com/gorilla/mux): Facilitates API server creation.
-- `jwt` (github.com/golang-jwt/jwt): Simplifies JWT token management.
-- `viper` (github.com/spf13/viper): Manages configurations efficiently.
-- `testify` (github.com/stretchr/testify): Enhances testing capabilities.
-- `pqx` (github.com/jackc/pgx/v5): Facilitates interaction with PostgreSQL databases.
-- `crypto` (golang.org/x/crypto): Utilized for bcrypt hashing.
-- `zap` (go.uber.org/zap): Employs structured and efficient logging.
+- **mux** (<https://github.com/gorilla/mux>): Facilitates API server creation.
+- **jwt** (<https://github.com/golang-jwt/jwt>): Simplifies JWT token management.
+- **viper** (<https://github.com/spf13/viper>): Manages configurations efficiently.
+- **testify** (<https://github.com/stretchr/testify>): Enhances testing capabilities.
+- **pqx** (<https://github.com/jackc/pgx/v5>) Facilitates interaction with PostgreSQL databases.
+- **crypto** (<https://golang.org/x/crypto>): Utilized for bcrypt hashing.
+- **zap** (<https://go.uber.org/zap>): Employs structured and efficient logging.
 
 ## Requirements
 
@@ -38,7 +48,7 @@ To run the application, make sure you have Docker installed on your system.
 
 ## Getting Started
 
-### Installation and Running the `BookRESTAPI Server`
+### Installation and Running the **BookRESTAPI Server**
 
 1. Clone the repository:
 

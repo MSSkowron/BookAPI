@@ -12,17 +12,17 @@ services:
       - "5432:5432"
     volumes:
       - bookrestapi_data:/var/lib/postgresql/data
-      - ./db/scripts/:/docker-entrypoint-initdb.d/
+      - ./dbscripts/:/docker-entrypoint-initdb.d/
     networks:
       - bookrestapi_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
   server:
-    container_name: bookrestapi_server  
+    container_name: bookrestapi_server
     build: .
     depends_on:
       database:
@@ -33,7 +33,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 10s
       timeout: 5s
       retries: 3
