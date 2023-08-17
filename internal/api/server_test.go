@@ -556,42 +556,6 @@ func TestHandlePostBook(t *testing.T) {
 	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
-	createAccountRequest := dtos.AccountCreateDTO{
-		Email:     "test@test.com",
-		Password:  "Test123@#",
-		FirstName: "test",
-		LastName:  "test",
-		Age:       30,
-	}
-
-	createAccountRequestJSON, err := json.Marshal(createAccountRequest)
-	require.NoError(t, err)
-
-	resp, err := http.Post(testServer.URL+"/register", "application/json", bytes.NewReader(createAccountRequestJSON))
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	loginRequest := dtos.UserLoginDTO{
-		Email:    "test@test.com",
-		Password: "Test123@#",
-	}
-
-	loginRequestJSON, err := json.Marshal(loginRequest)
-	require.NoError(t, err)
-
-	resp, err = http.Post(testServer.URL+"/login", "application/json", bytes.NewReader(loginRequestJSON))
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	loginResponse := dtos.TokenDTO{}
-	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
-	require.NoError(t, err)
-	require.NotEmpty(t, loginResponse.Token)
-
 	data := []struct {
 		name               string
 		input              interface{}
@@ -677,6 +641,7 @@ func TestHandlePostBook(t *testing.T) {
 		},
 	}
 
+	token := registerAndLogin(t, testServer)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			bookJSON, err := json.Marshal(d.input)
@@ -685,7 +650,7 @@ func TestHandlePostBook(t *testing.T) {
 			req, err := http.NewRequest(http.MethodPost, testServer.URL+"/books", bytes.NewReader(bookJSON))
 			require.NoError(t, err)
 
-			req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
+			req.Header.Set("Authorization", "Bearer "+token)
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
@@ -722,7 +687,7 @@ func TestHandlePostBook(t *testing.T) {
 
 	req.Header.Set("Authorization", "Bearer invalid_token")
 
-	resp, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -772,42 +737,6 @@ func TestHandleGetBookByID(t *testing.T) {
 	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
-	createAccountRequest := dtos.AccountCreateDTO{
-		Email:     "test@test.com",
-		Password:  "Test123!",
-		FirstName: "test",
-		LastName:  "test",
-		Age:       30,
-	}
-
-	createAccountRequestJSON, err := json.Marshal(createAccountRequest)
-	require.NoError(t, err)
-
-	resp, err := http.Post(testServer.URL+"/register", "application/json", bytes.NewReader(createAccountRequestJSON))
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	loginRequest := dtos.UserLoginDTO{
-		Email:    "test@test.com",
-		Password: "Test123!",
-	}
-
-	loginRequestJSON, err := json.Marshal(loginRequest)
-	require.NoError(t, err)
-
-	resp, err = http.Post(testServer.URL+"/login", "application/json", bytes.NewReader(loginRequestJSON))
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	loginResponse := dtos.TokenDTO{}
-	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
-	require.NoError(t, err)
-	require.NotEmpty(t, loginResponse.Token)
-
 	data := []struct {
 		name                 string
 		inputID              int
@@ -842,12 +771,13 @@ func TestHandleGetBookByID(t *testing.T) {
 		},
 	}
 
+	token := registerAndLogin(t, testServer)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/books/%d", testServer.URL, d.inputID), nil)
 			require.NoError(t, err)
 
-			req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
+			req.Header.Set("Authorization", "Bearer "+token)
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
@@ -884,9 +814,9 @@ func TestHandleGetBookByID(t *testing.T) {
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/books/abc", nil)
 	require.NoError(t, err)
 
-	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -955,49 +885,13 @@ func TestHandleGetBooks(t *testing.T) {
 	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
-	createAccountRequest := dtos.AccountCreateDTO{
-		Email:     "test@test.com",
-		Password:  "Test123!",
-		FirstName: "test",
-		LastName:  "test",
-		Age:       30,
-	}
-
-	createAccountRequestJSON, err := json.Marshal(createAccountRequest)
-	require.NoError(t, err)
-
-	resp, err := http.Post(testServer.URL+"/register", "application/json", bytes.NewReader(createAccountRequestJSON))
-	require.NoError(t, err)
-
-	defer resp.Body.Close()
-
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	loginRequest := dtos.UserLoginDTO{
-		Email:    "test@test.com",
-		Password: "Test123!",
-	}
-
-	loginRequestJSON, err := json.Marshal(loginRequest)
-	require.NoError(t, err)
-
-	resp, err = http.Post(testServer.URL+"/login", "application/json", bytes.NewReader(loginRequestJSON))
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	loginResponse := dtos.TokenDTO{}
-	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
-	require.NoError(t, err)
-	require.NotEmpty(t, loginResponse.Token)
-
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/books", nil)
 	require.NoError(t, err)
 
-	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
+	token := registerAndLogin(t, testServer)
+	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -1065,42 +959,6 @@ func TestHandleDeleteBookByID(t *testing.T) {
 	testServer := httptest.NewServer(router)
 	defer testServer.Close()
 
-	createAccountRequest := dtos.AccountCreateDTO{
-		Email:     "test@test.com",
-		Password:  "Test123!",
-		FirstName: "test",
-		LastName:  "test",
-		Age:       30,
-	}
-
-	createAccountRequestJSON, err := json.Marshal(createAccountRequest)
-	require.NoError(t, err)
-
-	resp, err := http.Post(testServer.URL+"/register", "application/json", bytes.NewReader(createAccountRequestJSON))
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	loginRequest := dtos.UserLoginDTO{
-		Email:    "test@test.com",
-		Password: "Test123!",
-	}
-
-	loginRequestJSON, err := json.Marshal(loginRequest)
-	require.NoError(t, err)
-
-	resp, err = http.Post(testServer.URL+"/login", "application/json", bytes.NewReader(loginRequestJSON))
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	loginResponse := dtos.TokenDTO{}
-	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
-	require.NoError(t, err)
-	require.NotEmpty(t, loginResponse.Token)
-
 	data := []struct {
 		name                 string
 		inputID              int
@@ -1131,12 +989,13 @@ func TestHandleDeleteBookByID(t *testing.T) {
 		},
 	}
 
+	token := registerAndLogin(t, testServer)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			req, err := http.NewRequest(http.MethodDelete, testServer.URL+"/books/"+strconv.Itoa(d.inputID), nil)
 			require.NoError(t, err)
 
-			req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
+			req.Header.Set("Authorization", "Bearer "+token)
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
@@ -1167,9 +1026,9 @@ func TestHandleDeleteBookByID(t *testing.T) {
 	req, err := http.NewRequest(http.MethodDelete, testServer.URL+"/books/abc", nil)
 	require.NoError(t, err)
 
-	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -1237,42 +1096,6 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	testServer := httptest.NewServer(router)
 	defer testServer.Close()
-
-	createAccountRequest := dtos.AccountCreateDTO{
-		Email:     "test@test.com",
-		Password:  "Test123!",
-		FirstName: "test",
-		LastName:  "test",
-		Age:       30,
-	}
-
-	createAccountRequestJSON, err := json.Marshal(createAccountRequest)
-	require.NoError(t, err)
-
-	resp, err := http.Post(testServer.URL+"/register", "application/json", bytes.NewReader(createAccountRequestJSON))
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	loginRequest := dtos.UserLoginDTO{
-		Email:    "test@test.com",
-		Password: "Test123!",
-	}
-
-	loginRequestJSON, err := json.Marshal(loginRequest)
-	require.NoError(t, err)
-
-	resp, err = http.Post(testServer.URL+"/login", "application/json", bytes.NewReader(loginRequestJSON))
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	require.Equal(t, http.StatusOK, resp.StatusCode)
-
-	loginResponse := dtos.TokenDTO{}
-	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
-	require.NoError(t, err)
-	require.NotEmpty(t, loginResponse.Token)
 
 	data := []struct {
 		name                 string
@@ -1372,6 +1195,7 @@ func TestHandlePutBookByID(t *testing.T) {
 		},
 	}
 
+	token := registerAndLogin(t, testServer)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			var (
@@ -1389,7 +1213,7 @@ func TestHandlePutBookByID(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
+			req.Header.Set("Authorization", "Bearer "+token)
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
@@ -1432,9 +1256,9 @@ func TestHandlePutBookByID(t *testing.T) {
 	req, err := http.NewRequest(http.MethodPut, testServer.URL+"/books/abc", bytes.NewReader(requestBody))
 	require.NoError(t, err)
 
-	req.Header.Set("Authorization", "Bearer "+loginResponse.Token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -1488,4 +1312,52 @@ func TestHandlePutBookByID(t *testing.T) {
 
 	require.NotEmpty(t, responseError.Error)
 	require.Equal(t, "unauthorized", responseError.Error)
+}
+
+func registerAndLogin(t *testing.T, testServer *httptest.Server) string {
+	const (
+		email     = "test@test.com"
+		password  = "Test123@#"
+		firstName = "test"
+		lastName  = "test"
+		age       = 30
+	)
+
+	createAccountRequest := dtos.AccountCreateDTO{
+		Email:     email,
+		Password:  password,
+		FirstName: firstName,
+		LastName:  lastName,
+		Age:       age,
+	}
+
+	createAccountRequestJSON, err := json.Marshal(createAccountRequest)
+	require.NoError(t, err)
+
+	resp, err := http.Post(testServer.URL+"/register", "application/json", bytes.NewReader(createAccountRequestJSON))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	loginRequest := dtos.UserLoginDTO{
+		Email:    email,
+		Password: password,
+	}
+
+	loginRequestJSON, err := json.Marshal(loginRequest)
+	require.NoError(t, err)
+
+	resp, err = http.Post(testServer.URL+"/login", "application/json", bytes.NewReader(loginRequestJSON))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	loginResponse := dtos.TokenDTO{}
+	err = json.NewDecoder(resp.Body).Decode(&loginResponse)
+	require.NoError(t, err)
+	require.NotEmpty(t, loginResponse.Token)
+
+	return loginResponse.Token
 }
