@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
 	"github.com/MSSkowron/BookRESTAPI/pkg/logger"
@@ -54,6 +55,10 @@ func (db *PostgresqlDatabase) SelectUserByID(id int) (*models.User, error) {
 
 	user := &models.User{}
 	if err := db.conn.QueryRow(context.Background(), query, id).Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+
 		logger.Errorf("Error (%s) while selecting user with ID: %d", err, id)
 
 		return nil, err
@@ -70,6 +75,10 @@ func (db *PostgresqlDatabase) SelectUserByEmail(email string) (*models.User, err
 
 	user := &models.User{}
 	if err := db.conn.QueryRow(context.Background(), query, email).Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+
 		logger.Errorf("Error (%s) while selecting user with email: %s", err, email)
 
 		return nil, err
@@ -132,6 +141,10 @@ func (db *PostgresqlDatabase) SelectBookByID(id int) (*models.Book, error) {
 	row := db.conn.QueryRow(context.Background(), query, id)
 	book := &models.Book{}
 	if err := row.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author, &book.CreatedBy); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+
 		logger.Errorf("Error (%s) while selecting book with ID: %d", err, id)
 
 		return nil, err
