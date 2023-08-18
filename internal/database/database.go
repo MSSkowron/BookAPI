@@ -14,4 +14,5 @@ type Database interface {
 	SelectAllBooks() ([]*models.Book, error)
 	DeleteBook(int) error
 	UpdateBook(int, *models.Book) error
+	Close()
 }

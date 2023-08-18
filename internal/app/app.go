@@ -26,6 +26,7 @@ func Run() error {
 	if err != nil {
 		return fmt.Errorf("failed to create database: %w", err)
 	}
+	defer database.Close()
 
 	tokenService := services.NewTokenService(config.TokenSecret, config.TokenDuration)
 	userService := services.NewUserService(database, tokenService)

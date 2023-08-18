@@ -71,6 +71,9 @@ func NewMockDatabase() Database {
 	}
 }
 
+// Close closes the database connection.
+func (db *MockDatabase) Close() {}
+
 // InsertUser inserts a new user into the database.
 func (db *MockDatabase) InsertUser(user *models.User) (int, error) {
 	user.ID = len(db.users) + 1

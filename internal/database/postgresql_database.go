@@ -23,12 +23,18 @@ func NewPostgresqlDatabase(connectionString string) (Database, error) {
 	}
 
 	if err := conn.Ping(context.Background()); err != nil {
+		conn.Close(context.Background())
 		return nil, err
 	}
 
 	return &PostgresqlDatabase{
 		conn: conn,
 	}, nil
+}
+
+// Close closes the database connection.
+func (db *PostgresqlDatabase) Close() {
+	db.conn.Close(context.Background())
 }
 
 // InsertUser inserts a new user into the database.
