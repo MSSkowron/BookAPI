@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
@@ -9,8 +10,10 @@ import (
 
 // MockDatabase is a mock implementation of Database interface.
 type MockDatabase struct {
-	users []*models.User
-	books []*models.Book
+	userMu sync.RWMutex
+	bookMu sync.RWMutex
+	users  []*models.User
+	books  []*models.Book
 }
 
 // NewMockDatabase creates a new MockDatabase.
@@ -76,6 +79,9 @@ func (db *MockDatabase) Close() {}
 
 // InsertUser inserts a new user into the database.
 func (db *MockDatabase) InsertUser(user *models.User) (int, error) {
+	db.userMu.Lock()
+	defer db.userMu.Unlock()
+
 	user.ID = len(db.users) + 1
 
 	for _, u := range db.users {
@@ -91,6 +97,9 @@ func (db *MockDatabase) InsertUser(user *models.User) (int, error) {
 
 // SelectUserByID selects a user with given ID from the database.
 func (db *MockDatabase) SelectUserByID(id int) (*models.User, error) {
+	db.userMu.RLock()
+	defer db.userMu.RUnlock()
+
 	for _, user := range db.users {
 		if user.ID == id {
 			return user, nil
@@ -102,6 +111,9 @@ func (db *MockDatabase) SelectUserByID(id int) (*models.User, error) {
 
 // SelectUserByEmail selects a user with given email from the database.
 func (db *MockDatabase) SelectUserByEmail(email string) (*models.User, error) {
+	db.userMu.RLock()
+	defer db.userMu.RUnlock()
+
 	for _, user := range db.users {
 		if user.Email == email {
 			return user, nil
@@ -113,6 +125,9 @@ func (db *MockDatabase) SelectUserByEmail(email string) (*models.User, error) {
 
 // InsertBook inserts a new book into the database.
 func (db *MockDatabase) InsertBook(book *models.Book) (int, error) {
+	db.bookMu.Lock()
+	defer db.bookMu.Unlock()
+
 	book.ID = len(db.books) + 1
 
 	db.books = append(db.books, book)
@@ -122,6 +137,9 @@ func (db *MockDatabase) InsertBook(book *models.Book) (int, error) {
 
 // SelectBookByID selects a book with given ID from the database.
 func (db *MockDatabase) SelectBookByID(id int) (*models.Book, error) {
+	db.bookMu.RLock()
+	defer db.bookMu.RUnlock()
+
 	for _, book := range db.books {
 		if book.ID == id {
 			return book, nil
@@ -133,11 +151,17 @@ func (db *MockDatabase) SelectBookByID(id int) (*models.Book, error) {
 
 // SelectAllBooks selects all books from the database.
 func (db *MockDatabase) SelectAllBooks() ([]*models.Book, error) {
+	db.bookMu.RLock()
+	defer db.bookMu.RUnlock()
+
 	return db.books, nil
 }
 
 // DeleteBook deletes a book with given ID from the database.
 func (db *MockDatabase) DeleteBook(id int) error {
+	db.bookMu.Lock()
+	defer db.bookMu.Unlock()
+
 	for i, book := range db.books {
 		if book.ID == id {
 			db.books = append(db.books[:i], db.books[i+1:]...)
@@ -150,6 +174,9 @@ func (db *MockDatabase) DeleteBook(id int) error {
 
 // UpdateBook updates a book with given ID in the database.
 func (db *MockDatabase) UpdateBook(id int, book *models.Book) error {
+	db.bookMu.Lock()
+	defer db.bookMu.Unlock()
+
 	for i, b := range db.books {
 		if b.ID == id {
 			db.books[i].Author = book.Author
