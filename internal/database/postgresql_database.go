@@ -7,34 +7,30 @@ import (
 	"github.com/MSSkowron/BookRESTAPI/internal/models"
 	"github.com/MSSkowron/BookRESTAPI/pkg/logger"
 	pgx "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // PostgresqlDatabase is a Postgresql implementation of Database interface.
 // It uses pgx as a Postgresql driver.
 type PostgresqlDatabase struct {
-	conn *pgx.Conn
+	connPool *pgxpool.Pool
 }
 
 // NewPostgresqlDatabase creates a new PostgresqlDatabase.
 func NewPostgresqlDatabase(connectionString string) (Database, error) {
-	conn, err := pgx.Connect(context.Background(), connectionString)
+	pool, err := pgxpool.New(context.Background(), connectionString)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := conn.Ping(context.Background()); err != nil {
-		conn.Close(context.Background())
-		return nil, err
-	}
-
 	return &PostgresqlDatabase{
-		conn: conn,
+		connPool: pool,
 	}, nil
 }
 
 // Close closes the database connection.
 func (db *PostgresqlDatabase) Close() {
-	db.conn.Close(context.Background())
+	db.connPool.Close()
 }
 
 // InsertUser inserts a new user into the database.
@@ -44,7 +40,7 @@ func (db *PostgresqlDatabase) InsertUser(user *models.User) (int, error) {
 		id    int    = -1
 	)
 
-	if err := db.conn.QueryRow(context.Background(), query, user.Email, user.Password, user.FirstName, user.LastName, user.Age).Scan(&id); err != nil {
+	if err := db.connPool.QueryRow(context.Background(), query, user.Email, user.Password, user.FirstName, user.LastName, user.Age).Scan(&id); err != nil {
 		logger.Errorf("Error (%s) while inserting new user", err)
 
 		return id, err
@@ -60,7 +56,7 @@ func (db *PostgresqlDatabase) SelectUserByID(id int) (*models.User, error) {
 	query := "SELECT * FROM users WHERE id=$1"
 
 	user := &models.User{}
-	if err := db.conn.QueryRow(context.Background(), query, id).Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age); err != nil {
+	if err := db.connPool.QueryRow(context.Background(), query, id).Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
@@ -80,7 +76,7 @@ func (db *PostgresqlDatabase) SelectUserByEmail(email string) (*models.User, err
 	query := "SELECT * FROM users WHERE email=$1"
 
 	user := &models.User{}
-	if err := db.conn.QueryRow(context.Background(), query, email).Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age); err != nil {
+	if err := db.connPool.QueryRow(context.Background(), query, email).Scan(&user.ID, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Age); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
@@ -102,7 +98,7 @@ func (db *PostgresqlDatabase) InsertBook(book *models.Book) (int, error) {
 		id    int    = -1
 	)
 
-	if err := db.conn.QueryRow(context.Background(), query, book.Author, book.Title, book.CreatedBy).Scan(&id); err != nil {
+	if err := db.connPool.QueryRow(context.Background(), query, book.Author, book.Title, book.CreatedBy).Scan(&id); err != nil {
 		logger.Errorf("Error (%s) while inserting new book", err)
 
 		return id, err
@@ -117,7 +113,7 @@ func (db *PostgresqlDatabase) InsertBook(book *models.Book) (int, error) {
 func (db *PostgresqlDatabase) SelectAllBooks() ([]*models.Book, error) {
 	query := "SELECT * FROM books"
 
-	rows, err := db.conn.Query(context.Background(), query)
+	rows, err := db.connPool.Query(context.Background(), query)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +140,7 @@ func (db *PostgresqlDatabase) SelectAllBooks() ([]*models.Book, error) {
 func (db *PostgresqlDatabase) SelectBookByID(id int) (*models.Book, error) {
 	query := "SELECT * FROM books WHERE id=$1"
 
-	row := db.conn.QueryRow(context.Background(), query, id)
+	row := db.connPool.QueryRow(context.Background(), query, id)
 	book := &models.Book{}
 	if err := row.Scan(&book.ID, &book.CreatedAt, &book.Title, &book.Author, &book.CreatedBy); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -165,7 +161,7 @@ func (db *PostgresqlDatabase) SelectBookByID(id int) (*models.Book, error) {
 func (db *PostgresqlDatabase) DeleteBook(id int) error {
 	query := "DELETE FROM books WHERE id=$1"
 
-	if _, err := db.conn.Exec(context.Background(), query, id); err != nil {
+	if _, err := db.connPool.Exec(context.Background(), query, id); err != nil {
 		logger.Errorf("Error (%s) while deleting book with ID: %d", err, id)
 
 		return err
@@ -180,7 +176,7 @@ func (db *PostgresqlDatabase) DeleteBook(id int) error {
 func (db *PostgresqlDatabase) UpdateBook(id int, book *models.Book) error {
 	query := "UPDATE books SET author = $1, title = $2 WHERE id = $3"
 
-	if _, err := db.conn.Exec(context.Background(), query, book.Author, book.Title, id); err != nil {
+	if _, err := db.connPool.Exec(context.Background(), query, book.Author, book.Title, id); err != nil {
 		logger.Errorf("Error (%s) while updating book with ID: %d", err, id)
 
 		return err
